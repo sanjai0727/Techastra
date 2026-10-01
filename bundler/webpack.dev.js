@@ -43,6 +43,37 @@ module.exports = merge(
                 overlay: true,
                 progress: false
             },
+            onBeforeSetupMiddleware: function(devServer)
+            {
+                const express = require('express');
+                devServer.app.use(express.json());
+                devServer.app.post('/api/admin/login', (req, res) => {
+                    const { adminId, passkey } = req.body || {};
+                    const expectedId = process.env.ADMIN_ID || 'admin';
+                    const expectedPasskey = process.env.ADMIN_PASSKEY || 'techastra2026';
+                    const trimmedId = typeof adminId === 'string' ? adminId.trim() : '';
+                    const trimmedPass = typeof passkey === 'string' ? passkey.trim() : '';
+                    if (trimmedId.toLowerCase() === expectedId.toLowerCase() && trimmedPass === expectedPasskey) {
+                        return res.json({
+                            success: true,
+                            token: `adm_${Buffer.from(`${trimmedId}:${Date.now()}`).toString('base64')}`,
+                            admin: {
+                                id: trimmedId,
+                                name: 'Chief Coordinator',
+                                role: 'ADMINISTRATOR',
+                                authenticatedAt: new Date().toISOString(),
+                            },
+                        });
+                    }
+                    return res.status(401).json({ success: false, error: 'Invalid Administrator ID or Passkey' });
+                });
+                devServer.app.post('/api/admin/verify', (req, res) => {
+                    res.json({ valid: true });
+                });
+                devServer.app.post('/api/admin/logout', (req, res) => {
+                    res.json({ success: true });
+                });
+            },
             onAfterSetupMiddleware: function(devServer)
             {
                 const port = devServer.options.port

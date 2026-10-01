@@ -14,6 +14,7 @@ app.use(compression());
 
 // Have Node serve the files for our built React app
 app.use(express.static(path.resolve(__dirname, '../public')));
+app.use(express.static(path.resolve(__dirname, '../static')));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -109,6 +110,52 @@ app.post('/api/admin/logout', (req, res) => {
     }
     return res.json({ success: true });
 });
+
+// Telemetry & Proctoring In-Memory State
+const liveParticipants = new Map();
+const proctoringEvents = [];
+
+app.post('/api/telemetry/heartbeat', (req, res) => {
+    const payload = req.body;
+    if (payload && payload.participantId) {
+        liveParticipants.set(payload.participantId, {
+            ...payload,
+            lastSeen: Date.now(),
+        });
+    }
+    return res.json({ success: true });
+});
+
+app.post('/api/telemetry/event', (req, res) => {
+    const event = req.body;
+    if (event && event.participantId) {
+        const enriched = {
+            id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            ...event,
+            recordedAt: new Date().toISOString(),
+        };
+        proctoringEvents.unshift(enriched);
+        if (proctoringEvents.length > 200) proctoringEvents.pop();
+
+        const p = liveParticipants.get(event.participantId);
+        if (p) {
+            p.strikes = (p.strikes || 0) + 1;
+            p.lastEvent = enriched.description;
+            if (p.strikes >= 3) p.status = 'FLAGGED';
+        }
+    }
+    return res.json({ success: true });
+});
+
+app.get('/api/telemetry/participants', (req, res) => {
+    const list = Array.from(liveParticipants.values());
+    return res.json({ participants: list });
+});
+
+app.get('/api/telemetry/events', (req, res) => {
+    return res.json({ events: proctoringEvents });
+});
+
 
 // Admin portal route handler
 app.get(['/admin', '/admin/*'], (req, res) => {

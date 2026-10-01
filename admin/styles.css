@@ -1,0 +1,458 @@
+/* ============================================================================
+   TECHASTRA 2026 — CODE RESCUE ADMIN PORTAL STYLES
+   Natural layout inside Event Dossier main content column.
+   NO fake duplicate windows, NO fixed positioning, NO horizontal overflow.
+   ============================================================================ */
+
+.admin-page,
+.admin-page * {
+    box-sizing: border-box;
+}
+
+.admin-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    color: #000000;
+}
+
+/* Row helper when horizontal alignment is explicitly intended */
+.admin-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Windows 95 Input Fields */
+.admin-input {
+    background-color: #ffffff;
+    color: #000000;
+    border: 2px solid;
+    border-color: #808080 #dfdfdf #dfdfdf #808080;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.admin-input:focus {
+    outline: 1px dotted #000080;
+}
+
+/* Windows 95 Beveled Button */
+.admin-btn {
+    background-color: #c0c0c0;
+    color: #000000;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.admin-btn:active {
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 5px 13px 3px 15px;
+}
+
+.admin-btn-primary {
+    background-color: #000080;
+    color: #ffffff;
+    border-color: #6080e0 #000040 #000040 #6080e0;
+}
+
+.admin-btn-danger {
+    background-color: #8b0000;
+    color: #ffffff;
+    border-color: #e06060 #400000 #400000 #e06060;
+}
+
+/* ============================================================================
+   ADMIN LOGIN CARD — Clean, centered inside main content area
+   ============================================================================ */
+.admin-login-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 16px;
+    margin-bottom: 32px;
+    min-width: 0;
+}
+
+.admin-login-card {
+    width: 100%;
+    max-width: 480px;
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.admin-login-title-primary {
+    font-size: 22px;
+    font-weight: bold;
+    color: #000080;
+    margin: 0 0 2px 0;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.admin-login-title-secondary {
+    font-size: 15px;
+    font-weight: bold;
+    color: #222222;
+    margin: 0 0 4px 0;
+    text-align: center;
+}
+
+.admin-login-subtitle {
+    font-size: 12px;
+    color: #444444;
+    text-align: center;
+    margin: 0 0 16px 0;
+    border-bottom: 1px solid #999;
+    padding-bottom: 8px;
+}
+
+.admin-field-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+    width: 100%;
+}
+
+.admin-field-label {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #000000;
+}
+
+.admin-password-wrap {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    width: 100%;
+}
+
+.admin-password-wrap input {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-login-auth-note {
+    font-size: 11px;
+    color: #555555;
+    text-align: center;
+    margin-top: 16px;
+    border-top: 1px solid #999;
+    padding-top: 8px;
+}
+
+.admin-error-box {
+    background-color: #ffe6e6;
+    color: #990000;
+    border: 1px solid #cc0000;
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-bottom: 14px;
+    font-weight: bold;
+    width: 100%;
+}
+
+/* ============================================================================
+   ADMIN DASHBOARD — Fit inside main content column
+   ============================================================================ */
+.admin-cc-header {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.admin-cc-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: #000080;
+    margin: 0;
+}
+
+.admin-cc-sub {
+    font-size: 11px;
+    color: #333333;
+    margin: 2px 0 0 0;
+    font-weight: bold;
+}
+
+/* Tab Navigation inside Dossier */
+.admin-tab-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #808080;
+    padding-bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.admin-tab-btn {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 transparent #ffffff;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+    position: relative;
+    top: 2px;
+    white-space: nowrap;
+}
+
+.admin-tab-btn.active {
+    background-color: #dfdfdf;
+    border-color: #ffffff #000000 #dfdfdf #ffffff;
+    top: 0;
+    padding-bottom: 7px;
+    color: #000080;
+}
+
+/* Stat Cards Grid — Responsive, no overflow */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.admin-stat-card {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.admin-stat-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #444;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-stat-val {
+    font-size: 22px;
+    font-weight: bold;
+    font-family: 'Terminal', monospace, sans-serif;
+    color: #000080;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+    white-space: nowrap;
+}
+
+.status-badge-ACTIVE {
+    background-color: #e6f4ea;
+    color: #0d652d;
+    border-color: #0d652d;
+}
+
+.status-badge-COMPLETED {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+    border-color: #1a73e8;
+}
+
+.status-badge-QUALIFIED {
+    background-color: #e6f4ea;
+    color: #137333;
+    border-color: #137333;
+}
+
+.status-badge-ELIMINATED {
+    background-color: #f1f3f4;
+    color: #5f6368;
+    border-color: #5f6368;
+}
+
+.status-badge-FLAGGED {
+    background-color: #fce8e6;
+    color: #c5221f;
+    border-color: #c5221f;
+    animation: flashFlag 2s infinite;
+}
+
+.status-badge-WARNING {
+    background-color: #fef7e0;
+    color: #b06000;
+    border-color: #b06000;
+}
+
+.status-badge-CLEAN {
+    background-color: #e6f4ea;
+    color: #0d652d;
+    border-color: #0d652d;
+}
+
+@keyframes flashFlag {
+    50% { opacity: 0.6; }
+}
+
+/* Table Container — Horizontal scroll belongs ONLY to this container */
+.admin-table-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    background-color: #ffffff;
+    border: 2px solid;
+    border-color: #808080 #dfdfdf #dfdfdf #808080;
+    margin-bottom: 16px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+    min-width: 620px;
+}
+
+.admin-table th {
+    background-color: #c0c0c0;
+    border-bottom: 2px solid #808080;
+    border-right: 1px solid #808080;
+    padding: 6px 8px;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e8e8e8;
+    border-right: 1px solid #f0f0f0;
+    white-space: nowrap;
+}
+
+.admin-table tr:hover {
+    background-color: #000080 !important;
+    color: #ffffff !important;
+    cursor: pointer;
+}
+
+.admin-table tr:hover .status-badge {
+    background-color: #ffffff;
+    color: #000080;
+}
+
+.admin-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Panel Box */
+.admin-box {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 12px;
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-box-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #000080;
+    margin: 0 0 8px 0;
+    border-bottom: 1px solid #808080;
+    padding-bottom: 4px;
+}
+
+/* Code and Log Blocks */
+.admin-code-block {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 10px;
+    border: 2px solid;
+    border-color: #808080 #dfdfdf #dfdfdf #808080;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.4;
+    max-width: 100%;
+    margin-top: 4px;
+}
+
+.admin-terminal-block {
+    background-color: #000000;
+    color: #00ff66;
+    font-family: 'Terminal', monospace, 'Courier New';
+    font-size: 12px;
+    padding: 8px 10px;
+    border: 2px solid;
+    border-color: #808080 #dfdfdf #dfdfdf #808080;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    max-width: 100%;
+    margin-top: 4px;
+}
