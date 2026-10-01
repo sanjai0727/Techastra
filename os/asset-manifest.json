@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "./static/css/main.dd509221.css",
+    "main.js": "./static/js/main.18593012.js",
+    "static/js/787.749b4a44.chunk.js": "./static/js/787.749b4a44.chunk.js",
+    "static/media/code_rescue_poster.png": "./static/media/code_rescue_poster.2d9f71b647ad01974e39.png",
+    "static/media/MSSansSerif.ttf": "./static/media/MSSansSerif.aa14e7b110864a3c2e08.ttf",
+    "static/media/mgr_university_logo.png": "./static/media/mgr_university_logo.a004674c7a82b3cf7c2e.png",
+    "static/media/ee.jpg": "./static/media/ee.7656e3a317181c8a39b1.jpg",
+    "static/media/Terminal.ttf": "./static/media/Terminal.6a1b7290048681921b2c.ttf",
+    "static/media/neverGiveUp.jpg": "./static/media/neverGiveUp.c9ee4e48677de77065a9.jpg",
+    "static/media/Millennium.ttf": "./static/media/Millennium.e16d74a8e8e0567ce30e.ttf",
+    "static/media/Millennium-Bold.ttf": "./static/media/Millennium-Bold.cd5e3be832ebd008c852.ttf",
+    "static/media/Code_Rescue_Rules_and_Regulations.pdf": "./static/media/Code_Rescue_Rules_and_Regulations.5da194b9d57107d52543.pdf",
+    "index.html": "./index.html",
+    "main.dd509221.css.map": "./static/css/main.dd509221.css.map",
+    "main.18593012.js.map": "./static/js/main.18593012.js.map",
+    "787.749b4a44.chunk.js.map": "./static/js/787.749b4a44.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.dd509221.css",
+    "static/js/main.18593012.js"
+  ]
+}
