@@ -6,15 +6,51 @@
     <title>CODE RESCUE — Windows 95 Debugging Championship</title>
     <script>
       (function() {
-        var ua = navigator.userAgent || '';
-        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(ua) ||
-                       (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && (window.innerWidth < 1024 || window.innerHeight < 600)) ||
-                       (screen.width < 768 && !window.matchMedia('(min-width: 768px)').matches);
-        if (isMobile) {
+        function checkMobileDevice() {
+          var ua = navigator.userAgent || '';
+          var platform = navigator.platform || '';
+          var maxTouch = navigator.maxTouchPoints || 0;
+          
+          // 1. Standard mobile user agent string
+          if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(ua)) {
+            return { blocked: true, reason: 'Mobile User-Agent' };
+          }
+          
+          // 2. iOS 'Request Desktop Website' mode (spoofs MacIntel, but has touch hardware)
+          if (platform === 'MacIntel' && maxTouch > 1) {
+            return { blocked: true, reason: 'iOS Desktop-Site Mode' };
+          }
+
+          // 3. Android 'Desktop site' mode (spoofs desktop Linux/Windows, but has coarse pointer and no hover)
+          var hasHover = window.matchMedia ? window.matchMedia('(hover: hover)').matches : true;
+          var hasCoarsePointer = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
+          var hasFinePointer = window.matchMedia ? window.matchMedia('(pointer: fine)').matches : true;
+          
+          if (!hasHover && hasCoarsePointer && maxTouch > 0) {
+            return { blocked: true, reason: 'Android Desktop-Site Mode (Touchscreen / No Mouse)' };
+          }
+
+          // 4. Client Hints API check
+          if (navigator.userAgentData && navigator.userAgentData.mobile) {
+            return { blocked: true, reason: 'Client Hints Mobile Hardware' };
+          }
+
+          // 5. Touch device with portrait aspect ratio (no laptops operate in tall portrait mode)
+          var sw = window.screen ? window.screen.width : window.innerWidth;
+          var sh = window.screen ? window.screen.height : window.innerHeight;
+          if (maxTouch > 1 && sh > sw * 1.25 && !hasFinePointer) {
+            return { blocked: true, reason: 'Portrait Touch Device' };
+          }
+
+          return { blocked: false };
+        }
+
+        var mobileStatus = checkMobileDevice();
+        if (mobileStatus.blocked) {
           window.__TECHASTRA_MOBILE_BLOCKED__ = true;
           window.stop && window.stop();
           document.addEventListener('DOMContentLoaded', function() {
-            document.body.innerHTML = '<div style="min-height: 100vh; background-color: #008080; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; font-family: Segoe UI, Tahoma, sans-serif;"><div style="max-width: 480px; width: 100%; background-color: #c0c0c0; border: 2px solid #ffffff; border-right-color: #000000; border-bottom-color: #000000; box-shadow: 3px 3px 10px rgba(0,0,0,0.5);"><div style="background: linear-gradient(90deg, #800000, #a00000); color: #ffffff; padding: 6px 10px; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: space-between;"><span>⚠️ TECHASTRA SECURITY LOCKDOWN</span></div><div style="padding: 20px; text-align: center;"><div style="font-size: 48px; margin-bottom: 12px;">🚫📱</div><div style="font-size: 16px; font-weight: bold; color: #a00000; margin-bottom: 12px; letter-spacing: 0.5px;">MOBILE / TABLET ACCESS BLOCKED</div><div style="background-color: #ffffff; border: 2px inset #dfdfdf; padding: 14px; text-align: left; font-size: 12px; line-height: 1.55; color: #111111; margin-bottom: 16px;"><p style="margin: 0 0 10px 0; font-weight: bold; color: #a00000;">Competition Integrity Policy Enforced:</p><p style="margin: 0 0 8px 0;">The <b>Techastra 2026 Code Rescue Championship</b> must be accessed from a <b>physical laptop or desktop computer with a hardware keyboard</b>.</p><p style="margin: 0 0 8px 0; color: #555555;">Mobile browsers allow external clipboard sharing, copy/paste shortcuts, and split-screen aids which violate strict anti-cheat regulations.</p><p style="margin: 0; font-weight: bold; color: #000080;">▶ Please open this URL on your laptop or lab workstation to enter the arena.</p></div><div style="padding: 6px; background-color: #e0e0e0; border: 1px solid #999; font-family: monospace; font-size: 11px; color: #333;">NODE: TECHASTRA-CR-26 • STATUS: DEVICE_PROHIBITED</div></div></div></div>';
+            document.body.innerHTML = '<div style="min-height: 100vh; background-color: #008080; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; font-family: Segoe UI, Tahoma, sans-serif;"><div style="max-width: 490px; width: 100%; background-color: #c0c0c0; border: 2px solid #ffffff; border-right-color: #000000; border-bottom-color: #000000; box-shadow: 3px 3px 10px rgba(0,0,0,0.5);"><div style="background: linear-gradient(90deg, #800000, #a00000); color: #ffffff; padding: 6px 10px; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: space-between;"><span>⚠️ TECHASTRA SECURITY LOCKDOWN</span></div><div style="padding: 20px; text-align: center;"><div style="font-size: 48px; margin-bottom: 12px;">🚫📱</div><div style="font-size: 16px; font-weight: bold; color: #a00000; margin-bottom: 8px; letter-spacing: 0.5px;">MOBILE / TABLET ACCESS PROHIBITED</div><div style="font-size: 12px; font-weight: bold; color: #660000; margin-bottom: 12px;">(Including "Desktop Site" Mode on Mobile Browsers)</div><div style="background-color: #ffffff; border: 2px inset #dfdfdf; padding: 14px; text-align: left; font-size: 12px; line-height: 1.55; color: #111111; margin-bottom: 16px;"><p style="margin: 0 0 10px 0; font-weight: bold; color: #a00000;">Competition Integrity Policy Enforced:</p><p style="margin: 0 0 8px 0;">The <b>Techastra 2026 Code Rescue Championship</b> must be accessed from a <b>physical laptop or desktop computer with a hardware keyboard</b>.</p><p style="margin: 0 0 8px 0; color: #555555;">Mobile browsers—even with "Desktop site" toggled on—allow external clipboard synchronization, touch copy/paste assistance, and split-screen aids which violate strict anti-cheat regulations.</p><p style="margin: 0; font-weight: bold; color: #000080;">▶ Please open this URL on your laptop or lab workstation to enter the arena.</p></div><div style="padding: 6px; background-color: #e0e0e0; border: 1px solid #999; font-family: monospace; font-size: 11px; color: #333;">DETECTION: ' + mobileStatus.reason + ' • ACCESS: DENIED</div></div></div></div>';
           });
         }
       })();
