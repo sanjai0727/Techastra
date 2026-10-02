@@ -85,54 +85,75 @@
 }
 
 /* ============================================================================
-   ADMIN LOGIN CARD — Clean, centered inside main content area
+   ADMIN LOGIN CARD — Clean, authentic Win95 dialog centered in workspace
    ============================================================================ */
+.admin-login-page {
+    height: 100%;
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .admin-login-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     width: 100%;
     max-width: 100%;
-    margin-top: 16px;
-    margin-bottom: 32px;
+    margin: auto 0;
     min-width: 0;
 }
 
 .admin-login-card {
     width: 100%;
-    max-width: 480px;
+    max-width: 460px;
     background-color: #c0c0c0;
     border: 2px solid;
     border-color: #ffffff #808080 #808080 #ffffff;
-    padding: 24px;
+    box-shadow: 2px 2px 0px #000000;
+    padding: 24px 28px;
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
 
+.admin-login-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.admin-login-key-icon {
+    font-size: 32px;
+}
+
 .admin-login-title-primary {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
     color: #000080;
-    margin: 0 0 2px 0;
-    text-align: center;
-    letter-spacing: 1px;
+    margin: 0;
+    letter-spacing: 0.5px;
 }
 
 .admin-login-title-secondary {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: bold;
     color: #222222;
-    margin: 0 0 4px 0;
-    text-align: center;
+    margin: 2px 0 0 0;
+    letter-spacing: 0.5px;
 }
 
 .admin-login-subtitle {
-    font-size: 12px;
+    font-size: 11px;
     color: #444444;
     text-align: center;
     margin: 0 0 16px 0;
-    border-bottom: 1px solid #999;
+    border-bottom: 1px solid #808080;
     padding-bottom: 8px;
 }
 

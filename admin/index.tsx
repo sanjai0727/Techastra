@@ -33,7 +33,21 @@ window.unmountTechastraAdmin = (container: HTMLElement) => {
 };
 
 // Auto-mount if root exists and not in embedded mode
-const rootElement = document.getElementById('techastra-admin-root') || document.getElementById('admin-root');
-if (rootElement) {
-    ReactDOM.render(React.createElement(AdminPortal, {}), rootElement);
+const autoMountAdmin = () => {
+    const rootElement = document.getElementById('techastra-admin-root') || document.getElementById('admin-root');
+    if (rootElement && !rootElement.hasAttribute('data-admin-mounted')) {
+        rootElement.setAttribute('data-admin-mounted', 'true');
+        ReactDOM.render(React.createElement(AdminPortal, {}), rootElement);
+    }
+};
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoMountAdmin);
+    } else {
+        autoMountAdmin();
+    }
+    // Secondary safety mount
+    window.addEventListener('load', autoMountAdmin);
 }
+

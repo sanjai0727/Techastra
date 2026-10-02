@@ -23,7 +23,7 @@ const keys: { [key in CameraKey]: CameraKeyframe } = {
         focalPoint: new THREE.Vector3(0, -1000, 0),
     },
     monitor: {
-        position: new THREE.Vector3(0, 950, 2000),
+        position: new THREE.Vector3(0, 950, 1985),
         focalPoint: new THREE.Vector3(0, 950, 0),
     },
     desk: {
@@ -57,8 +57,11 @@ export class MonitorKeyframe extends CameraKeyframeInstance {
 
     update() {
         const aspect = this.sizes.height / this.sizes.width;
-        const additionalZoom = this.sizes.width < 768 ? 0 : 600;
-        this.targetPos.z = this.origin.z + aspect * 1200 - additionalZoom;
+        // Screen is 1024 tall at z=255. A target height of 1090 fills 94% of the viewport height,
+        // displaying the title bar, taskbar, and full screen with zero cropping and no wasted outer bezel.
+        const targetVisibleHeight = Math.max(1090, 1340 * aspect);
+        const distance = targetVisibleHeight / (2 * Math.tan((35 * Math.PI) / 360));
+        this.targetPos.z = 255 + distance;
         this.position.copy(this.targetPos);
     }
 }

@@ -57,10 +57,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
 
     return (
         <div className="admin-page">
-            <h1 style={{ marginLeft: -16 }}>Admin Command Center</h1>
-            <h3>TECHASTRA 2026 • CODE RESCUE</h3>
-            <br />
-
             {/* Header Control Bar */}
             <div className="admin-cc-header">
                 <div>

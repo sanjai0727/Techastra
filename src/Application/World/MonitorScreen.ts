@@ -164,6 +164,17 @@ export default class MonitorScreen extends EventEmitter {
             }
         });
 
+        // Allow Escape key to return to 3D CRT view
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.body.classList.contains('fullscreen-os-active')) {
+                document.body.classList.remove('fullscreen-os-active');
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                }
+                this.camera.trigger('enterMonitor');
+            }
+        });
+
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement && document.body.classList.contains('fullscreen-os-active')) {
                 // Browser exited fullscreen during active workstation round

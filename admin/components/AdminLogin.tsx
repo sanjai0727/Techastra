@@ -35,17 +35,18 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess }) => {
     };
 
     return (
-        <div className="admin-page">
-            <h1 style={{ marginLeft: -16 }}>Admin Access</h1>
-            <h3>TECHASTRA 2026 • CODE RESCUE</h3>
-            <br />
-
+        <div className="admin-page admin-login-page">
             <div className="admin-login-wrapper">
                 <div className="admin-login-card">
                     {/* Header */}
-                    <h2 className="admin-login-title-primary">TECHASTRA 2026</h2>
-                    <h3 className="admin-login-title-secondary">ADMIN ACCESS</h3>
-                    <div className="admin-login-subtitle">Authorized Coordinator Access</div>
+                    <div className="admin-login-badge-row">
+                        <span className="admin-login-key-icon">🔑</span>
+                        <div>
+                            <h2 className="admin-login-title-primary">TECHASTRA 2026</h2>
+                            <h3 className="admin-login-title-secondary">SECURITY &amp; ADMINISTRATION DESK</h3>
+                        </div>
+                    </div>
+                    <div className="admin-login-subtitle">Restricted to Authorized Event Coordinators &amp; Faculty</div>
 
                     {/* Error Notice */}
                     {errorMessage && (

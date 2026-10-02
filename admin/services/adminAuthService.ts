@@ -1,19 +1,19 @@
 // ============================================================================
 // ADMIN AUTHENTICATION SERVICE — TECHASTRA 2026
-// Validates credentials against Express server /api/admin/login with fallback
-// to secure prototype verification. Never exposes passkey in visible UI.
+// Zero-trust client authentication communicating with hardened server API.
+// Never stores passkeys client-side. Strict session token verification.
 // ============================================================================
 
 import { AdminUser } from '../types';
 
 const STORAGE_KEY = 'techastra_admin_session';
+let inactivityTimer: any = null;
 
 export class AdminAuthService {
     private static currentUser: AdminUser | null = null;
 
     /**
-     * Authenticate Administrator ID + Passkey.
-     * Prefers server-side validation via POST /api/admin/login.
+     * Authenticate Administrator ID + Passkey against server.
      */
     public static async login(adminId: string, passkey: string): Promise<{ success: boolean; error?: string; user?: AdminUser }> {
         const trimmedId = adminId.trim();
@@ -24,7 +24,6 @@ export class AdminAuthService {
         }
 
         try {
-            // Attempt server-side authentication
             const response = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -33,48 +32,43 @@ export class AdminAuthService {
 
             if (response.ok) {
                 const data = await response.json();
-                if (data.success && data.admin) {
+                if (data.success && data.admin && data.token) {
                     const user: AdminUser = {
                         id: data.admin.id,
                         username: data.admin.id,
                         name: data.admin.name || 'Chief Coordinator',
                         role: data.admin.role || 'ADMINISTRATOR',
-                        token: data.token || `token-${Date.now()}`,
+                        token: data.token,
                         authenticatedAt: new Date().toISOString(),
                     };
                     this.saveSession(user);
+                    this.startInactivityWatch();
                     return { success: true, user };
                 }
+            } else if (response.status === 429) {
+                const errData = await response.json().catch(() => ({}));
+                return { success: false, error: errData.error || 'Too many failed login attempts. Temporarily locked for 5 minutes.' };
             } else if (response.status === 401) {
-                return { success: false, error: 'Authentication failed: Invalid Administrator ID or Passkey.' };
+                const errData = await response.json().catch(() => ({}));
+                return { success: false, error: errData.error || 'Access Denied: Invalid Administrator ID or Passkey.' };
             }
         } catch (netErr) {
-            // Server offline or prototype fallback
-            console.warn('[AdminAuthService] Server API unavailable, using prototype authentication layer.');
+            return { success: false, error: 'Authentication Server Offline. Contact Network Admin.' };
         }
 
-        // Prototype credential verification (supports default admin / techastra2026 or environment variables)
-        const validId = (typeof process !== 'undefined' && process.env?.ADMIN_ID) || 'admin';
-        const validPass = (typeof process !== 'undefined' && process.env?.ADMIN_PASSKEY) || 'techastra2026';
-
-        if (trimmedId.toLowerCase() === validId.toLowerCase() && trimmedPasskey === validPass) {
-            const user: AdminUser = {
-                id: trimmedId,
-                username: trimmedId,
-                name: 'Chief Coordinator (Prototype Mode)',
-                role: 'ADMINISTRATOR',
-                token: `proto-${btoa(trimmedId + ':' + Date.now())}`,
-                authenticatedAt: new Date().toISOString(),
-            };
-            this.saveSession(user);
-            return { success: true, user };
-        }
-
-        return { success: false, error: 'Access Denied: Invalid Administrator ID or Passkey.' };
+        return { success: false, error: 'Access Denied: Invalid credentials.' };
     }
 
     public static isAuthenticated(): boolean {
         return !!this.getCurrentUser();
+    }
+
+    public static getAuthHeader(): Record<string, string> {
+        const user = this.getCurrentUser();
+        if (user && user.token) {
+            return { 'Authorization': `Bearer ${user.token}` };
+        }
+        return {};
     }
 
     public static getCurrentUser(): AdminUser | null {
@@ -84,11 +78,12 @@ export class AdminAuthService {
             const stored = sessionStorage.getItem(STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored) as AdminUser;
-                // Optional 4-hour session expiration
                 const authTime = new Date(parsed.authenticatedAt).getTime();
                 const now = Date.now();
-                if (now - authTime < 4 * 60 * 60 * 1000) {
+                // 2-hour hard session expiration
+                if (now - authTime < 2 * 60 * 60 * 1000) {
                     this.currentUser = parsed;
+                    this.startInactivityWatch();
                     return parsed;
                 } else {
                     this.logout();
@@ -101,11 +96,21 @@ export class AdminAuthService {
     }
 
     public static logout(): void {
+        const token = this.currentUser?.token;
         this.currentUser = null;
+        if (inactivityTimer) {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = null;
+        }
         try {
             sessionStorage.removeItem(STORAGE_KEY);
-            // Optionally notify backend
-            fetch('/api/admin/logout', { method: 'POST' }).catch(() => {});
+            if (token) {
+                fetch('/api/admin/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ token }),
+                }).catch(() => {});
+            }
         } catch (e) {}
     }
 
@@ -115,4 +120,26 @@ export class AdminAuthService {
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
         } catch (e) {}
     }
+
+    private static startInactivityWatch(): void {
+        const resetTimer = () => {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            // Auto logout after 30 minutes of no user activity
+            inactivityTimer = setTimeout(() => {
+                alert('Session expired due to 30 minutes of inactivity. Logging out for security.');
+                AdminAuthService.logout();
+                window.location.reload();
+            }, 30 * 60 * 1000);
+        };
+
+        window.removeEventListener('mousemove', resetTimer);
+        window.removeEventListener('keydown', resetTimer);
+        window.removeEventListener('click', resetTimer);
+
+        window.addEventListener('mousemove', resetTimer, { passive: true });
+        window.addEventListener('keydown', resetTimer, { passive: true });
+        window.addEventListener('click', resetTimer, { passive: true });
+        resetTimer();
+    }
 }
+

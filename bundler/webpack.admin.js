@@ -4,7 +4,7 @@ module.exports = {
     mode: 'production',
     entry: path.resolve(__dirname, '../admin/index.tsx'),
     output: {
-        path: path.resolve(__dirname, '../static/os'),
+        path: path.resolve(__dirname, '../static/admin'),
         filename: 'admin.bundle.js',
         clean: false,
     },

@@ -1,0 +1,208 @@
+/* ==========================================================================
+   TECHASTRA 2026 — OS HIGH READABILITY & ENHANCED TYPOGRAPHY OVERRIDES
+   Designed for classroom projectors, high-DPI displays, and optimal legibility
+   ========================================================================== */
+
+/* Overall Desktop Text Scale */
+html, body, #root, .App {
+    font-size: 15px !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base Paragraphs and Content */
+.site-page-content p, .text-block p, p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #111111;
+}
+
+p b, strong {
+    font-weight: 800 !important;
+    color: #000000;
+}
+
+/* Headings in Dossier */
+h1 {
+    font-size: 42px !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.5px !important;
+    margin-bottom: 6px !important;
+}
+
+h2 {
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    margin-bottom: 6px !important;
+}
+
+h3 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0.3px !important;
+}
+
+h4 {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+}
+
+/* Site Page & Scroll Area */
+.site-page-content {
+    margin-left: 300px !important;
+    padding: 32px 48px 64px 20px !important;
+    box-sizing: border-box !important;
+}
+
+.text-block {
+    margin-top: 12px !important;
+    margin-bottom: 24px !important;
+}
+
+.text-block p {
+    font-size: 16.5px !important;
+    line-height: 1.65 !important;
+}
+
+/* Left Vertical Navbar Links */
+.router-link {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.8px !important;
+    text-decoration: underline !important;
+    color: #000080 !important;
+    display: inline-block !important;
+}
+
+.router-link:hover {
+    color: #cc0000 !important;
+}
+
+/* University Header Banner */
+div[style*="institutionBanner"] {
+    padding: 16px 20px !important;
+    margin-bottom: 20px !important;
+    background: #ffffff !important;
+    border: 2px solid #000080 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+}
+
+div[style*="institutionBanner"] img {
+    max-width: 440px !important;
+    height: auto !important;
+}
+
+/* Dept and symposium text */
+div[style*="deptText"], p[style*="deptText"] {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #111111 !important;
+    letter-spacing: 0.6px !important;
+}
+
+div[style*="symposiumText"], p[style*="symposiumText"] {
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    color: #000080 !important;
+}
+
+/* Launch Arena in OS Banner Callout */
+div[style*="launchCallout"] {
+    padding: 18px 22px !important;
+    background-color: #f0f5ff !important;
+    border: 2.5px solid #000080 !important;
+    margin-top: 10px !important;
+    margin-bottom: 24px !important;
+}
+
+div[style*="launchCallout"] h3 {
+    font-size: 21px !important;
+    font-weight: 800 !important;
+    color: #000080 !important;
+}
+
+div[style*="launchCallout"] p {
+    font-size: 15.5px !important;
+    color: #222222 !important;
+    line-height: 1.5 !important;
+}
+
+/* Action Buttons */
+.site-button, button[style*="launchBtn"], button.site-button {
+    font-size: 15px !important;
+    padding: 8px 22px !important;
+    font-weight: 800 !important;
+    background: #ffffff !important;
+    border: 2px outset #ffffff !important;
+    box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff !important;
+    cursor: pointer !important;
+    letter-spacing: 0.5px !important;
+}
+
+.site-button:hover, button[style*="launchBtn"]:hover {
+    background-color: #f4f4f4 !important;
+}
+
+/* Tournament Quick Links Cards */
+div[style*="cardGrid"] {
+    gap: 16px !important;
+    margin-top: 12px !important;
+}
+
+div[style*="cardGrid"] > div, div[style*="card"] {
+    padding: 14px 16px !important;
+    border: 1.5px solid #b8b8b8 !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06) !important;
+}
+
+div[style*="cardGrid"] h4 {
+    font-size: 16px !important;
+    color: #000080 !important;
+    font-weight: 800 !important;
+    margin-bottom: 6px !important;
+}
+
+div[style*="cardGrid"] p {
+    font-size: 14px !important;
+    color: #333333 !important;
+    line-height: 1.5 !important;
+}
+
+/* Win95 Window Title Bar */
+.showcase-header {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Bottom Bar Status Text */
+div[style*="bottomBar"] p {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+/* Windows 95 Desktop Icons */
+div[style*="shortcutContainer"] p, div[style*="shortcutContainer"] span {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-shadow: 1px 1px 1px #000;
+}
+
+/* Windows 95 Taskbar / Toolbar */
+.toolbar-text, div[style*="toolbar"] span, div[style*="toolbar"] p {
+    font-size: 13px !important;
+    font-weight: bold !important;
+}
+
+/* Dialog Buttons */
+.win95-dialog-btn {
+    font-size: 13px !important;
+    height: 26px !important;
+    min-width: 80px !important;
+    font-weight: 600 !important;
+}
