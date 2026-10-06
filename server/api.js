@@ -503,6 +503,85 @@ router.post('/participants/register', (req, res) => {
     });
 });
 
+router.post('/participants/verify', async (req, res) => {
+    const { participantId } = req.body || {};
+    let trimmedId = typeof participantId === 'string' ? participantId.trim().toUpperCase() : '';
+
+    if (!trimmedId) {
+        return res.status(400).json({ success: false, verified: false, error: 'Participant Token ID is required.' });
+    }
+
+    if (/^\d+$/.test(trimmedId)) {
+        trimmedId = `SYM2026-${String(trimmedId).padStart(4, '0')}`;
+    }
+
+    let participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(trimmedId);
+
+    if (!participant) {
+        try {
+            const roster = await fetchLiveRoster();
+            const match = roster.find(
+                (r) =>
+                    (r.registrationCode && r.registrationCode.toUpperCase() === trimmedId) ||
+                    (r.registrationId && r.registrationId.toUpperCase() === trimmedId)
+            );
+            if (match) {
+                const code = match.registrationCode || trimmedId;
+                const numMatch = code.match(/(\d+)$/);
+                const slotNum = numMatch ? parseInt(numMatch[1], 10) : 1;
+                const nowMs = Date.now();
+                const nowIso = new Date().toISOString();
+
+                db.prepare(`
+                    INSERT INTO participants (
+                        id, slot_number, full_name, college, department, year,
+                        current_round, current_question, score, total_score,
+                        round1_score, round2_score, round3_score, time_remaining,
+                        status, strikes, last_event, last_seen, registered_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 1200, 'ACTIVE', 0, 'Verified on Official Portal', ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET full_name = excluded.full_name, college = excluded.college
+                `).run(
+                    code,
+                    slotNum,
+                    match.name || `Contestant ${code}`,
+                    match.college || 'Engineering College',
+                    'Computer Science and Engineering',
+                    'Senior Engineering',
+                    nowMs,
+                    nowIso
+                );
+
+                participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(code);
+                broadcast('participants_updated', getAllParticipantsFormatted());
+            }
+        } catch (err) {}
+    }
+
+    if (!participant) {
+        return res.status(404).json({
+            success: false,
+            verified: false,
+            error: `Participant Token '${trimmedId}' was not found in the official Techastra roster. Please verify your token or register below.`,
+        });
+    }
+
+    return res.json({
+        success: true,
+        verified: true,
+        participant: {
+            id: participant.id,
+            slotNumber: participant.slot_number,
+            name: participant.full_name,
+            college: participant.college,
+            department: participant.department,
+            year: participant.year,
+            currentRound: participant.current_round,
+            status: participant.status,
+            strikes: participant.strikes,
+        }
+    });
+});
+
 router.post('/participants/login', async (req, res) => {
     const { participantId } = req.body || {};
     let trimmedId = typeof participantId === 'string' ? participantId.trim().toUpperCase() : '';
@@ -612,7 +691,10 @@ router.post('/coordinator/sync', async (req, res) => {
     try {
         const result = await syncRosterToDatabase();
         broadcast('participants_updated', getAllParticipantsFormatted());
-        return res.json(result);
+        return res.json({
+            ...result,
+            synced: result.syncedCount,
+        });
     } catch (err) {
         return res.status(500).json({ success: false, error: err.message });
     }
@@ -766,12 +848,14 @@ router.post('/telemetry/heartbeat', (req, res) => {
 });
 
 // Real-Time Keystroke & Participant Code Stream
-router.post('/telemetry/code-stream', (req, res) => {
+router.post(['/telemetry/code-stream', '/telemetry/live-screen'], (req, res) => {
     const {
         participantId,
         participantName,
         roundId,
+        round,
         questionId,
+        question,
         questionTitle,
         code,
         timeRemaining,
@@ -785,6 +869,9 @@ router.post('/telemetry/code-stream', (req, res) => {
     const name = p ? p.full_name : (participantName || id);
     const curTime = timeRemaining !== undefined ? Number(timeRemaining) : (p ? p.time_remaining : 2400);
     const nowMs = lastKeystrokeAt || Date.now();
+    const effectiveRound = roundId || round || 'R1';
+    const effectiveQuestion = questionId || question || 'Q1';
+    const effectiveTitle = questionTitle || effectiveQuestion;
 
     // Upsert into live_screens
     db.prepare(`
@@ -798,7 +885,7 @@ router.post('/telemetry/code-stream', (req, res) => {
             code = excluded.code,
             time_remaining = excluded.time_remaining,
             last_keystroke_at = excluded.last_keystroke_at
-    `).run(id, name, roundId || 'R1', questionId || 'Q1', questionTitle || 'Work Order', code || '', curTime, nowMs);
+    `).run(id, name, effectiveRound, effectiveQuestion, effectiveTitle, code || '', curTime, nowMs);
 
     // Also update time_remaining and current_question on participants table
     if (p) {
@@ -809,15 +896,15 @@ router.post('/telemetry/code-stream', (req, res) => {
                 current_round = ?,
                 last_seen = ?
             WHERE id = ?
-        `).run(curTime, questionId || 'Q1', roundId || 'R1', nowMs, id);
+        `).run(curTime, effectiveQuestion, effectiveRound, nowMs, id);
     }
 
     const screenData = {
         participantId: id,
         participantName: name,
-        roundId: roundId || 'R1',
-        questionId: questionId || 'Q1',
-        questionTitle: questionTitle || 'Work Order',
+        roundId: effectiveRound,
+        questionId: effectiveQuestion,
+        questionTitle: effectiveTitle,
         code: code || '',
         timeRemaining: curTime,
         lastKeystrokeAt: nowMs,
@@ -827,10 +914,10 @@ router.post('/telemetry/code-stream', (req, res) => {
     broadcast('code_stream', screenData);
     broadcast('participant_heartbeat', {
         id,
-        currentRound: roundId || 'R1',
-        currentQuestion: questionId || 'Q1',
+        currentRound: effectiveRound,
+        currentQuestion: effectiveQuestion,
         timeRemaining: curTime,
-        lastEvent: `Live editing ${questionId || 'question'}`,
+        lastEvent: `Live editing ${effectiveQuestion}`,
     });
 
     return res.json({ success: true });
@@ -879,18 +966,17 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
     }
 
     return res.json({ success: true, screen });
-});
-
-router.post('/telemetry/event', (req, res) => {
+});router.post(['/telemetry/event', '/proctoring/event'], (req, res) => {
     const event = req.body || {};
     const id = event.participantId ? event.participantId.trim().toUpperCase() : null;
-    if (!id) return res.json({ success: false, error: 'No participantId' });
+    if (!id) return res.status(400).json({ success: false, error: 'No participantId' });
 
     const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
-    const pName = p ? p.full_name : event.participantName || id;
+    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
+    const pName = p.full_name || event.participantName || id;
 
     const eventId = `SEC-${Date.now().toString().slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    const newStrikes = (p ? p.strikes : 0) + 1;
+    const newStrikes = (p.strikes || 0) + 1;
     const status = newStrikes >= 2 ? 'FLAGGED' : 'WARNING';
     const nowTime = new Date().toTimeString().split(' ')[0];
 
@@ -903,30 +989,29 @@ router.post('/telemetry/event', (req, res) => {
         id,
         pName,
         event.eventType || 'WINDOW_BLUR',
-        event.description || 'Proctoring violation recorded',
+        event.details || event.description || 'Proctoring violation recorded',
         newStrikes,
         status,
         nowTime,
         Date.now()
     );
 
-    if (p) {
-        db.prepare(`
-            UPDATE participants
-            SET strikes = ?,
-                status = CASE WHEN ? >= 3 THEN 'FLAGGED' ELSE status END,
-                last_event = ?
-            WHERE id = ?
-        `).run(newStrikes, newStrikes, event.description || 'Integrity Strike Logged', id);
-    }
+    db.prepare(`
+        UPDATE participants
+        SET strikes = ?,
+            status = CASE WHEN ? >= 3 THEN 'FLAGGED' ELSE status END,
+            last_event = ?
+        WHERE id = ?
+    `).run(newStrikes, newStrikes, event.details || event.description || 'Integrity Strike Logged', id);
 
     const createdEvent = {
         id: eventId,
         participantId: id,
         participantName: pName,
         eventType: event.eventType || 'WINDOW_BLUR',
-        description: event.description || 'Proctoring violation recorded',
+        description: event.details || event.description || 'Proctoring violation recorded',
         strikeCount: newStrikes,
+        strikes: newStrikes,
         status,
         timestamp: nowTime,
     };
@@ -935,14 +1020,14 @@ router.post('/telemetry/event', (req, res) => {
     broadcast('security_event', createdEvent);
     broadcast('participants_updated', getAllParticipantsFormatted());
 
-    return res.json({ success: true, eventId, strikeCount: newStrikes });
+    return res.json({ success: true, eventId, strikes: newStrikes, strikeCount: newStrikes });
 });
 
 router.get('/telemetry/participants', (req, res) => {
     return res.json({ success: true, participants: getAllParticipantsFormatted() });
 });
 
-router.get('/telemetry/events', (req, res) => {
+router.get(['/telemetry/events', '/proctoring/events'], (req, res) => {
     return res.json({ success: true, events: getAllEventsFormatted() });
 });
 
@@ -950,6 +1035,9 @@ router.post('/telemetry/reinstate', requireAdminAuth, (req, res) => {
     const { participantId } = req.body || {};
     const id = participantId ? participantId.trim().toUpperCase() : null;
     if (!id) return res.status(400).json({ success: false, error: 'participantId required' });
+
+    const p = db.prepare('SELECT full_name FROM participants WHERE id = ?').get(id);
+    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
 
     db.prepare(`
         UPDATE participants
@@ -959,7 +1047,6 @@ router.post('/telemetry/reinstate', requireAdminAuth, (req, res) => {
         WHERE id = ?
     `).run(id);
 
-    const p = db.prepare('SELECT full_name FROM participants WHERE id = ?').get(id);
     const eventId = `SEC-REINSTATE-${Date.now().toString().slice(-4)}`;
     const nowTime = new Date().toTimeString().split(' ')[0];
 
@@ -967,14 +1054,14 @@ router.post('/telemetry/reinstate', requireAdminAuth, (req, res) => {
         INSERT INTO proctoring_events (
             id, participant_id, participant_name, event_type, description, strike_count, status, timestamp, created_at
         ) VALUES (?, ?, ?, 'WINDOW_BLUR', 'Coordinator cleared all strikes and reinstated session', 0, 'CLEAN', ?, ?)
-    `).run(eventId, id, p?.full_name || id, nowTime, Date.now());
+    `).run(eventId, id, p.full_name || id, nowTime, Date.now());
 
     // Instant broadcast
     broadcast('participants_updated', getAllParticipantsFormatted());
     broadcast('security_event', {
         id: eventId,
         participantId: id,
-        participantName: p?.full_name || id,
+        participantName: p.full_name || id,
         eventType: 'WINDOW_BLUR',
         description: 'Coordinator cleared all strikes and reinstated session',
         strikeCount: 0,
@@ -991,7 +1078,9 @@ router.post('/telemetry/flag', requireAdminAuth, (req, res) => {
     if (!id) return res.status(400).json({ success: false, error: 'participantId required' });
 
     const p = db.prepare('SELECT full_name, strikes FROM participants WHERE id = ?').get(id);
-    const strikes = (p?.strikes || 0) + 1;
+    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
+
+    const strikes = (p.strikes || 0) + 1;
     const nowTime = new Date().toTimeString().split(' ')[0];
 
     db.prepare(`
@@ -1007,14 +1096,14 @@ router.post('/telemetry/flag', requireAdminAuth, (req, res) => {
         INSERT INTO proctoring_events (
             id, participant_id, participant_name, event_type, description, strike_count, status, timestamp, created_at
         ) VALUES (?, ?, ?, 'WINDOW_BLUR', ?, ?, 'FLAGGED', ?, ?)
-    `).run(eventId, id, p?.full_name || id, reason || 'Manually flagged by Coordinator', strikes, nowTime, Date.now());
+    `).run(eventId, id, p.full_name || id, reason || 'Manually flagged by Coordinator', strikes, nowTime, Date.now());
 
     // Instant broadcast
     broadcast('participants_updated', getAllParticipantsFormatted());
     broadcast('security_event', {
         id: eventId,
         participantId: id,
-        participantName: p?.full_name || id,
+        participantName: p.full_name || id,
         eventType: 'WINDOW_BLUR',
         description: reason || 'Manually flagged by Coordinator',
         strikeCount: strikes,
@@ -1050,6 +1139,7 @@ router.post('/submissions', (req, res) => {
     if (!id) return res.status(400).json({ success: false, error: 'participantId required' });
 
     const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
     const pName = p ? p.full_name : participantName || id;
     const subId = `SUB-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const nowIso = new Date().toISOString();
@@ -1146,7 +1236,7 @@ router.get('/rounds', (req, res) => {
     return res.json({ success: true, rounds: getAllRoundsFormatted() });
 });
 
-router.put('/rounds/:id', requireAdminAuth, (req, res) => {
+const handleRoundUpdate = (req, res) => {
     const roundId = req.params.id.toUpperCase();
     const { cutoff, isActive } = req.body || {};
 
@@ -1171,7 +1261,7 @@ router.put('/rounds/:id', requireAdminAuth, (req, res) => {
     broadcast('rounds_updated', getAllRoundsFormatted());
 
     return res.json({ success: true, message: `Round ${roundId} updated.` });
-});
+};
 
 // Master Clock Adjustment (Rounds or Global)
 router.post('/rounds/adjust-timer', requireAdminAuth, (req, res) => {
@@ -1199,6 +1289,11 @@ router.post('/rounds/adjust-timer', requireAdminAuth, (req, res) => {
     broadcast('participants_updated', getAllParticipantsFormatted());
     return res.json({ success: true, message: `Timer adjusted for ${rId}.` });
 });
+
+router.put('/rounds/:id', requireAdminAuth, handleRoundUpdate);
+router.post('/rounds/:id', requireAdminAuth, handleRoundUpdate);
+router.put('/rounds/:id/cutoff', requireAdminAuth, handleRoundUpdate);
+router.post('/rounds/:id/cutoff', requireAdminAuth, handleRoundUpdate);
 
 // Individual Participant Timer Adjustment
 router.post('/participants/:id/adjust-timer', requireAdminAuth, (req, res) => {
