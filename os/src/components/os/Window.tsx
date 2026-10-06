@@ -39,13 +39,21 @@ const Window: React.FC<WindowProps> = (props) => {
 
     const resizeRef = useRef<any>(null);
 
-    const [top, setTop] = useState(props.top);
-    const [left, setLeft] = useState(props.left);
+    const [top, setTop] = useState(typeof props.top === 'number' && !isNaN(props.top) && props.top >= 0 ? props.top : 14);
+    const [left, setLeft] = useState(typeof props.left === 'number' && !isNaN(props.left) && props.left >= 0 ? props.left : 20);
 
     const lastClickInside = useRef(false);
 
-    const [width, setWidth] = useState(props.width);
-    const [height, setHeight] = useState(props.height);
+    const [width, setWidth] = useState(
+        typeof props.width === 'number' && !isNaN(props.width) && props.width >= 300
+            ? props.width
+            : 1360
+    );
+    const [height, setHeight] = useState(
+        typeof props.height === 'number' && !isNaN(props.height) && props.height >= 200
+            ? props.height
+            : 880
+    );
 
     const [contentWidth, setContentWidth] = useState(props.width);
     const [contentHeight, setContentHeight] = useState(props.height);
@@ -226,10 +234,10 @@ const Window: React.FC<WindowProps> = (props) => {
         <div onMouseDown={onWindowInteract} style={styles.container}>
             <div
                 style={Object.assign({}, styles.window, {
-                    width,
-                    height,
-                    top,
-                    left,
+                    width: typeof width === 'number' && !isNaN(width) && width >= 300 ? width : 1360,
+                    height: typeof height === 'number' && !isNaN(height) && height >= 200 ? height : 880,
+                    top: typeof top === 'number' && !isNaN(top) && top >= 0 ? top : 14,
+                    left: typeof left === 'number' && !isNaN(left) && left >= 0 ? left : 20,
                 })}
                 ref={windowRef}
             >
@@ -410,6 +418,11 @@ const styles: StyleSheetCSS = {
     window: {
         backgroundColor: Colors.lightGray,
         position: 'absolute',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        minWidth: 480,
+        minHeight: 320,
     },
     dragHitbox: {
         position: 'absolute',
@@ -425,6 +438,10 @@ const styles: StyleSheetCSS = {
         borderTopColor: colors.lightGray,
         borderLeftColor: colors.lightGray,
         flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        boxSizing: 'border-box',
     },
     windowBorderInner: {
         border: `1px solid ${Colors.darkGray}`,
@@ -432,8 +449,10 @@ const styles: StyleSheetCSS = {
         borderLeftColor: colors.white,
         flex: 1,
         padding: 2,
-
+        display: 'flex',
         flexDirection: 'column',
+        height: '100%',
+        boxSizing: 'border-box',
     },
     resizeHitbox: {
         position: 'absolute',
@@ -457,25 +476,34 @@ const styles: StyleSheetCSS = {
         borderTopColor: colors.darkGray,
         borderLeftColor: colors.darkGray,
         flexGrow: 1,
-
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
         marginTop: 8,
         marginBottom: 8,
         overflow: 'hidden',
+        boxSizing: 'border-box',
     },
     contentInner: {
         border: `1px solid ${Colors.lightGray}`,
         borderTopColor: colors.black,
         borderLeftColor: colors.black,
         flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
         overflow: 'hidden',
+        boxSizing: 'border-box',
     },
     content: {
         flex: 1,
-
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
         position: 'relative',
-        // overflow: 'scroll',
         overflowX: 'hidden',
         backgroundColor: Colors.white,
+        boxSizing: 'border-box',
     },
     bottomBar: {
         flexShrink: 1,
