@@ -1,7 +1,6 @@
 import React from 'react';
 import posterImg from '../../assets/pictures/code_rescue_poster.png';
 import mgrLogo from '../../assets/pictures/mgr_university_logo.png';
-import { Link } from 'react-router-dom';
 import ResumeDownload from './ResumeDownload';
 
 export interface AboutProps {}
