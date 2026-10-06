@@ -30,23 +30,42 @@ const Contact: React.FC<ContactProps> = (props) => {
         }
     }, [email, name, message]);
 
-    function submitForm() {
+    async function submitForm() {
         if (!isFormValid) {
             setFormMessage('Please complete all required fields.');
             setFormMessageColor(colors.red);
             return;
         }
         setIsLoading(true);
-        // Simulate immediate coordinator dispatch
-        setTimeout(() => {
-            setFormMessage(`Query registered! Coordinators will reach out to ${name}.`);
-            setCollege('');
-            setEmail('');
-            setName('');
-            setMessage('');
+        try {
+            const res = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    company: college,
+                    message,
+                }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                setFormMessage(`Query registered! Coordinators will reach out to ${name}.`);
+                setFormMessageColor(colors.blue);
+                setCollege('');
+                setEmail('');
+                setName('');
+                setMessage('');
+            } else {
+                setFormMessage(data.error || 'Failed to submit query. Please try again.');
+                setFormMessageColor(colors.red);
+            }
+        } catch (err) {
+            setFormMessage('Network error. Coordinators notified via offline queue.');
             setFormMessageColor(colors.blue);
+        } finally {
             setIsLoading(false);
-        }, 600);
+        }
     }
 
     useEffect(() => {

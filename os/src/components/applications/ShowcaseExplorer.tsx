@@ -44,10 +44,19 @@ const ShowcaseExplorer: React.FC<ShowcaseExplorerProps> = (props) => {
                             element={<SoftwareProjects />}
                         />
                         <Route
+                            path="/projects/round1"
+                            element={<SoftwareProjects />}
+                        />
+                        <Route
                             path="/projects/music"
                             element={<MusicProjects />}
                         />
+                        <Route
+                            path="/projects/round2"
+                            element={<MusicProjects />}
+                        />
                         <Route path="/projects/art" element={<ArtProjects />} />
+                        <Route path="/projects/round3" element={<ArtProjects />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </div>

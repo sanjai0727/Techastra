@@ -161,6 +161,23 @@ const Toolbar: React.FC<ToolbarProps> = ({
                                 style={styles.startMenuOption}
                                 onMouseDown={(e) => {
                                     e.stopPropagation();
+                                    if (openApp) openApp('thiscomputer');
+                                    setStartWindowOpen(false);
+                                }}
+                            >
+                                <Icon
+                                    style={styles.startMenuIcon}
+                                    icon="myComputer"
+                                />
+                                <p style={styles.startMenuText}>
+                                    <u>M</u>y Computer...
+                                </p>
+                            </div>
+                            <div
+                                className="start-menu-option"
+                                style={styles.startMenuOption}
+                                onMouseDown={(e) => {
+                                    e.stopPropagation();
                                     if (openApp) openApp('settings');
                                     setStartWindowOpen(false);
                                 }}

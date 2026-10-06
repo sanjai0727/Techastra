@@ -4,8 +4,8 @@ import ShowcaseExplorer from '../applications/ShowcaseExplorer';
 import Doom from '../applications/Doom';
 import OregonTrail from '../applications/OregonTrail';
 import ShutdownSequence from './ShutdownSequence';
-// import ThisComputer from '../applications/ThisComputer';
 import Henordle from '../applications/Henordle';
+import ThisComputer from '../applications/ThisComputer';
 import Toolbar from './Toolbar';
 import DesktopShortcut, { DesktopShortcutProps } from './DesktopShortcut';
 import Scrabble from '../applications/Scrabble';
@@ -50,6 +50,12 @@ const APPLICATIONS: {
         name: 'Settings',
         shortcutIcon: 'settings',
         component: SettingsApp,
+    },
+    thiscomputer: {
+        key: 'thiscomputer',
+        name: 'My Computer',
+        shortcutIcon: 'myComputer',
+        component: ThisComputer,
     },
     trail: {
         key: 'trail',

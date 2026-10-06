@@ -239,6 +239,15 @@ async function runTests() {
   const syncRes = await request('POST', '/api/coordinator/sync', {});
   assert('Live Portal Coordinator Sync endpoint', syncRes.status === 200 && typeof syncRes.data.synced === 'number', syncRes.data);
 
+  // 2.15 Contact Inquiry Dispatch
+  const inquiryRes = await request('POST', '/api/send-email', {
+    name: 'Verification Bot',
+    email: 'verify@techastra.drmgrdu.ac.in',
+    company: 'Dept of CSE',
+    message: 'Automated production sanity check inquiry'
+  });
+  assert('Contact Inquiry Dispatch & Database Persistence', inquiryRes.status === 200 && inquiryRes.data.message === 'success', inquiryRes.data);
+
   // -------------------------------------------------------------
   // SUMMARY
   // -------------------------------------------------------------

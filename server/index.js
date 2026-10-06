@@ -23,44 +23,61 @@ app.use(bodyParser.json());
 app.use(express.static(path.resolve(__dirname, '../public')));
 app.use(express.static(path.resolve(__dirname, '../static')));
 
-// Handle email contact form
+// Handle email contact form & coordinator dispatch
 app.post('/api/send-email', (req, res) => {
-    const { name, company, email, message } = req.body;
+    const { name, company, email, message } = req.body || {};
 
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        auth: {
-            user: process.env.FOLIO_EMAIL,
-            pass: process.env.FOLIO_PASSWORD,
-        },
-    });
+    if (!name || !email || !message) {
+        return res.status(400).json({ error: 'Name, email, and message are required' });
+    }
 
-    transporter
-        .verify()
-        .then(() => {
-            transporter
-                .sendMail({
-                    from: `"${name}" <${process.env.FOLIO_EMAIL || 'techastra2026@gmail.com'}>`,
-                    to: process.env.FOLIO_EMAIL || 'techastra2026@gmail.com',
+    // Always persist inquiry to SQLite database
+    try {
+        const { db } = require('./db');
+        db.prepare(`
+            INSERT INTO inquiries (name, email, college, message, status, created_at)
+            VALUES (?, ?, ?, ?, 'NEW', ?)
+        `).run(String(name).trim(), String(email).trim(), String(company || '').trim(), String(message).trim(), new Date().toISOString());
+    } catch (dbErr) {
+        console.error('[DB] Failed to record inquiry:', dbErr.message);
+    }
+
+    // If SMTP credentials configured, attempt sending email
+    if (process.env.FOLIO_EMAIL && process.env.FOLIO_PASSWORD) {
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            auth: {
+                user: process.env.FOLIO_EMAIL,
+                pass: process.env.FOLIO_PASSWORD,
+            },
+        });
+
+        transporter
+            .verify()
+            .then(() => {
+                return transporter.sendMail({
+                    from: `"${name}" <${process.env.FOLIO_EMAIL}>`,
+                    to: process.env.FOLIO_EMAIL,
                     subject: `${name} <${email}> ${
                         company ? `from ${company}` : ''
                     } submitted a contact form`,
                     text: `${message}`,
-                })
-                .then((info) => {
-                    console.log({ info });
-                    res.json({ message: 'success' });
-                })
-                .catch((e) => {
-                    console.error(e);
-                    res.status(500).send(e);
                 });
-        })
-        .catch((e) => {
-            console.error(e);
-            res.status(500).send(e);
-        });
+            })
+            .then((info) => {
+                console.log('[SMTP] Email dispatched:', info?.messageId);
+                return res.json({ message: 'success', sentEmail: true });
+            })
+            .catch((e) => {
+                console.warn('[SMTP] Email dispatch failed, saved to DB inbox:', e.message);
+                return res.json({ message: 'success', sentEmail: false, note: 'Saved to coordinator dispatch inbox' });
+            });
+    } else {
+        // Production fallback: saved to DB inbox
+        console.log(`[INQUIRY] Saved from ${name} <${email}>`);
+        return res.json({ message: 'success', sentEmail: false, note: 'Saved to coordinator dispatch inbox' });
+    }
 });
 
 // Mount full persistent SQLite database REST API

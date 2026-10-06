@@ -166,6 +166,17 @@ function initSchema() {
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         );
+
+        -- Contact & Participant Inquiries
+        CREATE TABLE IF NOT EXISTS inquiries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            college TEXT,
+            message TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'NEW',
+            created_at TEXT NOT NULL
+        );
     `);
 
     // Ensure event_ended flag defaults to 0 (scores hidden until event ends)
