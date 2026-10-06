@@ -1,7 +1,6 @@
 import React from 'react';
 import { CompetitionProvider, useCompetition } from './context/CompetitionContext';
 import { Header } from './components/Header';
-import { OrganizerModal } from './components/OrganizerModal';
 import { WelcomePage } from './pages/WelcomePage';
 import { RegistrationPage } from './pages/RegistrationPage';
 import { RulesPage } from './pages/RulesPage';
@@ -9,7 +8,6 @@ import { RoundWorkspacePage } from './pages/RoundWorkspacePage';
 import { RoundResultPage } from './pages/RoundResultPage';
 import { FinalResultPage } from './pages/FinalResultPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { DisqualifiedPage } from './pages/DisqualifiedPage';
 import { ProctoringShield } from './components/ProctoringShield';
 
@@ -30,9 +28,6 @@ const AppContent: React.FC = () => {
       }
       if (state.currentView === 'rules') {
         return <RulesPage />;
-      }
-      if (state.currentView === 'admin_dashboard') {
-        return <AdminDashboardPage />;
       }
       return <DisqualifiedPage />;
     }
@@ -56,8 +51,6 @@ const AppContent: React.FC = () => {
         return <FinalResultPage />;
       case 'leaderboard':
         return <LeaderboardPage />;
-      case 'admin_dashboard':
-        return <AdminDashboardPage />;
       default:
         return <WelcomePage />;
     }
@@ -82,7 +75,6 @@ const AppContent: React.FC = () => {
           {state.securityState?.isDisqualified ? 'DISQUALIFIED' : 'READY'}
         </div>
       </footer>
-      <OrganizerModal />
       <ProctoringShield />
     </div>
   );

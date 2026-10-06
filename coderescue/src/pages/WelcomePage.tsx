@@ -2,7 +2,7 @@ import React from 'react';
 import { useCompetition } from '../context/CompetitionContext';
 
 export const WelcomePage: React.FC = () => {
-  const { setView } = useCompetition();
+  const { state, setView } = useCompetition();
 
   return (
     <div className="w-full max-w-6xl xl:max-w-7xl mx-auto my-auto p-1 sm:p-2 select-none text-black font-sans text-sm">
@@ -120,11 +120,11 @@ export const WelcomePage: React.FC = () => {
           {/* Action Command Bar */}
           <div className="p-3 sm:p-4 bg-[#c0c0c0] flex flex-wrap items-center justify-center gap-3 sm:gap-4 border-t border-[#808080]">
             <button
-              onClick={() => setView('registration')}
+              onClick={() => setView(state.participant ? 'rules' : 'registration')}
               className="site-button active"
               style={{ fontSize: 15, padding: '10px 30px', fontWeight: 'bold', backgroundColor: '#000080', color: '#ffffff' }}
             >
-              ▶ Enter as Contestant &gt;&gt;
+              {state.participant ? `▶ Continue to Arena (${state.participant.fullName}) >>` : '▶ Enter as Contestant >>'}
             </button>
 
             <button
@@ -141,14 +141,6 @@ export const WelcomePage: React.FC = () => {
               style={{ fontSize: 14, padding: '9px 22px', fontWeight: 'bold' }}
             >
               View Live Standings...
-            </button>
-
-            <button
-              onClick={() => setView('admin_dashboard')}
-              className="site-button"
-              style={{ fontSize: 14, padding: '9px 22px', fontWeight: 'bold' }}
-            >
-              Coordinator Command Desk...
             </button>
           </div>
 

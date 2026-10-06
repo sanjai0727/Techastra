@@ -11,7 +11,7 @@ interface LiveContestant {
 }
 
 export const RegistrationPage: React.FC = () => {
-  const { registerParticipant, setView } = useCompetition();
+  const { state, registerParticipant, setView, resetCompetition } = useCompetition();
 
   // Mode: 'login' | 'signup'
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
@@ -310,6 +310,87 @@ export const RegistrationPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  // If candidate is already authenticated, show their verified session card
+  if (state.participant) {
+    return (
+      <div className="w-full max-w-2xl mx-auto my-auto p-2 select-none text-black font-sans text-sm">
+        <div className="win95-dialog-frame shadow-md">
+          {/* Titlebar */}
+          <div className="bg-[#000080] text-white px-2.5 py-1.5 flex items-center justify-between font-bold text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5">
+              <span>🛡️</span>
+              <span>Contestant Session Active — Techastra 2026</span>
+            </div>
+            <button
+              onClick={() => setView('rules')}
+              className="site-button"
+              style={{ padding: '0 5px', height: 18, fontSize: 11, lineHeight: '14px' }}
+              title="Return to Rules"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="p-4 sm:p-6 space-y-4 bg-[#c0c0c0]">
+            <div className="bg-white p-4 border-2 border-[#808080] border-t-black border-l-black space-y-3">
+              <div className="flex items-center justify-between border-b pb-2">
+                <span className="font-bold text-[#006000] text-base flex items-center gap-1.5">
+                  <span>✓</span> You Are Already Authenticated as Contestant
+                </span>
+                <span className="font-mono text-xs font-bold text-[#000080] bg-[#e8f0fe] px-2 py-0.5 border border-[#1a73e8]">
+                  {state.participant.participantId}
+                </span>
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-600">Contestant Full Name:</div>
+                <div className="text-xl font-bold text-gray-900">{state.participant.fullName}</div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-700">
+                <div><b>Institution:</b> {state.participant.college || 'Dr. M.G.R. Educational and Research Institute'}</div>
+                <div><b>Department:</b> {state.participant.department || 'Computer Science and Engineering'}</div>
+              </div>
+
+              <div className="p-2.5 bg-[#f0fff0] border border-[#a0c0a0] text-xs text-[#006000] font-semibold flex items-center gap-2">
+                <span>●</span>
+                <span>Your session is authenticated with the official Techastra portal. You are ready to compete.</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-[#808080]">
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Log out current contestant session and register/login with a different token?')) {
+                    sessionStorage.clear();
+                    localStorage.removeItem('cr_portal_verified');
+                    localStorage.removeItem('cr_pending_token');
+                    localStorage.removeItem('code_rescue_contest_state_v1');
+                    window.location.reload();
+                  }
+                }}
+                className="site-button"
+                style={{ fontSize: 13, padding: '7px 18px' }}
+              >
+                🔄 Switch Contestant / Logout
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setView('rules')}
+                className="site-button active bg-[#000080] text-white font-bold"
+                style={{ fontSize: 15, padding: '9px 28px' }}
+              >
+                ▶ Continue to Championship Rules &amp; Arena &gt;&gt;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl xl:max-w-5xl mx-auto my-auto p-1 sm:p-2 select-none text-black font-sans text-sm">

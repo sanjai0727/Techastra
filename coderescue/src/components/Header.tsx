@@ -9,8 +9,6 @@ export const Header: React.FC = () => {
   const {
     state,
     setView,
-    setOrganizerMode,
-    organizerSetTimer,
     getCurrentRoundScore,
     getCurrentRoundQuestions,
     disqualifyContestant
@@ -80,13 +78,6 @@ export const Header: React.FC = () => {
           >
             <u>S</u>tandings
           </span>
-          <span
-            onClick={() => handleNavClick('admin_dashboard')}
-            className={`win95-menu-item ${currentView === 'admin_dashboard' ? 'active' : ''}`}
-            title="Coordinator Command Desk"
-          >
-            <u>C</u>oordinator
-          </span>
 
           {isWorkspace && (
             <span className="win95-badge cyber-pill-cyan font-bold ml-2">
@@ -101,22 +92,16 @@ export const Header: React.FC = () => {
             <>
               {/* Sunken LCD Timer */}
               <div
-                onClick={() => {
-                  if (isTimerExpired) {
-                    const dur = (currentRound === 1 ? 20 : currentRound === 2 ? 25 : 40) * 60;
-                    organizerSetTimer(currentRound, dur);
-                  }
-                }}
-                className={`win95-status-panel font-mono font-bold ${isTimerExpired ? 'cursor-pointer hover:underline' : ''}`}
+                className="win95-status-panel font-mono font-bold"
                 style={{
                   backgroundColor: '#000000',
                   color: isTimerExpired ? '#ff3333' : isTimerCritical ? '#ffcc00' : '#00ff66',
                   fontSize: 11,
                   padding: '1px 6px'
                 }}
-                title={isTimerExpired ? "Timer Expired! Click to Reset to full round duration" : "Countdown Timer"}
+                title="Round Countdown Timer"
               >
-                ⏱ {isTimerExpired ? 'EXPIRED (Click Reset)' : formattedTime}
+                ⏱ {isTimerExpired ? '00:00 (EXPIRED)' : formattedTime}
               </div>
 
               {/* Sunken Score Panel */}
@@ -127,8 +112,31 @@ export const Header: React.FC = () => {
           )}
 
           {participant && (
-            <div className="win95-status-panel font-mono truncate max-w-[150px] text-[11px] py-0.5 px-1.5 hidden md:block">
-              {participant.fullName}
+            <div className="flex items-center gap-1">
+              <div
+                className="win95-status-panel font-mono truncate max-w-[150px] text-[11px] py-0.5 px-1.5 cursor-pointer hover:bg-white"
+                title={`Contestant: ${participant.fullName} (${participant.participantId}) - Click to view Rules`}
+                onClick={() => setView('rules')}
+              >
+                👤 {participant.fullName}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm(`Log out contestant ${participant.fullName}?`)) {
+                    sessionStorage.clear();
+                    localStorage.removeItem('cr_portal_verified');
+                    localStorage.removeItem('cr_pending_token');
+                    localStorage.removeItem('code_rescue_contest_state_v1');
+                    window.location.reload();
+                  }
+                }}
+                className="site-button"
+                style={{ padding: '0 5px', height: 19, fontSize: 10, lineHeight: '15px' }}
+                title="Log out current contestant session"
+              >
+                Logout
+              </button>
             </div>
           )}
 

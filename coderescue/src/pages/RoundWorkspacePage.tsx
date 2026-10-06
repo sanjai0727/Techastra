@@ -14,8 +14,6 @@ export const RoundWorkspacePage: React.FC = () => {
     runVisibleTests,
     submitSolution,
     finalizeRound,
-    devAutoSolveCurrentQuestion,
-    devSkipToNextRound,
     getCurrentRoundQuestions,
   } = useCompetition();
 
@@ -106,37 +104,9 @@ export const RoundWorkspacePage: React.FC = () => {
           })}
         </div>
 
-        {/* Right Actions: Dev Controls & Finish Round */}
+        {/* Right Actions: Finish Round */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Dev: Auto-Solve Current Question */}
-          <button
-            onClick={() => {
-              devAutoSolveCurrentQuestion();
-              const existingSubs = submissions[currentQuestion.id] || [];
-              if (existingSubs.length > 0) {
-                setLastResult(existingSubs[0].result);
-              }
-            }}
-            className="site-button"
-            style={{ fontSize: 11, padding: '2px 8px' }}
-            title="Auto-submits correct solution for this question"
-          >
-            ⚡ Auto-Solve Q{currentQuestion.number}
-          </button>
-
-          {/* Dev: Skip/Complete Round */}
-          <button
-            onClick={() => devSkipToNextRound(true)}
-            className="site-button"
-            style={{ fontSize: 11, padding: '2px 8px' }}
-            title="Auto-solves all remaining questions in this round"
-          >
-            Skip Round &gt;&gt;
-          </button>
-
-          <div className="h-4 w-px bg-[#808080] border-r border-[#ffffff] mx-0.5" />
-
-          {/* Finish Round Normally */}
+          {/* Finish Round */}
           <button
             onClick={() => setShowFinishConfirm(true)}
             className="site-button active font-bold"

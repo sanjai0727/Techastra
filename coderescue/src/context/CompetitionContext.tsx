@@ -38,8 +38,6 @@ interface CompetitionContextType {
   getCurrentRoundQuestions: () => Question[];
   getCurrentRoundScore: () => number;
   getTotalScore: () => number;
-  devSkipToNextRound: (directToWorkspace?: boolean) => void;
-  devAutoSolveCurrentQuestion: () => void;
   recordTabSwitch: () => void;
   dismissTabSwitchWarning: () => void;
   triggerClipboardWarning: (message: string) => void;
@@ -400,127 +398,6 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     }));
   };
 
-  const devAutoSolveCurrentQuestion = () => {
-    const questions = getCurrentRoundQuestions();
-    const currentQ = questions.find(q => q.id === state.activeQuestionId) || questions[0];
-    if (!currentQ) return;
-
-    const solution = currentQ.solutionCode;
-
-    const result: ExecutionResult = {
-      status: 'ACCEPTED',
-      visiblePassed: currentQ.visibleTests.length,
-      visibleTotal: currentQ.visibleTests.length,
-      hiddenPassed: currentQ.hiddenTests.length,
-      hiddenTotal: currentQ.hiddenTests.length,
-      output: `>>> python3 solution.py\n✓ [DEV AUTO-SOLVE] Verified solution against all visible and hidden tests.\n★ STATUS: ACCEPTED (+${currentQ.points} Points)\n`,
-      executionTimeMs: 22,
-      testResults: [
-        ...currentQ.visibleTests.map(t => ({
-          testId: t.id,
-          passed: true,
-          input: t.input,
-          expected: t.expectedOutput,
-          actual: t.expectedOutput,
-          isHidden: false,
-          description: t.description
-        })),
-        ...currentQ.hiddenTests.map(t => ({
-          testId: t.id,
-          passed: true,
-          input: t.input,
-          expected: t.expectedOutput,
-          actual: t.expectedOutput,
-          isHidden: true,
-          description: t.description
-        }))
-      ]
-    };
-
-    const sub: Submission = {
-      id: `dev-${Date.now()}`,
-      questionId: currentQ.id,
-      round: currentQ.round,
-      code: solution,
-      timestamp: Date.now(),
-      attemptNumber: (state.submissions[currentQ.id]?.length || 0) + 1,
-      result,
-      scoreEarned: currentQ.points
-    };
-
-    setState(prev => ({
-      ...prev,
-      codeBuffers: {
-        ...prev.codeBuffers,
-        [currentQ.id]: solution
-      },
-      submissions: {
-        ...prev.submissions,
-        [currentQ.id]: [sub, ...(prev.submissions[currentQ.id] || [])]
-      },
-      bestScores: {
-        ...prev.bestScores,
-        [currentQ.id]: currentQ.points
-      }
-    }));
-
-    try {
-      confetti({ particleCount: 50, spread: 60 });
-    } catch (e) {}
-  };
-
-  const devSkipToNextRound = (directToWorkspace: boolean = false) => {
-    const questions = getCurrentRoundQuestions();
-    const updatedScores = { ...state.bestScores };
-    const updatedBuffers = { ...state.codeBuffers };
-    const updatedSubs = { ...state.submissions };
-
-    questions.forEach(q => {
-      updatedScores[q.id] = q.points;
-      updatedBuffers[q.id] = q.solutionCode;
-      if (!updatedSubs[q.id] || updatedSubs[q.id].length === 0) {
-        updatedSubs[q.id] = [{
-          id: `dev-skip-${Date.now()}-${q.id}`,
-          questionId: q.id,
-          round: q.round,
-          code: q.solutionCode,
-          timestamp: Date.now(),
-          attemptNumber: 1,
-          result: {
-            status: 'ACCEPTED',
-            visiblePassed: q.visibleTests.length,
-            visibleTotal: q.visibleTests.length,
-            hiddenPassed: q.hiddenTests.length,
-            hiddenTotal: q.hiddenTests.length,
-            output: '✓ Dev Quick-Solved for Qualification testing',
-            executionTimeMs: 15,
-            testResults: []
-          },
-          scoreEarned: q.points
-        }];
-      }
-    });
-
-    setState(prev => ({
-      ...prev,
-      bestScores: updatedScores,
-      codeBuffers: updatedBuffers,
-      submissions: updatedSubs
-    }));
-
-    if (directToWorkspace) {
-      if (state.currentRound === 1) {
-        startRound(2);
-      } else if (state.currentRound === 2) {
-        startRound(3);
-      } else {
-        finalizeRound(3);
-      }
-    } else {
-      finalizeRound(state.currentRound);
-    }
-  };
-
   const recordTabSwitch = useCallback(() => {
     setState(prev => {
       if (prev.securityState?.isDisqualified || !prev.currentView.includes('workspace')) {
@@ -725,8 +602,6 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         getCurrentRoundQuestions,
         getCurrentRoundScore,
         getTotalScore,
-        devSkipToNextRound,
-        devAutoSolveCurrentQuestion,
         recordTabSwitch,
         dismissTabSwitchWarning,
         triggerClipboardWarning,
