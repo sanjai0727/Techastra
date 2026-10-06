@@ -1,0 +1,265 @@
+/* ==========================================================================
+   TECHASTRA 2026 — CODE RESCUE ARENA HIGH READABILITY OVERRIDES
+   Sharp, large, high-contrast UI for competition stages, directive, & BSOD
+   ========================================================================== */
+
+/* Eliminate duplicate inner status bar to prevent stacked status bars with outer OS window */
+footer.win95-statusbar {
+    display: none !important;
+}
+
+/* Overall container scale */
+.max-w-4xl, .max-w-3xl, .max-w-2xl, .max-w-xl, .max-w-lg, .max-w-md {
+    max-width: 98% !important;
+    width: 98% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+body {
+    font-size: 14.5px !important;
+    line-height: 1.5 !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Base font classes */
+.text-xs {
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+}
+
+.text-\[10px\], .text-\[11px\] {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+}
+
+.text-sm {
+    font-size: 15px !important;
+}
+
+.text-base {
+    font-size: 16px !important;
+}
+
+.text-lg {
+    font-size: 19px !important;
+}
+
+.text-xl {
+    font-size: 22px !important;
+}
+
+.text-2xl {
+    font-size: 26px !important;
+}
+
+.text-3xl {
+    font-size: 32px !important;
+}
+
+/* Institutional Header in Arena */
+.bg-white.p-2\.5 {
+    padding: 12px 18px !important;
+}
+
+.bg-white.p-2\.5 img {
+    height: 48px !important;
+}
+
+.bg-white.p-2\.5 .text-right p {
+    font-size: 13.5px !important;
+    line-height: 1.35 !important;
+}
+
+/* Directive Section */
+legend.win95-legend, .win95-legend {
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    padding: 2px 10px !important;
+    letter-spacing: 0.5px !important;
+}
+
+.win95-sunken p {
+    font-size: 14.5px !important;
+    line-height: 1.6 !important;
+    color: #111111 !important;
+}
+
+/* Badges & Pills */
+.win95-badge, .cyber-pill {
+    font-size: 13px !important;
+    padding: 3px 9px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Championship Stages (Round 1, 2, 3 cards) */
+.win95-sunken .text-\[\#000080\] {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 6px !important;
+}
+
+.win95-sunken .text-gray-900 {
+    font-size: 13.5px !important;
+    line-height: 1.45 !important;
+    color: #222222 !important;
+}
+
+.win95-sunken .font-mono {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+}
+
+.win95-sunken .font-mono b {
+    font-weight: 800 !important;
+}
+
+/* Buttons */
+.site-button, .win95-btn, button {
+    font-size: 14px !important;
+    min-height: 28px !important;
+    padding: 4px 16px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+/* ==========================================================================
+   BLUE SCREEN OF DEATH (BSOD) / SECURITY LOCKOUT HIGH READABILITY
+   ========================================================================== */
+
+/* BSOD Lockout Top Notice */
+.bg-\[\#a00000\] {
+    font-size: 15px !important;
+    padding: 6px 16px !important;
+    letter-spacing: 1px !important;
+    font-weight: 800 !important;
+}
+
+/* WORKSTATION SESSION TERMINATED Banner */
+h1.text-yellow-300 {
+    font-size: 26px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.8px !important;
+    margin-top: 8px !important;
+    margin-bottom: 6px !important;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.4) !important;
+}
+
+/* Sub-banner text */
+.text-white\/80 {
+    font-size: 13.5px !important;
+}
+
+/* Lockout card */
+.bg-\[\#000055\] {
+    padding: 16px 20px !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.bg-\[\#000055\] .text-red-400 {
+    font-size: 15.5px !important;
+    font-weight: 800 !important;
+    margin-bottom: 8px !important;
+}
+
+.bg-\[\#000055\] .text-white\/90 {
+    font-size: 14.5px !important;
+    line-height: 1.55 !important;
+}
+
+/* Contestant info table */
+.bg-black\/40 {
+    padding: 12px 16px !important;
+    font-size: 14.5px !important;
+    gap: 8px !important;
+}
+
+.bg-black\/40 b, .bg-black\/40 span {
+    font-size: 14.5px !important;
+}
+
+/* Proctor reason callout */
+.bg-\[\#400000\] {
+    font-size: 15.5px !important;
+    padding: 10px 16px !important;
+    font-weight: 800 !important;
+    line-height: 1.45 !important;
+}
+
+/* Audit logs */
+.bg-\[\#000044\], .font-mono {
+    font-size: 13.5px !important;
+    line-height: 1.5 !important;
+}
+
+/* Bottom status bar */
+.win95-statusbar, .win95-status-panel {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   AUTHENTIC WINDOWS 95 BSOD (BLUE SCREEN OF DEATH)
+   ========================================================================== */
+
+.win95-bsod-screen {
+    background-color: #0000aa !important;
+    color: #ffffff !important;
+    font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 30px !important;
+    box-sizing: border-box !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    text-shadow: none !important;
+}
+
+.win95-bsod-badge {
+    background-color: #a8a8a8 !important;
+    color: #000000 !important;
+    padding: 2px 18px !important;
+    font-weight: bold !important;
+    font-size: 16px !important;
+    display: inline-block !important;
+    margin-bottom: 28px !important;
+    letter-spacing: 1px !important;
+    font-family: 'Courier New', Courier, monospace !important;
+}
+
+.win95-bsod-body {
+    max-width: 680px !important;
+    width: 100% !important;
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+    color: #ffffff !important;
+}
+
+.win95-bsod-prompt {
+    margin-top: 28px !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-size: 16px !important;
+}
+
+.win95-bsod-cursor {
+    display: inline-block !important;
+    width: 12px !important;
+    height: 3px !important;
+    background-color: #ffffff !important;
+    vertical-align: bottom !important;
+    margin-left: 2px !important;
+    animation: bsod-blink 0.8s infinite !important;
+}
+
+@keyframes bsod-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+

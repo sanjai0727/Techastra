@@ -130,6 +130,39 @@ body {
     animation: none !important;
 }
 
+#fs-exit-btn {
+    display: none;
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 100000;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1.5px solid #00ff66;
+    color: #00ff66;
+    font-family: Consolas, Courier New, monospace;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 7px 16px;
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(0, 255, 102, 0.4);
+    letter-spacing: 0.08em;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.fullscreen-os-active #fs-exit-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#fs-exit-btn:hover {
+    background: #003311;
+    border-color: #33ff88;
+    box-shadow: 0 0 16px rgba(0, 255, 102, 0.75);
+    transform: scale(1.02);
+}
+
 
 h1,
 h2,
