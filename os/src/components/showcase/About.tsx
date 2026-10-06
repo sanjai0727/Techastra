@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import posterImg from '../../assets/pictures/code_rescue_poster.png';
 import mgrLogo from '../../assets/pictures/mgr_university_logo.png';
 import ResumeDownload from './ResumeDownload';
