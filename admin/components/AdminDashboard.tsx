@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Participant, Submission, AdminUser } from '../types';
 import { ParticipantService } from '../services/participantService';
+import { RealtimeService, StreamConnectionStatus } from '../services/realtimeService';
 import { OverviewCards } from './OverviewCards';
 import { LiveParticipantMonitor } from './LiveParticipantMonitor';
 import { ParticipantDetailModal } from './ParticipantDetailModal';
@@ -16,8 +17,9 @@ import { SubmissionsPanel } from './SubmissionsPanel';
 import { RoundManagement } from './RoundManagement';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 import { ReportsPanel } from './ReportsPanel';
+import { LiveScreensMatrix } from './LiveScreensMatrix';
 
-type DashboardTab = 'participants' | 'proctoring' | 'submissions' | 'rounds' | 'announcements' | 'reports';
+type DashboardTab = 'participants' | 'screens' | 'proctoring' | 'submissions' | 'rounds' | 'announcements' | 'reports';
 
 interface AdminDashboardProps {
     user: AdminUser;
@@ -29,8 +31,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
     const [participants, setParticipants] = useState<Participant[]>(ParticipantService.getParticipants());
     const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
     const [inspectedSubmission, setInspectedSubmission] = useState<Submission | null>(null);
+    const [streamStatus, setStreamStatus] = useState<StreamConnectionStatus>('CONNECTING');
 
     useEffect(() => {
+        // Initialize Realtime SSE Stream
+        RealtimeService.init();
+        const unsubsStatus = RealtimeService.subscribeStatus((st) => setStreamStatus(st));
+
         const unsubscribe = ParticipantService.subscribe((updated) => {
             setParticipants(updated);
             if (selectedParticipant) {
@@ -38,7 +45,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                 if (refreshed) setSelectedParticipant(refreshed);
             }
         });
-        return unsubscribe;
+        return () => {
+            unsubsStatus();
+            unsubscribe();
+        };
     }, [selectedParticipant]);
 
     const handleFlag = (id: string) => {
@@ -65,7 +75,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, fontWeight: 'bold', color: '#0d652d' }}>● SYSTEM ONLINE</span>
+                    {streamStatus === 'CONNECTED' ? (
+                        <span style={{ fontSize: 11, fontWeight: 'bold', color: '#0d652d', backgroundColor: '#e6f4ea', padding: '2px 8px', border: '1px solid #137333' }}>
+                            🟢 REAL-TIME STREAM ACTIVE (0ms)
+                        </span>
+                    ) : streamStatus === 'CONNECTING' ? (
+                        <span style={{ fontSize: 11, fontWeight: 'bold', color: '#b06000', backgroundColor: '#fef7e0', padding: '2px 8px', border: '1px solid #b06000' }}>
+                            🟡 CONNECTING STREAM...
+                        </span>
+                    ) : (
+                        <span style={{ fontSize: 11, fontWeight: 'bold', color: '#c5221f', backgroundColor: '#fce8e6', padding: '2px 8px', border: '1px solid #c5221f' }}>
+                            🔴 OFFLINE (POLLING ACTIVE)
+                        </span>
+                    )}
                     <span style={{ fontSize: 12, color: '#333' }}>
                         Coordinator: <b>{user.username}</b>
                     </span>
@@ -89,6 +111,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     onClick={() => setActiveTab('participants')}
                 >
                     👥 Live Monitor ({participants.length})
+                </button>
+                <button
+                    className={`admin-tab-btn ${activeTab === 'screens' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('screens')}
+                >
+                    🖥️ Live Screens Matrix
                 </button>
                 <button
                     className={`admin-tab-btn ${activeTab === 'proctoring' ? 'active' : ''}`}
@@ -131,6 +159,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     <LiveParticipantMonitor
                         participants={participants}
                         onSelectParticipant={(p) => setSelectedParticipant(p)}
+                    />
+                </div>
+            )}
+
+            {activeTab === 'screens' && (
+                <div>
+                    <LiveScreensMatrix
+                        onSelectParticipant={(p) => {
+                            setSelectedParticipant(p);
+                            setActiveTab('participants');
+                        }}
                     />
                 </div>
             )}

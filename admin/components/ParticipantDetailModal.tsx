@@ -3,9 +3,10 @@
 // Full breakdown of scores, submissions, security audit, and coordinator actions.
 // ============================================================================
 
-import React from 'react';
-import { Participant, Submission } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Participant, Submission, LiveScreenData } from '../types';
 import { SubmissionService } from '../services/submissionService';
+import { LiveScreenService } from '../services/liveScreenService';
 
 interface ParticipantDetailModalProps {
     participant: Participant;
@@ -23,6 +24,25 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
     onViewSubmission,
 }) => {
     const submissions = SubmissionService.getSubmissionsByParticipant(participant.id);
+    const [liveScreen, setLiveScreen] = useState<LiveScreenData | undefined>(LiveScreenService.getScreen(participant.id));
+
+    useEffect(() => {
+        const unsub = LiveScreenService.subscribeToParticipant(participant.id, (screen) => {
+            setLiveScreen(screen);
+        });
+        return () => unsub();
+    }, [participant.id]);
+
+    const formatRemaining = (seconds: number) => {
+        const s = Math.max(0, seconds);
+        const mm = Math.floor(s / 60);
+        const ss = s % 60;
+        return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+    };
+
+    const curTimeRemaining = liveScreen ? liveScreen.timeRemaining : (participant.timeRemaining || 0);
+    const curCode = liveScreen?.code || participant.currentCode || '';
+    const curQuestion = liveScreen?.questionTitle || participant.currentQuestion;
 
     return (
         <div className="admin-box" style={{ marginTop: 16, backgroundColor: '#f0f0f0' }}>
@@ -53,8 +73,20 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                     <div style={{ fontSize: 12, lineHeight: 1.6 }}>
                         <div><b>Round:</b> {participant.currentRound} ({participant.currentQuestion})</div>
                         <div><b>Current Score:</b> {participant.score}/{participant.currentRound === 'R1' ? 10 : (participant.currentRound === 'R2' ? 20 : 5)}</div>
-                        <div><b>Elapsed Time:</b> {participant.time}</div>
-                        <div><b>Connection:</b> {participant.sessionActive ? '🟢 Connected' : '🔴 Inactive / Blocked'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                            <b>Timer:</b>
+                            <span style={{
+                                fontFamily: 'Consolas, monospace',
+                                fontWeight: 'bold',
+                                color: curTimeRemaining <= 120 ? '#c5221f' : '#0d652d',
+                                backgroundColor: curTimeRemaining <= 120 ? '#fce8e6' : '#e6f4ea',
+                                padding: '1px 6px',
+                                border: '1px solid #ccc',
+                            }}>
+                                ⏱ {formatRemaining(curTimeRemaining)} remaining
+                            </span>
+                        </div>
+                        <div><b>Connection:</b> {participant.sessionActive ? '🟢 Connected (0ms stream)' : '🔴 Inactive / Blocked'}</div>
                     </div>
                 </div>
 
@@ -68,6 +100,45 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                             TOTAL SCORE: {participant.scores.total} / 35 marks
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Real-Time Live Screen & Keystroke Mirror */}
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #ccc', padding: 10, marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: 12, color: '#000080', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', backgroundColor: '#00ff66', boxShadow: '0 0 5px #00ff66' }} />
+                        <span>REAL-TIME WORKSTATION CODE MIRROR (LIVE SCREEN)</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: '#555', fontFamily: 'monospace' }}>
+                        {curCode ? `${curCode.split('\n').length} lines • ${curCode.length} chars` : '0 lines'}
+                    </span>
+                </div>
+
+                <div style={{ fontSize: 11, color: '#333', marginBottom: 6 }}>
+                    Active Work Order: <b>[{liveScreen?.roundId || participant.currentRound}] {curQuestion}</b>
+                </div>
+
+                <div style={{
+                    backgroundColor: '#1e1e1e',
+                    color: '#00ff66',
+                    fontFamily: 'Consolas, "Courier New", monospace',
+                    fontSize: 12,
+                    padding: 10,
+                    height: 160,
+                    overflowY: 'auto',
+                    lineHeight: 1.4,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-all',
+                    border: '1px solid #000',
+                }}>
+                    {curCode ? (
+                        curCode
+                    ) : (
+                        <span style={{ color: '#888', fontStyle: 'italic' }}>
+                            # Waiting for participant keystrokes on this workstation...
+                        </span>
+                    )}
                 </div>
             </div>
 

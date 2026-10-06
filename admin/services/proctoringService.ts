@@ -1,18 +1,61 @@
 // ============================================================================
 // PROCTORING SERVICE — TECHASTRA 2026 ADMIN PORTAL
-// Tracks proctoring audit events, strikes (0=CLEAN, 1=WARNING, 2+=FLAGGED),
-// with coordinator actions: REINSTATE SESSION & FLAG PARTICIPANT.
+// Tracks live proctoring audit events and strikes directly from SQLite DB.
+// Zero demo proctoring events — instant real-time security alerts.
 // ============================================================================
 
 import { SecurityEvent } from '../types';
-import { DEMO_PROCTORING_EVENTS } from '../data/demoProctoring';
 import { ParticipantService } from './participantService';
 
 export class ProctoringService {
-    private static events: SecurityEvent[] = [...DEMO_PROCTORING_EVENTS];
+    private static events: SecurityEvent[] = [];
     private static listeners: Array<(events: SecurityEvent[]) => void> = [];
+    private static isPolling: boolean = false;
+    private static pollInterval: any = null;
+
+    public static init(): void {
+        if (this.isPolling) return;
+        this.isPolling = true;
+
+        this.fetchEvents();
+        if (typeof window !== 'undefined') {
+            this.pollInterval = setInterval(() => {
+                this.fetchEvents();
+            }, 4000);
+        }
+    }
+
+    public static setEvents(list: SecurityEvent[]): void {
+        if (!Array.isArray(list)) return;
+        this.events = list;
+        this.notify();
+    }
+
+    public static addEvent(event: SecurityEvent): void {
+        if (!event || !event.id) return;
+        const exists = this.events.some(e => e.id === event.id);
+        if (!exists) {
+            this.events = [event, ...this.events];
+            this.notify();
+        }
+    }
+
+    public static fetchEvents(): void {
+        if (typeof fetch === 'undefined') return;
+
+        fetch('/api/telemetry/events')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data && Array.isArray(data.events)) {
+                    this.events = data.events;
+                    this.notify();
+                }
+            })
+            .catch(() => {});
+    }
 
     public static getEvents(): SecurityEvent[] {
+        this.init();
         return [...this.events];
     }
 
@@ -41,54 +84,26 @@ export class ProctoringService {
     }
 
     public static flagParticipant(participantId: string, reason?: string): void {
-        const participant = ParticipantService.getParticipantById(participantId);
-        const name = participant ? participant.name : participantId;
-
-        const newEvent: SecurityEvent = {
-            id: `SEC-${Date.now().toString().slice(-4)}`,
-            participantId,
-            participantName: name,
-            eventType: 'WINDOW_BLUR',
-            description: reason || 'Coordinator manually applied FLAGGED status for malpractice review',
-            timestamp: new Date().toTimeString().split(' ')[0],
-            strikeCount: 2,
-            status: 'FLAGGED',
-        };
-
-        this.events = [newEvent, ...this.events];
         ParticipantService.flagParticipant(participantId, reason);
-        this.notify();
+        setTimeout(() => this.fetchEvents(), 300);
     }
 
     public static reinstateSession(participantId: string): void {
-        const participant = ParticipantService.getParticipantById(participantId);
-        const name = participant ? participant.name : participantId;
-
-        const newEvent: SecurityEvent = {
-            id: `SEC-${Date.now().toString().slice(-4)}`,
-            participantId,
-            participantName: name,
-            eventType: 'WINDOW_BLUR',
-            description: 'Coordinator cleared strikes and reinstated session',
-            timestamp: new Date().toTimeString().split(' ')[0],
-            strikeCount: 0,
-            status: 'CLEAN',
-        };
-
-        this.events = [newEvent, ...this.events];
         ParticipantService.reinstateSession(participantId);
-        this.notify();
+        setTimeout(() => this.fetchEvents(), 300);
     }
 
     public static subscribe(listener: (events: SecurityEvent[]) => void): () => void {
+        this.init();
         this.listeners.push(listener);
+        listener([...this.events]);
         return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
+            this.listeners = this.listeners.filter((l) => l !== listener);
         };
     }
 
     private static notify(): void {
         const copy = [...this.events];
-        this.listeners.forEach(l => l(copy));
+        this.listeners.forEach((l) => l(copy));
     }
 }

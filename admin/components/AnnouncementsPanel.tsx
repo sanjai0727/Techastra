@@ -125,15 +125,23 @@ export const AnnouncementsPanel: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {announcements.map((a) => (
-                            <tr key={a.id}>
-                                <td style={{ fontFamily: 'monospace' }}>{a.timestamp}</td>
-                                <td><b>{a.author}</b></td>
-                                <td><span className="status-badge status-badge-ACTIVE">{a.roundTarget}</span></td>
-                                <td>{a.message}</td>
-                                <td><span className="status-badge status-badge-QUALIFIED">SENT</span></td>
+                        {announcements.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: '#555' }}>
+                                    No announcements broadcast yet. Dispatch announcements above to send alerts to all active contestant workstations.
+                                </td>
                             </tr>
-                        ))}
+                        ) : (
+                            announcements.map((a) => (
+                                <tr key={a.id}>
+                                    <td style={{ fontFamily: 'monospace' }}>{a.timestamp}</td>
+                                    <td><b>{a.author}</b></td>
+                                    <td><span className="status-badge status-badge-ACTIVE">{a.roundTarget}</span></td>
+                                    <td>{a.message}</td>
+                                    <td><span className="status-badge status-badge-QUALIFIED">SENT</span></td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

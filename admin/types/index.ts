@@ -35,6 +35,9 @@ export interface Participant {
     score: number; // Current round score
     totalScore: number;
     time: string; // Elapsed or remaining, e.g. '18:42'
+    timeRemaining?: number; // Raw seconds remaining
+    lastKeystrokeAt?: number;
+    currentCode?: string;
     status: ParticipantStatus;
     strikes: number;
     lastEvent: string;
@@ -42,6 +45,23 @@ export interface Participant {
     sessionActive: boolean;
     submissionsCount: number;
     securityEventsCount: number;
+}
+
+export interface LiveScreenData {
+    participantId: string;
+    participantName: string;
+    roundId: string;
+    questionId: string;
+    questionTitle: string;
+    code: string;
+    timeRemaining: number;
+    lastKeystrokeAt: number;
+    college?: string;
+    department?: string;
+    status?: string;
+    strikes?: number;
+    score?: number;
+    totalScore?: number;
 }
 
 export interface SecurityEvent {

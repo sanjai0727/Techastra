@@ -93,8 +93,10 @@ export const LiveParticipantMonitor: React.FC<LiveParticipantMonitorProps> = ({
                     <tbody>
                         {filtered.length === 0 ? (
                             <tr>
-                                <td colSpan={11} style={{ textAlign: 'center', padding: '16px', color: '#666' }}>
-                                    No participants matched the current filter.
+                                <td colSpan={11} style={{ textAlign: 'center', padding: '24px', color: '#555' }}>
+                                    {participants.length === 0
+                                        ? 'No participants enrolled yet. Live contestant data will populate as participants register.'
+                                        : 'No participants matched the current filter.'}
                                 </td>
                             </tr>
                         ) : (
@@ -111,7 +113,18 @@ export const LiveParticipantMonitor: React.FC<LiveParticipantMonitorProps> = ({
                                         <td>{p.currentQuestion}</td>
                                         <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{p.score}/{rMax}</td>
                                         <td style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#000080' }}>{p.totalScore}/35</td>
-                                        <td style={{ fontFamily: 'monospace' }}>{p.time}</td>
+                                        <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                                            <span style={{
+                                                padding: '2px 6px',
+                                                backgroundColor: (p.timeRemaining !== undefined && p.timeRemaining <= 120) ? '#fce8e6' : '#f0f0f0',
+                                                color: (p.timeRemaining !== undefined && p.timeRemaining <= 120) ? '#c5221f' : '#000',
+                                                border: '1px solid #ccc',
+                                                borderRadius: 2,
+                                                fontSize: 11,
+                                            }}>
+                                                ⏱ {p.time}
+                                            </span>
+                                        </td>
                                         <td>
                                             <span className={`status-badge status-badge-${p.status}`}>
                                                 {p.status}

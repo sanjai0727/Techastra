@@ -19,3 +19,9 @@ dist_unified/
 *old.jpg
 *.bak
 scratch/
+
+# Database files
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.sqlite

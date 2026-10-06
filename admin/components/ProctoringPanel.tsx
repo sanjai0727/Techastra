@@ -103,8 +103,15 @@ export const ProctoringPanel: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {events.map((evt) => (
-                            <tr key={evt.id}>
+                        {events.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: '#555' }}>
+                                    No security violations or proctoring alerts recorded. All participant workstations operating cleanly.
+                                </td>
+                            </tr>
+                        ) : (
+                            events.map((evt) => (
+                                <tr key={evt.id}>
                                 <td>
                                     <b>{evt.participantName}</b>
                                     <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#555' }}>{evt.participantId}</div>
@@ -139,7 +146,7 @@ export const ProctoringPanel: React.FC = () => {
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                        )))}
                     </tbody>
                 </table>
             </div>

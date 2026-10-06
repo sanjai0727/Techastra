@@ -23,7 +23,7 @@ p b, strong {
 }
 
 /* Headings in Dossier */
-h1 {
+.site-page-content h1 {
     font-size: 42px !important;
     font-weight: 900 !important;
     line-height: 1.15 !important;
@@ -205,4 +205,263 @@ div[style*="shortcutContainer"] p, div[style*="shortcutContainer"] span {
     height: 26px !important;
     min-width: 80px !important;
     font-weight: 600 !important;
+}
+
+
+/* ==========================================================================
+   Restored Text Colors & High Readability
+   ========================================================================== */
+p {
+    color: #000000;
+}
+
+.site-page-content p {
+    color: #111111 !important;
+}
+
+.showcase-header {
+    color: #ffffff !important;
+}
+
+div[style*="shortcutContainer"] p,
+div[style*="shortcutContainer"] span {
+    color: #ffffff !important;
+    text-shadow: 1px 1px 2px #000000 !important;
+}
+
+.router-link {
+    color: #000080 !important;
+}
+
+.router-link:hover {
+    color: #cc0000 !important;
+}
+
+/* ==========================================================================
+   Coordinators & Leadership Card Grid Fix
+   ========================================================================== */
+.coordinator-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+    margin-bottom: 24px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.coordinator-card,
+.coordinator-grid > div {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 300px !important;
+    min-width: 280px !important;
+    max-width: 100% !important;
+    background-color: #ffffff !important;
+    border: 2px solid #000080 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+    padding: 16px 20px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+}
+
+.coordinator-role-title,
+.coordinator-card > h4,
+.coordinator-grid > div > h4 {
+    display: block !important;
+    width: 100% !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: #000080 !important;
+    border-bottom: 2px solid #808080 !important;
+    padding-bottom: 6px !important;
+    margin: 0 0 14px 0 !important;
+    text-align: left !important;
+    letter-spacing: 0.5px !important;
+    box-sizing: border-box !important;
+}
+
+.coordinator-person-row,
+.coordinator-card > div,
+.coordinator-grid > div > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    margin-bottom: 12px !important;
+    text-align: left !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.coordinator-person-row p,
+.coordinator-card p,
+.coordinator-grid > div p {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    line-height: 1.45 !important;
+    font-size: 15px !important;
+    color: #111111 !important;
+}
+
+.coordinator-person-row p b,
+.coordinator-card p b,
+.coordinator-grid > div p b {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #000000 !important;
+}
+
+.coordinator-subtext,
+.coordinator-person-row p:nth-child(2),
+.coordinator-card > div > p:nth-child(2),
+.coordinator-grid > div > div > p:nth-child(2) {
+    display: block !important;
+    width: 100% !important;
+    font-size: 13px !important;
+    color: #555555 !important;
+    margin-left: 14px !important;
+    margin-top: 2px !important;
+    line-height: 1.4 !important;
+}
+
+/* ==========================================================================
+   Code Walkthrough & Diagnostics (Clean Light Presentation, No Black Box)
+   ========================================================================== */
+.code-walkthrough-block {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    background-color: #f6f8fa !important;
+    color: #1f2328 !important;
+    padding: 16px 18px !important;
+    font-family: Consolas, "Courier New", monospace !important;
+    font-size: 13.5px !important;
+    border: 1.5px solid #d0d7de !important;
+    border-radius: 4px !important;
+    margin-bottom: 18px !important;
+    line-height: 1.55 !important;
+    overflow-x: auto !important;
+    white-space: pre !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+}
+
+.code-walkthrough-block p {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 2px 4px !important;
+    font-family: Consolas, "Courier New", monospace !important;
+    font-size: 13.5px !important;
+    line-height: 1.55 !important;
+    white-space: pre !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+    color: #1f2328 !important;
+}
+
+.terminal-walkthrough-box {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    background-color: #fff5f5 !important;
+    padding: 14px 18px !important;
+    border: 1.5px solid #f8b4b4 !important;
+    border-radius: 4px !important;
+    margin-bottom: 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+}
+
+.terminal-walkthrough-box p {
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    font-family: Consolas, "Courier New", monospace !important;
+    font-size: 12.5px !important;
+    margin: 0 !important;
+    padding: 2px 0 !important;
+    color: #cf222e !important;
+    white-space: pre-wrap !important;
+}
+
+.analysis-walkthrough-box {
+    display: block !important;
+    background-color: #fff3cd !important;
+    border: 1.5px solid #ffeeba !important;
+    color: #856404 !important;
+    padding: 14px 18px !important;
+    margin-top: 6px !important;
+    margin-bottom: 18px !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    border-radius: 4px !important;
+}
+
+.analysis-walkthrough-box p {
+    display: block !important;
+    text-align: left !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: #856404 !important;
+}
+
+.warning-walkthrough-box {
+    display: block !important;
+    background-color: #f8d7da !important;
+    border: 1.5px solid #f5c6cb !important;
+    color: #721c24 !important;
+    padding: 14px 18px !important;
+    margin-bottom: 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    border-radius: 4px !important;
+}
+
+.warning-walkthrough-box p {
+    display: block !important;
+    text-align: left !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    color: #721c24 !important;
+}
+
+
+/* ==========================================================================
+   Sidebar Navbar Header Fit Fix (TECHASTRA never cropped)
+   ========================================================================== */
+.site-page > div:first-child {
+    padding: 36px 20px !important;
+}
+
+.site-page > div:first-child h1,
+.site-page > div:first-child h1[style] {
+    font-size: 29px !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    width: auto !important;
+}
+
+.site-page > div:first-child h2 {
+    font-size: 20px !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+}
+
+.site-page > div:first-child h3 {
+    font-size: 15px !important;
+    white-space: nowrap !important;
 }

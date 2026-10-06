@@ -1,50 +1,150 @@
 // ============================================================================
 // ROUND MANAGEMENT SERVICE — TECHASTRA 2026 ADMIN PORTAL
-// Manages round state, qualification cutoff thresholds (R1=50, R2=50),
-// active round toggles, and participant readiness metrics.
+// Manages round state, qualification cutoff thresholds, active round toggles,
+// and participant readiness metrics directly through SQLite database.
+// Zero demo data — persistent state with live SSE sync.
 // ============================================================================
 
 import { RoundId, RoundStatus } from '../types';
-import { DEMO_ROUNDS } from '../data/demoRounds';
+import { AdminAuthService } from './adminAuthService';
 
 export class RoundService {
-    private static rounds: RoundStatus[] = [...DEMO_ROUNDS];
+    private static rounds: RoundStatus[] = [
+        {
+            roundId: 'R1',
+            name: 'Round 1',
+            title: 'Syntax & Exception Triage',
+            isActive: true,
+            cutoff: 50,
+            maxScore: 100,
+            participantsCount: 0,
+            qualifiedCount: 0,
+            timeLimitMinutes: 45,
+            totalQuestions: 8,
+            description: 'Fast-paced syntax error identification, type mismatch repair, and exception handling triage under pressure.',
+        },
+        {
+            roundId: 'R2',
+            name: 'Round 2',
+            title: 'Logic & Edge Case Debugging',
+            isActive: false,
+            cutoff: 50,
+            maxScore: 100,
+            participantsCount: 0,
+            qualifiedCount: 0,
+            timeLimitMinutes: 45,
+            totalQuestions: 6,
+            description: 'Resolving subtle off-by-one errors, recursion limits, boundary condition anomalies, and race conditions.',
+        },
+        {
+            roundId: 'R3',
+            name: 'Round 3',
+            title: 'High Stakes Algorithm Repair',
+            isActive: false,
+            cutoff: 0,
+            maxScore: 100,
+            participantsCount: 0,
+            qualifiedCount: 0,
+            timeLimitMinutes: 30,
+            totalQuestions: 4,
+            description: 'Complex algorithmic corruption repair: graph algorithms, dynamic programming optimizations, and memory leak mitigation.',
+        },
+    ];
     private static listeners: Array<(rounds: RoundStatus[]) => void> = [];
+    private static isPolling: boolean = false;
+    private static pollInterval: any = null;
+
+    public static init(): void {
+        if (this.isPolling) return;
+        this.isPolling = true;
+
+        this.fetchRounds();
+        if (typeof window !== 'undefined') {
+            this.pollInterval = setInterval(() => {
+                this.fetchRounds();
+            }, 5000);
+        }
+    }
+
+    public static setRounds(list: RoundStatus[]): void {
+        if (!Array.isArray(list) || list.length === 0) return;
+        this.rounds = list;
+        this.notify();
+    }
+
+    public static fetchRounds(): void {
+        if (typeof fetch === 'undefined') return;
+
+        fetch('/api/rounds')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data && Array.isArray(data.rounds) && data.rounds.length > 0) {
+                    this.rounds = data.rounds;
+                    this.notify();
+                }
+            })
+            .catch(() => {});
+    }
 
     public static getRounds(): RoundStatus[] {
+        this.init();
         return [...this.rounds];
     }
 
     public static updateCutoff(roundId: RoundId, newCutoff: number): boolean {
         let changed = false;
-        this.rounds = this.rounds.map(r => {
+        this.rounds = this.rounds.map((r) => {
             if (r.roundId === roundId) {
                 changed = true;
                 return { ...r, cutoff: Math.max(0, Math.min(r.maxScore, newCutoff)) };
             }
             return r;
         });
+
         if (changed) this.notify();
+
+        // Persist to backend database
+        fetch(`/api/rounds/${roundId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...AdminAuthService.getAuthHeader(),
+            },
+            body: JSON.stringify({ cutoff: newCutoff }),
+        }).catch(() => {});
+
         return changed;
     }
 
     public static setActiveRound(roundId: RoundId): void {
-        this.rounds = this.rounds.map(r => ({
+        this.rounds = this.rounds.map((r) => ({
             ...r,
             isActive: r.roundId === roundId,
         }));
         this.notify();
+
+        // Persist to backend database
+        fetch(`/api/rounds/${roundId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...AdminAuthService.getAuthHeader(),
+            },
+            body: JSON.stringify({ isActive: true }),
+        }).catch(() => {});
     }
 
     public static subscribe(listener: (rounds: RoundStatus[]) => void): () => void {
+        this.init();
         this.listeners.push(listener);
+        listener([...this.rounds]);
         return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
+            this.listeners = this.listeners.filter((l) => l !== listener);
         };
     }
 
     private static notify(): void {
         const copy = [...this.rounds];
-        this.listeners.forEach(l => l(copy));
+        this.listeners.forEach((l) => l(copy));
     }
 }
