@@ -80,18 +80,21 @@ export const RoundResultPage: React.FC<RoundResultProps> = ({ round }) => {
             </div>
             <p className="text-xs text-gray-800 mt-1 max-w-md mx-auto">
               {isQualified
-                ? `Candidate attained ${totalScore} pts, satisfying the official qualification cutoff of ${minCutoff} pts.`
-                : `Candidate score of ${totalScore} pts did not satisfy the qualification cutoff of ${minCutoff} pts.`}
+                ? `Candidate satisfied the official qualification threshold for advancement. Official numerical score will be revealed after event concludes.`
+                : `Candidate work order submissions have been archived. Qualification cutoff not satisfied.`}
             </p>
           </div>
 
           {/* Performance Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* Total Score */}
-            <div className="win95-sunken p-2 text-center bg-white">
-              <span className="text-[10px] font-bold block text-gray-600 uppercase">Score Earned</span>
-              <span className="text-xl font-bold font-mono text-black">
-                {totalScore} <span className="text-xs text-gray-600 font-normal">/ {maxScore}</span>
+            <div className="win95-sunken p-2 text-center bg-white" title="Official numerical score will be revealed after event concludes">
+              <span className="text-[10px] font-bold block text-gray-600 uppercase">Score Status</span>
+              <span className="text-sm font-bold font-mono text-blue-900 block mt-1">
+                RECORDED
+              </span>
+              <span className="text-[10px] text-gray-500 font-mono">
+                Revealed after event
               </span>
             </div>
 

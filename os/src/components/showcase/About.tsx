@@ -110,14 +110,14 @@ const About: React.FC<AboutProps> = (props) => {
                 <div style={styles.organizerSection}>
                     <div style={styles.organizerBlock}>
                         <h4>Staff Coordinators:</h4>
-                        <p>• <b>Dr. G. Senthil Velan</b> (Associate Professor)</p>
-                        <p>• <b>Ms. Anu</b> (Assistant Professor)</p>
+                        <p>• <b>Dr. G. Senthilvelan</b> (+91 98404 66300)</p>
+                        <p>• <b>Mr. P. Sudarsan</b> (+91 97907 80562)</p>
                     </div>
                     <div style={styles.organizerBlock}>
                         <h4>Student Coordinators:</h4>
-                        <p>• <b>Yashvinthan M</b> (Lead Coordinator)</p>
-                        <p>• <b>Kavitha G</b> (Student Coordinator)</p>
-                        <p>• <b>Sanjai P.A.</b> (Student Coordinator)</p>
+                        <p>• <b>Mr. Sanjai P A</b> (+91 94878 26286)</p>
+                        <p>• <b>Ms. Kavitha G</b> (+91 63824 01242)</p>
+                        <p>• <b>Mr. Yashvinthan M</b> (+91 97899 21988)</p>
                     </div>
                 </div>
                 <br />

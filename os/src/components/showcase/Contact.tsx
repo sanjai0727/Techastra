@@ -96,28 +96,28 @@ const Contact: React.FC<ContactProps> = (props) => {
                     <div style={styles.coordinatorCard}>
                         <h4 style={styles.roleTitle}>Staff Coordinators</h4>
                         <div style={styles.personRow}>
-                            <p>• <b>Dr. G. Senthil Velan</b></p>
-                            <p style={styles.subtext}>Associate Professor, Dept. of CSE</p>
+                            <p>• <b>Dr. G. Senthilvelan</b> (+91 98404 66300)</p>
+                            <p style={styles.subtext}>Staff Coordinator, Dept. of CSE</p>
                         </div>
                         <div style={styles.personRow}>
-                            <p>• <b>Ms. Anu</b></p>
-                            <p style={styles.subtext}>Assistant Professor, Dept. of CSE</p>
+                            <p>• <b>Mr. P. Sudarsan</b> (+91 97907 80562)</p>
+                            <p style={styles.subtext}>Staff Coordinator, Dept. of CSE</p>
                         </div>
                     </div>
 
                     <div style={styles.coordinatorCard}>
                         <h4 style={styles.roleTitle}>Student Coordinators</h4>
                         <div style={styles.personRow}>
-                            <p>• <b>Yashvinthan M</b></p>
-                            <p style={styles.subtext}>Lead Coordinator & Technical Head</p>
+                            <p>• <b>Mr. Sanjai P A</b> (+91 94878 26286)</p>
+                            <p style={styles.subtext}>Student Coordinator, Dept. of CSE</p>
                         </div>
                         <div style={styles.personRow}>
-                            <p>• <b>Kavitha G</b></p>
-                            <p style={styles.subtext}>Event Operations & Registration Head</p>
+                            <p>• <b>Ms. Kavitha G</b> (+91 63824 01242)</p>
+                            <p style={styles.subtext}>Student Coordinator, Dept. of CSE</p>
                         </div>
                         <div style={styles.personRow}>
-                            <p>• <b>Sanjai P.A.</b></p>
-                            <p style={styles.subtext}>Logistics & Scoring Invigilator</p>
+                            <p>• <b>Mr. Yashvinthan M</b> (+91 97899 21988)</p>
+                            <p style={styles.subtext}>Lead Student Coordinator & Tech Lead</p>
                         </div>
                     </div>
                 </div>
@@ -126,6 +126,8 @@ const Contact: React.FC<ContactProps> = (props) => {
                 <h3>Symposium Venue & Department</h3>
                 <p>
                     <b>Symposium:</b> Techastra 2026 National Level Technical Symposium<br />
+                    <b>Event Date:</b> 08/10/2026<br />
+                    <b>Venue:</b> IBM LAB<br />
                     <b>Department:</b> Department of Computer Science & Engineering<br />
                     <b>Event Station:</b> Lab Systems / Computer Center • Stations 1 to 50
                 </p>
@@ -282,6 +284,8 @@ const styles: StyleSheetCSS = {
         marginBottom: 16,
     },
     coordinatorCard: {
+        display: 'flex',
+        flexDirection: 'column',
         flex: 1,
         minWidth: 240,
         backgroundColor: '#f8f8f8',
@@ -296,6 +300,8 @@ const styles: StyleSheetCSS = {
         color: '#111',
     },
     personRow: {
+        display: 'flex',
+        flexDirection: 'column',
         marginBottom: 10,
     },
     subtext: {

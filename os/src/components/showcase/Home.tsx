@@ -100,7 +100,7 @@ const Home: React.FC<HomeProps> = () => {
                     <div style={styles.card} onClick={() => navigate('/contact')}>
                         <h4>👤 Coordinator Help Desk</h4>
                         <p style={{ fontSize: 13, marginTop: 4 }}>
-                            Reach out to faculty leads Dr. G. Senthil Velan, Ms. Anu, and student coordinators.
+                            Reach out to faculty leads Dr. G. Senthilvelan, Mr. P. Sudarsan, and student coordinators.
                         </p>
                     </div>
                 </div>

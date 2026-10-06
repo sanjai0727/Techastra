@@ -110,9 +110,11 @@ export const AdminDashboardPage: React.FC = () => {
               </h1>
             </div>
             <div className="text-[11px] text-gray-700 space-x-2">
-              <span><b>Faculty Coordinators:</b> Dr. G. Senthil Velan, Ms. Anu</span>
+              <span><b>Event Date:</b> 08/10/2026 • <b>Venue:</b> IBM LAB</span>
               <span>•</span>
-              <span><b>Student Leads:</b> Kavitha G, Sanjai P.A., Yashvinthan M</span>
+              <span><b>Faculty:</b> Dr. G. Senthilvelan, Mr. P. Sudarsan</span>
+              <span>•</span>
+              <span><b>Student Leads:</b> Mr. Sanjai P A, Ms. Kavitha G, Mr. Yashvinthan M</span>
             </div>
           </div>
 

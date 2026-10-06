@@ -159,8 +159,11 @@ export const WelcomePage: React.FC = () => {
               <div>
                 <b>DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING • TECHASTRA 2026</b>
               </div>
+              <div className="font-mono text-[10px]">
+                Event Date: <b>08/10/2026</b> • Venue: <b>IBM LAB</b>
+              </div>
               <div>
-                Faculty: Dr. G. Senthil Velan, Ms. Anu • Student Coordinators: Yashvinthan M, Kavitha G, Sanjai P.A.
+                Faculty: Dr. G. Senthilvelan (+91 98404 66300), Mr. P. Sudarsan (+91 97907 80562) • Student Leads: Mr. Sanjai P A (+91 94878 26286), Ms. Kavitha G (+91 63824 01242), Mr. Yashvinthan M (+91 97899 21988)
               </div>
               <div className="text-red-700 font-bold font-mono">
                 [ STRICT ANTI-AI VERIFICATION PROTOCOL ACTIVE • ZERO EXTERNAL ASSISTANCE ]

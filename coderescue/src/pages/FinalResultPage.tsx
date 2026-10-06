@@ -72,10 +72,13 @@ export const FinalResultPage: React.FC = () => {
             </p>
 
             {/* Grand Cumulative Score Banner */}
-            <div className="inline-block px-6 py-2 bg-white win95-sunken">
-              <span className="text-[11px] text-gray-600 block uppercase font-bold">Cumulative Grand Score</span>
-              <span className="text-2xl sm:text-3xl font-bold font-mono text-black">
-                {totalScore} <span className="text-xs text-gray-600 font-normal">/ {maxTotalScore} Pts</span>
+            <div className="inline-block px-6 py-2 bg-white win95-sunken" title="Official numerical score will be revealed after event concludes">
+              <span className="text-[11px] text-gray-600 block uppercase font-bold">Arbitration Status</span>
+              <span className="text-xl sm:text-2xl font-bold font-mono text-blue-900 block mt-0.5">
+                DOSSIER ARCHIVED (SCORES RECORDED)
+              </span>
+              <span className="text-[11px] text-gray-600 font-mono">
+                Official scores revealed after symposium event ends
               </span>
             </div>
           </div>
@@ -87,8 +90,8 @@ export const FinalResultPage: React.FC = () => {
                 Round 1 (Bug Hunt)
               </legend>
               <div className="win95-sunken p-2 bg-white">
-                <span className="text-xl font-bold font-mono text-black block">{r1Score}</span>
-                <span className="text-[11px] text-gray-600 font-mono">/ 100 Pts</span>
+                <span className="text-sm font-bold font-mono text-black block">RECORDED</span>
+                <span className="text-[10px] text-gray-600 font-mono">-- / 100 Pts</span>
               </div>
             </fieldset>
 
@@ -97,8 +100,8 @@ export const FinalResultPage: React.FC = () => {
                 Round 2 (Logic Breaker)
               </legend>
               <div className="win95-sunken p-2 bg-white">
-                <span className="text-xl font-bold font-mono text-black block">{r2Score}</span>
-                <span className="text-[11px] text-gray-600 font-mono">/ 100 Pts</span>
+                <span className="text-sm font-bold font-mono text-black block">RECORDED</span>
+                <span className="text-[10px] text-gray-600 font-mono">-- / 100 Pts</span>
               </div>
             </fieldset>
 
@@ -107,8 +110,8 @@ export const FinalResultPage: React.FC = () => {
                 Round 3 (Code Rescue)
               </legend>
               <div className="win95-sunken p-2 bg-white">
-                <span className="text-xl font-bold font-mono text-black block">{r3Score}</span>
-                <span className="text-[11px] text-gray-600 font-mono">/ 100 Pts</span>
+                <span className="text-sm font-bold font-mono text-black block">RECORDED</span>
+                <span className="text-[10px] text-gray-600 font-mono">-- / 100 Pts</span>
               </div>
             </fieldset>
           </div>

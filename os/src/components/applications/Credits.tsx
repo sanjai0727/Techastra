@@ -18,16 +18,16 @@ const CREDITS = [
     {
         title: 'Staff Coordinators',
         rows: [
-            ['Dr. G. Senthil Velan', 'Associate Professor / CSE'],
-            ['Ms. Anu', 'Assistant Professor / CSE'],
+            ['Dr. G. Senthilvelan', 'Staff Coordinator (+91 98404 66300)'],
+            ['Mr. P. Sudarsan', 'Staff Coordinator (+91 97907 80562)'],
         ],
     },
     {
         title: 'Student Coordinators',
         rows: [
-            ['Yashvinthan M', 'Lead Coordinator & Tech Lead'],
-            ['Kavitha G', 'Event Operations & Registration'],
-            ['Sanjai P.A.', 'Logistics & Scoring Invigilator'],
+            ['Mr. Sanjai P A', 'Student Coordinator (+91 94878 26286)'],
+            ['Ms. Kavitha G', 'Student Coordinator (+91 63824 01242)'],
+            ['Mr. Yashvinthan M', 'Lead Coordinator (+91 97899 21988)'],
         ],
     },
     {

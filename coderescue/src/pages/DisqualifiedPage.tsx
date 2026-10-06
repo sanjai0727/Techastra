@@ -99,7 +99,7 @@ export const DisqualifiedPage: React.FC = () => {
               * All code submissions and pending tests for this session have been frozen and finalized with Disqualified status.
             </p>
             <p>
-              * If you believe this incident was triggered by an unavoidable OS system error, immediately alert the Faculty Coordinators (Dr. G. Senthil Velan, Ms. Anu) or Student Coordinators (Yashvinthan M, Kavitha G, Sanjai P.A.).
+              * If you believe this incident was triggered by an unavoidable OS system error, immediately alert the Faculty Coordinators (Dr. G. Senthilvelan, Mr. P. Sudarsan) or Student Leads (Mr. Sanjai P A, Ms. Kavitha G, Mr. Yashvinthan M).
             </p>
           </div>
         </div>
