@@ -41,8 +41,8 @@ app.post('/api/send-email', (req, res) => {
         .then(() => {
             transporter
                 .sendMail({
-                    from: `"${name}" <henryheffernan.folio@gmail.com>`,
-                    to: 'henryheffernan@gmail.com, henryheffernan.folio@gmail.com',
+                    from: `"${name}" <${process.env.FOLIO_EMAIL || 'techastra2026@gmail.com'}>`,
+                    to: process.env.FOLIO_EMAIL || 'techastra2026@gmail.com',
                     subject: `${name} <${email}> ${
                         company ? `from ${company}` : ''
                     } submitted a contact form`,

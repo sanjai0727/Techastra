@@ -8,10 +8,12 @@
         "start": "node server/index.js",
         "build": "webpack --config ./bundler/webpack.admin.js && webpack --config ./bundler/webpack.prod.js",
         "build:admin": "webpack --config ./bundler/webpack.admin.js",
+        "build:coderescue": "npm --prefix coderescue run build && node scripts/deploy-coderescue.js",
+        "build:os": "npm --prefix os run build",
         "dev": "webpack --config ./bundler/webpack.admin.js && webpack serve --config ./bundler/webpack.dev.js",
         "dev:coderescue": "npm --prefix coderescue run dev",
         "dev:os": "npm --prefix os start",
-        "reset:db": "node -e \"const { db } = require('./server/db'); db.exec('DELETE FROM participants; DELETE FROM participant_sessions; DELETE FROM submissions; DELETE FROM proctoring_events; DELETE FROM live_screens;'); console.log('All participant dossiers and contest data successfully wiped.');\""
+        "reset:db": "node scripts/reset-db.js"
     },
     "dependencies": {
         "@babel/core": "^7.16.12",
