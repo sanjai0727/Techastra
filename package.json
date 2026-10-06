@@ -1,11 +1,17 @@
 {
-    "repository": "#",
+    "name": "techastra-2026",
+    "version": "1.0.0",
+    "description": "Techastra 2026 — 3D Workstation, Windows 95 Desktop OS, Code Rescue Arena, and Coordinator Admin Center",
+    "repository": "https://github.com/yashvinthan/techastra.git",
     "license": "UNLICENSED",
     "scripts": {
         "start": "node server/index.js",
         "build": "webpack --config ./bundler/webpack.admin.js && webpack --config ./bundler/webpack.prod.js",
         "build:admin": "webpack --config ./bundler/webpack.admin.js",
-        "dev": "webpack --config ./bundler/webpack.admin.js && webpack serve --config ./bundler/webpack.dev.js"
+        "dev": "webpack --config ./bundler/webpack.admin.js && webpack serve --config ./bundler/webpack.dev.js",
+        "dev:coderescue": "npm --prefix coderescue run dev",
+        "dev:os": "npm --prefix os start",
+        "reset:db": "node -e \"const { db } = require('./server/db'); db.exec('DELETE FROM participants; DELETE FROM participant_sessions; DELETE FROM submissions; DELETE FROM proctoring_events; DELETE FROM live_screens;'); console.log('All participant dossiers and contest data successfully wiped.');\""
     },
     "dependencies": {
         "@babel/core": "^7.16.12",
