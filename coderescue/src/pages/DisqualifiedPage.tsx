@@ -33,7 +33,7 @@ export const DisqualifiedPage: React.FC = () => {
               WORKSTATION SESSION TERMINATED — AUTO-DISQUALIFIED
             </h1>
             <p className="text-[11px] text-white/80 mt-0.5">
-              Department of Computer Science & Engineering • Techastra 2026 Code Rescue Championship
+              Department of Computer Science & Engineering • Department of Cyber Security • Techastra 2026 Code Rescue Championship
             </p>
           </div>
 

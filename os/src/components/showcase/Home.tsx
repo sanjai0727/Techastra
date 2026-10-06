@@ -42,7 +42,7 @@ const Home: React.FC<HomeProps> = () => {
                 <p>
                     Welcome to the official <b>Code Rescue Event Dossier</b> for{' '}
                     <b>Techastra 2026</b>, hosted by the Department of Computer
-                    Science & Engineering.
+                    Science & Engineering & Department of Cyber Security.
                 </p>
                 <br />
                 <p>

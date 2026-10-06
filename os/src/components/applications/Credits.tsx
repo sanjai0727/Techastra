@@ -12,7 +12,7 @@ const CREDITS = [
             ['Symposium', 'TECHASTRA 2026'],
             ['Event', 'CODE RESCUE'],
             ['Tagline', '"Think. Debug. Fix. Rescue the Code!"'],
-            ['Department', 'Computer Science & Engineering'],
+            ['Departments', 'Computer Science & Engineering • Cyber Security'],
         ],
     },
     {

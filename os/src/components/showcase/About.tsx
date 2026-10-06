@@ -32,7 +32,7 @@ const About: React.FC<AboutProps> = (props) => {
                     Welcome to <b>CODE RESCUE ("Three-Round Debugging Challenge")</b>,
                     a premier competitive debugging event hosted as part of the{' '}
                     <b>Techastra National Level Technical Symposium</b> by the
-                    Department of Computer Science & Engineering.
+                    Department of Computer Science & Engineering & Department of Cyber Security.
                 </p>
                 <br />
                 <p>
@@ -104,7 +104,7 @@ const About: React.FC<AboutProps> = (props) => {
                 <br />
                 <p>
                     Code Rescue is organized and adjudicated by the faculty and student
-                    leadership of the Department of Computer Science & Engineering:
+                    leadership of the Department of Computer Science & Engineering & Department of Cyber Security:
                 </p>
                 <br />
                 <div style={styles.organizerSection}>

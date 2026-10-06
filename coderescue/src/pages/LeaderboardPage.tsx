@@ -239,7 +239,7 @@ export const LeaderboardPage: React.FC = () => {
           {/* Bottom matrix telemetry */}
           <div className="flex items-center justify-between pt-2 text-[11px] text-gray-700 font-mono">
             <div>Displaying {filtered.length} of {allEntries.length} recorded dossiers</div>
-            <div>Department of Computer Science & Engineering • Techastra 2026</div>
+            <div>Department of Computer Science & Engineering • Department of Cyber Security • Techastra 2026</div>
           </div>
         </div>
       </div>

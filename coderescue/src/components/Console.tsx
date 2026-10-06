@@ -291,7 +291,7 @@ export const Console: React.FC<ConsoleProps> = ({
       responses.push({
         id: `res-${timestamp}`,
         type: 'info',
-        content: `Microsoft Windows 95 [Version 4.00.950]\nDepartment of Computer Science & Engineering • Techastra 2026`
+        content: `Microsoft Windows 95 [Version 4.00.950]\nDepartment of Computer Science & Engineering & Department of Cyber Security • Techastra 2026`
       });
     }
     // 10. UNRECOGNIZED COMMAND

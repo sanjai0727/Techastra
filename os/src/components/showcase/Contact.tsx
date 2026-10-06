@@ -128,7 +128,7 @@ const Contact: React.FC<ContactProps> = (props) => {
                     <b>Symposium:</b> Techastra 2026 National Level Technical Symposium<br />
                     <b>Event Date:</b> 08/10/2026<br />
                     <b>Venue:</b> IBM LAB<br />
-                    <b>Department:</b> Department of Computer Science & Engineering<br />
+                    <b>Department:</b> Department of Computer Science & Engineering & Department of Cyber Security<br />
                     <b>Event Station:</b> Lab Systems / Computer Center • Stations 1 to 50
                 </p>
 

@@ -72,7 +72,7 @@ export const RulesPage: React.FC = () => {
                 Official Competition Protocol & Ethics Agreement
               </h1>
               <p className="text-[11px] text-gray-700">
-                Department of Computer Science & Engineering • Techastra 2026
+                Department of Computer Science & Engineering • Department of Cyber Security • Techastra 2026
               </p>
             </div>
             <button

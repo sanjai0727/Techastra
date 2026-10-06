@@ -295,7 +295,7 @@ export const RegistrationPage: React.FC = () => {
               />
               <div>
                 <div className="font-bold text-[#000080] text-xs">Dr. M.G.R. EDUCATIONAL AND RESEARCH INSTITUTE</div>
-                <div className="text-[10px] text-gray-600">Event Coordinator Gateway • Code Rescue Arena</div>
+                <div className="text-[10px] text-gray-700"><b>Dept. of Computer Science &amp; Engineering</b> &bull; <b>Dept. of Cyber Security</b></div>
               </div>
             </div>
             <div className="text-right">
@@ -613,7 +613,7 @@ export const RegistrationPage: React.FC = () => {
 
           {/* Footer Notice */}
           <div className="p-1.5 bg-[#e0e0e0] border border-[#808080] text-[10px] text-gray-700 flex items-center justify-between">
-            <span>Official Event: <b>Code Rescue (IBM Lab)</b> • Coordinator: coderescue@techastra.drmgrdu.ac.in</span>
+            <span>Official Event: <b>Code Rescue (IBM Lab)</b> • Dept. of CSE &amp; Dept. of Cyber Security • Coordinator: coderescue@techastra.drmgrdu.ac.in</span>
             <span className="font-mono text-gray-600">ID SPEC: SYM2026-XXXX</span>
           </div>
         </div>

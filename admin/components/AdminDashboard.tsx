@@ -71,7 +71,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
             <div className="admin-cc-header">
                 <div>
                     <h2 className="admin-cc-title">TECHASTRA 2026 — ADMIN COMMAND CENTER</h2>
-                    <div className="admin-cc-sub">Department of Computer Science &amp; Engineering</div>
+                    <div className="admin-cc-sub">Department of Computer Science &amp; Engineering &bull; Department of Cyber Security</div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>

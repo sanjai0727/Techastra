@@ -31,7 +31,7 @@ export const WelcomePage: React.FC = () => {
                 TECHASTRA '26: CODE RESCUE
               </h1>
               <p className="text-xs text-gray-700">
-                Three-Round Competitive Debugging Championship • Department of Computer Science & Engineering
+                Three-Round Competitive Debugging Championship • Department of Computer Science & Engineering & Department of Cyber Security
               </p>
             </div>
             <div className="hidden sm:flex items-center gap-1 font-mono text-[11px]">
@@ -157,7 +157,7 @@ export const WelcomePage: React.FC = () => {
             <legend className="win95-legend">Official Notice</legend>
             <div className="p-1.5 text-center text-[11px] space-y-0.5 text-gray-800">
               <div>
-                <b>DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING • TECHASTRA 2026</b>
+                <b>DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING • DEPARTMENT OF CYBER SECURITY • TECHASTRA 2026</b>
               </div>
               <div className="font-mono text-[10px]">
                 Event Date: <b>08/10/2026</b> • Venue: <b>IBM LAB</b>
