@@ -58,7 +58,6 @@ export const getInitialState = (): CompetitionState => {
     roundResults: {},
     isCompetitionComplete: false,
     competitionModeActive: true,
-    organizerModeOpen: false,
     securityState: { ...DEFAULT_SECURITY_STATE }
   };
 };

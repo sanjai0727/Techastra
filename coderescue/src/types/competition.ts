@@ -106,7 +106,6 @@ export interface LeaderboardEntry {
   totalTimeUsedSeconds: number;
   status: 'QUALIFIED' | 'WINNER_EVALUATION' | 'ELIMINATED' | 'IN_PROGRESS' | 'DISQUALIFIED';
   isCurrentParticipant?: boolean;
-  isDemoData: boolean;
 }
 
 export interface QualificationConfig {
@@ -168,6 +167,5 @@ export interface CompetitionState {
   };
   isCompetitionComplete: boolean;
   competitionModeActive: boolean;
-  organizerModeOpen: boolean;
   securityState: SecurityState;
 }

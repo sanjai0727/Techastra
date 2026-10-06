@@ -2,7 +2,7 @@ import React from 'react';
 import { useCompetition } from '../context/CompetitionContext';
 
 export const DisqualifiedPage: React.FC = () => {
-  const { state, setView, resetSecurityState } = useCompetition();
+  const { state, setView } = useCompetition();
   const participant = state.participant;
   const reason = state.securityState?.disqualificationReason || 'Multiple unauthorized tab switches detected during active round.';
   const violations = state.securityState?.violationLogs || [];
@@ -112,26 +112,6 @@ export const DisqualifiedPage: React.FC = () => {
           <span>Status: DISQUALIFIED // Incident Archived to Ledger</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm('Proctor Override: Reinstate contestant session, clear all security strikes, and resume round?')) {
-                resetSecurityState();
-              }
-            }}
-            className="site-button"
-            style={{
-              padding: '5px 12px',
-              fontSize: 11,
-              fontWeight: 'bold',
-              background: '#006400',
-              color: '#ffffff',
-              border: '2px solid #00ff66',
-              cursor: 'pointer',
-            }}
-          >
-            🛡️ Proctor Override
-          </button>
           <button
             type="button"
             onClick={() => setView('leaderboard')}

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useCompetition } from '../context/CompetitionContext';
-import { mockLeaderboardData } from '../data/leaderboardData';
 import { LeaderboardEntry } from '../types/competition';
 
 export const LeaderboardPage: React.FC = () => {
@@ -24,9 +23,8 @@ export const LeaderboardPage: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  // Combine live/mock leaderboard with current active participant
-  const baseEntries = liveEntries.length > 0 ? liveEntries : mockLeaderboardData;
-  const allEntries: LeaderboardEntry[] = [...baseEntries];
+  // Live standings with current active participant
+  const allEntries: LeaderboardEntry[] = [...liveEntries];
 
   if (state.participant) {
     const r1Score = Object.values(state.bestScores).slice(0, 10).reduce((a, b) => a + b, 0);
@@ -47,8 +45,7 @@ export const LeaderboardPage: React.FC = () => {
       totalTimeUsedSeconds: 120,
       participantId: state.participant.participantId,
       status: isDisqualified ? 'DISQUALIFIED' : 'ACTIVE',
-      isCurrentParticipant: true,
-      isDemoData: false
+      isCurrentParticipant: true
     };
 
     if (existingIdx >= 0) {

@@ -157,7 +157,6 @@ export const RegistrationPage: React.FC = () => {
         });
         setView('rules');
       } else {
-        // Fallback to coordinator lookup details
         const cand = await verifyToken(tokenToLogin);
         if (cand) {
           registerParticipant({
@@ -169,19 +168,12 @@ export const RegistrationPage: React.FC = () => {
             registeredAt: Date.now(),
           });
           setView('rules');
+        } else {
+          setError(`Token '${tokenToLogin}' could not be verified in the official Techastra database.`);
         }
       }
     } catch {
-      // Local fallback
-      registerParticipant({
-        fullName: `Contestant ${tokenToLogin}`,
-        college: 'Dr. M.G.R. Educational and Research Institute',
-        department: 'Computer Science and Engineering',
-        year: 'Senior Engineering',
-        participantId: tokenToLogin,
-        registeredAt: Date.now(),
-      });
-      setView('rules');
+      setError('Unable to reach authentication server. Please check network connectivity.');
     } finally {
       setIsSubmitting(false);
     }
@@ -244,7 +236,11 @@ export const RegistrationPage: React.FC = () => {
   // Proceed immediately into Arena once returned from Techastra portal
   const handleProceedAfterPortalAuth = async () => {
     setShowRedirectModal(false);
-    const cleanToken = loginToken.trim().toUpperCase() || sessionStorage.getItem('cr_pending_token') || 'SYM2026-0036';
+    const cleanToken = loginToken.trim().toUpperCase() || sessionStorage.getItem('cr_pending_token');
+    if (!cleanToken) {
+      setError('Please provide your official Contestant Token ID to proceed.');
+      return;
+    }
     sessionStorage.setItem('cr_portal_verified', 'true');
     await autoLoginWithVerifiedToken(cleanToken);
   };
@@ -296,16 +292,7 @@ export const RegistrationPage: React.FC = () => {
         setError(data.error || 'Failed to register on-spot contestant.');
       }
     } catch {
-      // Local fallback
-      registerParticipant({
-        fullName: fullName.trim(),
-        college: college.trim(),
-        department: department.trim(),
-        year,
-        participantId: token,
-        registeredAt: Date.now(),
-      });
-      setView('rules');
+      setError('Registration server unreachable. Please check connectivity or notify the event coordinator.');
     } finally {
       setIsSubmitting(false);
     }

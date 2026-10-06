@@ -1211,21 +1211,8 @@ router.get('/leaderboard', (req, res) => {
     return res.json({ success: true, leaderboard: ranked, eventEnded });
 });
 
-// Reset Contest & Wipe All Data Endpoint
-router.post(['/admin/reset-contest', '/competition/reset'], (req, res) => {
-    db.exec(`
-        DELETE FROM participants;
-        DELETE FROM participant_sessions;
-        DELETE FROM submissions;
-        DELETE FROM proctoring_events;
-        DELETE FROM live_screens;
-    `);
-    broadcast('reset_contest', {});
-    return res.json({ success: true, message: 'All contest dossiers, submissions, and logs wiped.' });
-});
-
-// Toggle Event Ended status (reveals / hides scores)
-router.post('/admin/toggle-event-ended', (req, res) => {
+// Toggle Event Ended status (reveals / hides scores) (STRICTLY ADMIN AUTHENTICATED)
+router.post('/admin/toggle-event-ended', requireAdminAuth, (req, res) => {
     const { eventEnded } = req.body || {};
     const val = eventEnded ? '1' : '0';
     db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_ended', ?)").run(val);
@@ -1278,6 +1265,7 @@ router.post('/admin/reset-contest', requireAdminAuth, (req, res) => {
     db.prepare('DELETE FROM participant_sessions').run();
     db.prepare('DELETE FROM participants').run();
     db.prepare('DELETE FROM announcements').run();
+    try { db.prepare('DELETE FROM live_screens').run(); } catch (e) {}
 
     db.prepare('UPDATE rounds SET is_active = 0').run();
     db.prepare("UPDATE rounds SET is_active = 1 WHERE round_id = 'R1'").run();

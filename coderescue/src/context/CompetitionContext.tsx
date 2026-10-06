@@ -30,10 +30,6 @@ interface CompetitionContextType {
   finalizeRound: (round: 1 | 2 | 3) => void;
   proceedToNextRound: () => void;
   resetCompetition: () => void;
-  setOrganizerMode: (open: boolean) => void;
-  organizerJumpToRound: (round: 1 | 2 | 3) => void;
-  organizerSetTimer: (round: 1 | 2 | 3, seconds: number) => void;
-  organizerAutofillParticipant: () => void;
   updateQualificationConfig: (config: Partial<QualificationConfig>) => void;
   getCurrentRoundQuestions: () => Question[];
   getCurrentRoundScore: () => number;
@@ -43,7 +39,6 @@ interface CompetitionContextType {
   triggerClipboardWarning: (message: string) => void;
   clearClipboardWarning: () => void;
   disqualifyContestant: (reason: string) => void;
-  resetSecurityState: () => void;
 }
 
 const CompetitionContext = createContext<CompetitionContextType | null>(null);
@@ -353,41 +348,6 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     setState(getInitialState());
   };
 
-  const setOrganizerMode = (open: boolean) => {
-    setState(prev => ({ ...prev, organizerModeOpen: open }));
-  };
-
-  const organizerJumpToRound = (round: 1 | 2 | 3) => {
-    startRound(round);
-  };
-
-  const organizerSetTimer = (round: 1 | 2 | 3, seconds: number) => {
-    setState(prev => {
-      const key = round === 1 ? 'round1Remaining' : (round === 2 ? 'round2Remaining' : 'round3Remaining');
-      const activeKey = round === 1 ? 'round1Active' : (round === 2 ? 'round2Active' : 'round3Active');
-      return {
-        ...prev,
-        timers: {
-          ...prev.timers,
-          [key]: seconds,
-          [activeKey]: seconds > 0
-        }
-      };
-    });
-  };
-
-  const organizerAutofillParticipant = () => {
-    const demoParticipant: Participant = {
-      fullName: 'RAMATHATCHANA M',
-      college: 'R.M.D ENGINEERING COLLEGE',
-      department: 'Computer Science and Engineering',
-      year: 'Senior Engineering',
-      participantId: 'SYM2026-0036',
-      registeredAt: Date.now()
-    };
-    registerParticipant(demoParticipant);
-  };
-
   const updateQualificationConfig = (config: Partial<QualificationConfig>) => {
     setState(prev => ({
       ...prev,
@@ -555,30 +515,6 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     }));
   }, []);
 
-  const resetSecurityState = useCallback(() => {
-    try {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
-      }
-    } catch (e) {}
-    setState(prev => ({
-      ...prev,
-      currentView: prev.currentRound === 1 ? 'round1_workspace' : (prev.currentRound === 2 ? 'round2_workspace' : 'round3_workspace'),
-      timers: {
-        ...prev.timers,
-        [`round${prev.currentRound}Active`]: true
-      },
-      securityState: {
-        tabSwitchCount: 0,
-        isDisqualified: false,
-        disqualificationReason: undefined,
-        showTabSwitchWarning: false,
-        clipboardWarning: null,
-        violationLogs: []
-      }
-    }));
-  }, []);
-
   return (
     <CompetitionContext.Provider
       value={{
@@ -594,10 +530,6 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         finalizeRound,
         proceedToNextRound,
         resetCompetition,
-        setOrganizerMode,
-        organizerJumpToRound,
-        organizerSetTimer,
-        organizerAutofillParticipant,
         updateQualificationConfig,
         getCurrentRoundQuestions,
         getCurrentRoundScore,
@@ -606,8 +538,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         dismissTabSwitchWarning,
         triggerClipboardWarning,
         clearClipboardWarning,
-        disqualifyContestant,
-        resetSecurityState
+        disqualifyContestant
       }}
     >
       {children}
