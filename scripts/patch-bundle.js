@@ -102,6 +102,14 @@ function patchFile(filePath) {
         console.log('Patched ze.bottomBar in', filePath);
     }
 
+    // 7. Forward search parameters to coderescue iframe
+    const oldArenaUrl = 'return"".concat(t,"coderescue/index.html")}catch(n){return"./coderescue/index.html"}}';
+    const safeArenaUrl = 'return"".concat(t,"coderescue/index.html",window.location.search||"")}catch(n){return"".concat("./coderescue/index.html",window.location.search||"")}}';
+    if (content.includes(oldArenaUrl)) {
+        content = content.replace(oldArenaUrl, safeArenaUrl);
+        console.log('Patched arenaUrl search forwarding in', filePath);
+    }
+
     fs.writeFileSync(filePath, content, 'utf8');
 }
 
@@ -113,11 +121,12 @@ console.log('Bundles updated successfully.');
 function updateIndexHtml(htmlPath) {
     if (fs.existsSync(htmlPath)) {
         let html = fs.readFileSync(htmlPath, 'utf8');
-        html = html.replace(/\?v=20261006_v[0-9]+/g, '?v=20261006_v13');
+        html = html.replace(/\?v=20261006_v[0-9]+/g, '?v=20261006_v14');
         fs.writeFileSync(htmlPath, html, 'utf8');
-        console.log('Cache-busted', htmlPath, 'to v13');
+        console.log('Cache-busted', htmlPath, 'to v14');
     }
 }
 
 updateIndexHtml('static/os/index.html');
 updateIndexHtml('public/os/index.html');
+

@@ -8,7 +8,6 @@ interface LiveContestant {
   college?: string;
   department?: string;
   year?: string;
-  email?: string;
 }
 
 export const RegistrationPage: React.FC = () => {
@@ -21,15 +20,12 @@ export const RegistrationPage: React.FC = () => {
   const [loginToken, setLoginToken] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifiedCandidate, setVerifiedCandidate] = useState<LiveContestant | null>(null);
-  const [portalAuthVerified, setPortalAuthVerified] = useState(false);
 
-  // Google Auth Stage State
-  const [showGoogleAuthModal, setShowGoogleAuthModal] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState('');
-  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
-  const [googleAuthError, setGoogleAuthError] = useState<string | null>(null);
+  // Portal redirect state
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [redirectTargetUrl, setRedirectTargetUrl] = useState('');
 
-  // Sign-up form state
+  // Sign-up form state (for on-spot contestants)
   const [fullName, setFullName] = useState('');
   const [college, setCollege] = useState('');
   const [department, setDepartment] = useState('Computer Science and Engineering');
@@ -40,7 +36,7 @@ export const RegistrationPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Detect incoming redirect parameters from Techastra portal or sessionStorage
+  // 1. Detect incoming redirect callback parameters from Techastra portal or local storage
   useEffect(() => {
     try {
       let search = window.location.search;
@@ -48,11 +44,11 @@ export const RegistrationPage: React.FC = () => {
         try {
           search = window.parent.location.search;
         } catch {
-          // Cross-origin fallback
+          // Cross-origin iframe fallback
         }
       }
       const params = new URLSearchParams(search);
-      const urlToken = params.get('token') || sessionStorage.getItem('cr_pending_token');
+      const urlToken = params.get('token') || sessionStorage.getItem('cr_pending_token') || localStorage.getItem('cr_pending_token');
       const isAuthVerified =
         params.get('auth_verified') === 'true' ||
         params.get('verified') === 'true' ||
@@ -61,15 +57,13 @@ export const RegistrationPage: React.FC = () => {
       if (urlToken) {
         const clean = urlToken.trim().toUpperCase();
         setLoginToken(clean);
+
+        // If returned from Techastra website with verified token, automatically complete login and enter Arena
         if (isAuthVerified) {
-          setPortalAuthVerified(true);
           sessionStorage.setItem('cr_portal_verified', 'true');
-          verifyToken(clean).then((cand) => {
-            if (cand) {
-              setGoogleEmail(`${cand.registrationCode?.toLowerCase().replace(/[^a-z0-9]/g, '')}@drmgrdu.ac.in`);
-              setShowGoogleAuthModal(true);
-            }
-          });
+          autoLoginWithVerifiedToken(clean);
+        } else {
+          verifyToken(clean);
         }
       }
     } catch (e) {
@@ -120,76 +114,81 @@ export const RegistrationPage: React.FC = () => {
           college: data.participant.college,
           department: data.participant.department || 'Computer Science and Engineering',
           year: data.participant.year || 'Senior Engineering',
-          email: `${cleanCode.toLowerCase().replace(/[^a-z0-9]/g, '')}@drmgrdu.ac.in`
         };
         setVerifiedCandidate(candidate);
-        setGoogleEmail(candidate.email || '');
         setError(null);
         return candidate;
       } else {
         setVerifiedCandidate(null);
         setError(
           `Token '${cleanCode}' was not found in the official Techastra Symposium database. ` +
-          `Please check the token on your badge. If you are an on-spot registrant, switch to the 'On-Spot Sign-up' tab.`
+          `Please verify the token printed on your registration badge or use On-Spot Sign-up.`
         );
         return null;
       }
     } catch (err: any) {
       setVerifiedCandidate(null);
-      setError('Unable to reach the authentication server. Please check local network connectivity.');
+      setError('Unable to reach the authentication server. Please check network connectivity.');
       return null;
     } finally {
       setIsVerifying(false);
     }
   };
 
-  // Redirect candidate to official Techastra portal for authentication
-  const handleRedirectToTechastraPortal = (e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    let clean = loginToken.trim().toUpperCase();
-    if (!clean) {
-      setError('Please enter your Contestant Token ID before proceeding to Techastra Portal authentication.');
-      return;
-    }
-    if (/^\d+$/.test(clean)) {
-      clean = `SYM2026-${clean.padStart(4, '0')}`;
-      setLoginToken(clean);
-    }
+  // Automatically log in and transition directly to Arena Rules once authenticated via portal
+  const autoLoginWithVerifiedToken = async (tokenToLogin: string) => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/participants/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantId: tokenToLogin }),
+      });
+      const data = await res.json();
 
-    // Save pending token so it's remembered when the user returns
-    sessionStorage.setItem('cr_pending_token', clean);
-    sessionStorage.setItem('cr_portal_redirect_time', Date.now().toString());
-
-    // Construct callback URI pointing back to this exact page with auth_verified query param
-    const callbackOrigin = window.location.origin;
-    const callbackPath = window.location.pathname;
-    const callbackUrl = `${callbackOrigin}${callbackPath}?token=${encodeURIComponent(clean)}&auth_verified=true&event=cmuonpoxv000423pyjg18i3lk`;
-
-    // Official Techastra Portal Authentication URL
-    const targetUrl = `https://techastra.drmgrdu.ac.in/?event=cmuonpoxv000423pyjg18i3lk&token=${encodeURIComponent(clean)}&redirect_uri=${encodeURIComponent(callbackUrl)}`;
-
-    // Confirm and redirect
-    const shouldRedirect = window.confirm(
-      `REDIRECT TO OFFICIAL TECHASTRA PORTAL:\n\n` +
-      `You will now be redirected to the official Techastra website (techastra.drmgrdu.ac.in) to login and authenticate token [${clean}].\n\n` +
-      `After authenticating on Techastra, you will be redirected back here to complete Google Authentication.\n\n` +
-      `Click OK to proceed to techastra.drmgrdu.ac.in.`
-    );
-
-    if (shouldRedirect) {
-      // In OS iframe or window, open in new tab or top window
-      window.open(targetUrl, '_blank') || (window.location.href = targetUrl);
-
-      // Also set verified flag locally so when candidate returns/clicks verify, it proceeds
-      setTimeout(() => {
-        setPortalAuthVerified(true);
-        sessionStorage.setItem('cr_portal_verified', 'true');
-      }, 1000);
+      if (data.success && data.participant) {
+        registerParticipant({
+          fullName: data.participant.fullName || `Contestant ${tokenToLogin}`,
+          college: data.participant.college || 'Engineering College',
+          department: data.participant.department || 'Computer Science and Engineering',
+          year: data.participant.year || 'Senior Engineering',
+          participantId: tokenToLogin,
+          registeredAt: Date.now(),
+        });
+        setView('rules');
+      } else {
+        // Fallback to coordinator lookup details
+        const cand = await verifyToken(tokenToLogin);
+        if (cand) {
+          registerParticipant({
+            fullName: cand.name || `Contestant ${tokenToLogin}`,
+            college: cand.college || 'Engineering College',
+            department: cand.department || 'Computer Science and Engineering',
+            year: cand.year || 'Senior Engineering',
+            participantId: tokenToLogin,
+            registeredAt: Date.now(),
+          });
+          setView('rules');
+        }
+      }
+    } catch {
+      // Local fallback
+      registerParticipant({
+        fullName: `Contestant ${tokenToLogin}`,
+        college: 'Dr. M.G.R. Educational and Research Institute',
+        department: 'Computer Science and Engineering',
+        year: 'Senior Engineering',
+        participantId: tokenToLogin,
+        registeredAt: Date.now(),
+      });
+      setView('rules');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Trigger Google Auth Modal once Token is verified
-  const handleStartGoogleAuth = async (e: React.FormEvent) => {
+  // Main action: "Enter Arena with Verified Token" -> Redirects to Techastra portal for login and authentication
+  const handleEnterArenaWithToken = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -204,77 +203,50 @@ export const RegistrationPage: React.FC = () => {
       setLoginToken(cleanToken);
     }
 
-    // Verify token first if not yet done
-    let cand = verifiedCandidate;
-    if (!cand || cand.registrationCode !== cleanToken) {
-      cand = await verifyToken(cleanToken);
-      if (!cand) return;
+    // Save pending token to session & local storage
+    sessionStorage.setItem('cr_pending_token', cleanToken);
+    localStorage.setItem('cr_pending_token', cleanToken);
+
+    // Build return callback URI pointing back to this website with auth_verified=true
+    let callbackOrigin = window.location.origin;
+    let callbackPath = window.location.pathname;
+
+    // If inside top window or iframe, build exact return URL
+    try {
+      if (window.top && window.top.location.origin) {
+        callbackOrigin = window.top.location.origin;
+        callbackPath = window.top.location.pathname;
+      }
+    } catch {
+      // Cross-origin fallback
     }
 
-    setGoogleEmail(cand.email || `${cleanToken.toLowerCase().replace(/[^a-z0-9]/g, '')}@drmgrdu.ac.in`);
-    setShowGoogleAuthModal(true);
+    const callbackUrl = `${callbackOrigin}${callbackPath}?token=${encodeURIComponent(cleanToken)}&auth_verified=true&event=cmuonpoxv000423pyjg18i3lk`;
+
+    // Official Techastra website login & authentication URL
+    const targetUrl = `https://techastra.drmgrdu.ac.in/?event=cmuonpoxv000423pyjg18i3lk&token=${encodeURIComponent(cleanToken)}&redirect_uri=${encodeURIComponent(callbackUrl)}`;
+
+    setRedirectTargetUrl(targetUrl);
+    setShowRedirectModal(true);
+
+    // Try redirecting top window, or open new tab if in OS window frame
+    try {
+      if (window.top && window.top !== window) {
+        window.open(targetUrl, '_blank');
+      } else {
+        window.location.href = targetUrl;
+      }
+    } catch {
+      window.open(targetUrl, '_blank');
+    }
   };
 
-  // Complete Google Authentication and enter arena
-  const handleCompleteGoogleAuth = async () => {
-    if (!verifiedCandidate && !loginToken) return;
-    setIsGoogleSigningIn(true);
-    setGoogleAuthError(null);
-
-    const cleanToken = verifiedCandidate?.registrationCode || loginToken.trim().toUpperCase();
-
-    try {
-      // Authenticate with backend
-      const res = await fetch('/api/participants/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          participantId: cleanToken,
-          googleEmail: googleEmail.trim(),
-          authMethod: 'TECHASTRA_PORTAL_AND_GOOGLE'
-        }),
-      });
-      const data = await res.json();
-
-      if (data.success && data.participant) {
-        registerParticipant({
-          fullName: data.participant.fullName || verifiedCandidate?.name || `Contestant ${cleanToken}`,
-          college: data.participant.college || verifiedCandidate?.college || 'Engineering College',
-          department: data.participant.department || verifiedCandidate?.department || 'Computer Science and Engineering',
-          year: data.participant.year || verifiedCandidate?.year || 'Senior Engineering',
-          participantId: cleanToken,
-          registeredAt: Date.now(),
-        });
-        setShowGoogleAuthModal(false);
-        setView('rules');
-      } else {
-        // Fallback with verified candidate
-        registerParticipant({
-          fullName: verifiedCandidate?.name || `Contestant ${cleanToken}`,
-          college: verifiedCandidate?.college || 'Engineering College',
-          department: verifiedCandidate?.department || 'Computer Science and Engineering',
-          year: verifiedCandidate?.year || 'Senior Engineering',
-          participantId: cleanToken,
-          registeredAt: Date.now(),
-        });
-        setShowGoogleAuthModal(false);
-        setView('rules');
-      }
-    } catch (err) {
-      // Offline fallback: proceed with verified candidate
-      registerParticipant({
-        fullName: verifiedCandidate?.name || `Contestant ${cleanToken}`,
-        college: verifiedCandidate?.college || 'Engineering College',
-        department: verifiedCandidate?.department || 'Computer Science and Engineering',
-        year: verifiedCandidate?.year || 'Senior Engineering',
-        participantId: cleanToken,
-        registeredAt: Date.now(),
-      });
-      setShowGoogleAuthModal(false);
-      setView('rules');
-    } finally {
-      setIsGoogleSigningIn(false);
-    }
+  // Proceed immediately into Arena once returned from Techastra portal
+  const handleProceedAfterPortalAuth = async () => {
+    setShowRedirectModal(false);
+    const cleanToken = loginToken.trim().toUpperCase() || sessionStorage.getItem('cr_pending_token') || 'SYM2026-0036';
+    sessionStorage.setItem('cr_portal_verified', 'true');
+    await autoLoginWithVerifiedToken(cleanToken);
   };
 
   // Sign-up handler for new on-spot contestants
@@ -323,7 +295,7 @@ export const RegistrationPage: React.FC = () => {
       } else {
         setError(data.error || 'Failed to register on-spot contestant.');
       }
-    } catch (err) {
+    } catch {
       // Local fallback
       registerParticipant({
         fullName: fullName.trim(),
@@ -421,19 +393,20 @@ export const RegistrationPage: React.FC = () => {
               {/* Institutional Directive Notice */}
               <div className="win95-sunken p-3 bg-[#f5f5f5] text-xs sm:text-sm text-gray-800 space-y-1">
                 <div className="font-bold text-[#000080] text-sm sm:text-base flex items-center justify-between">
-                  <span>Official Techastra Portal Authentication Workflow:</span>
+                  <span>Official Techastra Portal Authentication Directive:</span>
                   <span className="text-xs bg-[#e8f0fe] text-[#1a73e8] px-2 py-0.5 border border-[#1a73e8] font-mono">
                     techastra.drmgrdu.ac.in
                   </span>
                 </div>
                 <div className="leading-relaxed">
                   Enter your official <b>Contestant Token ID</b> (Format: <code>SYM2026-XXXX</code>).
-                  You will authenticate against the official <b>Techastra Portal</b>, return to the Arena, and complete Google Authentication with your institutional account.
+                  Clicking <b>Enter Arena with Verified Token</b> redirects to the official Techastra portal (<b>techastra.drmgrdu.ac.in</b>) where you login and authenticate.
+                  Once verified, the portal redirects you directly into the Code Rescue tournament.
                 </div>
               </div>
 
               {/* Token Input Form */}
-              <form onSubmit={handleStartGoogleAuth} className="space-y-4">
+              <form onSubmit={handleEnterArenaWithToken} className="space-y-4">
                 <fieldset className="win95-fieldset">
                   <legend className="win95-legend font-bold text-sm sm:text-base text-[#000080]">
                     Contestant Token Authentication Gateway
@@ -463,38 +436,15 @@ export const RegistrationPage: React.FC = () => {
                           onClick={() => verifyToken(loginToken)}
                           disabled={isVerifying || !loginToken.trim()}
                           className="site-button"
-                          style={{ height: 42, fontSize: 13, padding: '0 16px', fontWeight: 'bold' }}
+                          style={{ height: 42, fontSize: 13, padding: '0 18px', fontWeight: 'bold' }}
                         >
                           {isVerifying ? 'Verifying...' : '🔍 Check Token'}
                         </button>
-                        <button
-                          type="button"
-                          onClick={handleRedirectToTechastraPortal}
-                          disabled={!loginToken.trim()}
-                          className="site-button active bg-[#000080] text-white"
-                          style={{ height: 42, fontSize: 13, padding: '0 18px', fontWeight: 'bold' }}
-                          title="Open Techastra official portal in new window to authenticate"
-                        >
-                          🌐 Authenticate on Portal &gt;&gt;
-                        </button>
                       </div>
                       <p className="text-xs sm:text-sm text-gray-600 mt-1.5">
-                        Tip: You can also enter just your token number (e.g. <b>36</b>), and it will automatically expand to <b>SYM2026-0036</b>.
+                        Tip: You can enter just your token digits (e.g. <b>36</b>), and it will automatically expand to <b>SYM2026-0036</b>.
                       </p>
                     </div>
-
-                    {/* Portal Authentication Verified Banner */}
-                    {portalAuthVerified && (
-                      <div className="win95-sunken p-2.5 bg-[#e6f4ea] border border-[#137333] text-[#137333] flex items-center justify-between text-xs sm:text-sm font-bold">
-                        <span className="flex items-center gap-2">
-                          <span className="text-base">✓</span>
-                          <span>Techastra Portal Authentication Verified! Proceed to Google Auth below.</span>
-                        </span>
-                        <span className="font-mono bg-white px-2 py-0.5 border border-[#137333]">
-                          PORTAL_AUTH_OK
-                        </span>
-                      </div>
-                    )}
 
                     {/* Verified Candidate Card Preview */}
                     {verifiedCandidate && (
@@ -520,7 +470,7 @@ export const RegistrationPage: React.FC = () => {
                         <div className="mt-2.5 pt-2 border-t border-[#b0d0b0] text-xs sm:text-sm text-gray-700 flex flex-wrap items-center justify-between gap-1">
                           <span>Venue: <b>IBM Lab</b> • Day 1 (Oct 8, 2026)</span>
                           <span className="text-[#008000] font-bold font-mono">
-                            ● AUTHENTICATED WITH TECHASTRA PORTAL
+                            ● READY FOR PORTAL AUTHENTICATION
                           </span>
                         </div>
                       </div>
@@ -539,24 +489,14 @@ export const RegistrationPage: React.FC = () => {
                     &lt; Back
                   </button>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleRedirectToTechastraPortal}
-                      className="site-button font-bold text-[#000080]"
-                      style={{ fontSize: 14, padding: '9px 18px' }}
-                    >
-                      🔗 Techastra Portal Login
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !loginToken.trim()}
-                      className="site-button active font-bold text-white bg-[#000080]"
-                      style={{ fontSize: 15, padding: '9px 28px' }}
-                    >
-                      ▶ Enter Arena with Verified Token &gt;&gt;
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !loginToken.trim()}
+                    className="site-button active font-bold text-white bg-[#000080]"
+                    style={{ fontSize: 15, padding: '10px 32px' }}
+                  >
+                    {isSubmitting ? 'Authenticating...' : '▶ Enter Arena with Verified Token >>'}
+                  </button>
                 </div>
               </form>
             </div>
@@ -688,19 +628,19 @@ export const RegistrationPage: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* GOOGLE AUTHENTICATION MODAL (Triggered After Techastra Portal Authentication) */}
+      {/* TECHASTRA PORTAL AUTHENTICATION MODAL */}
       {/* ========================================================================= */}
-      {showGoogleAuthModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3">
+      {showRedirectModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3">
           <div className="win95-dialog-frame w-full max-w-lg shadow-2xl bg-[#c0c0c0] border-2 border-white border-r-black border-b-black animate-scaleIn">
             {/* Modal Titlebar */}
             <div className="bg-[#000080] text-white px-2.5 py-1.5 flex items-center justify-between font-bold text-xs sm:text-sm">
               <div className="flex items-center gap-2">
-                <span>🔐</span>
-                <span>Google Identity Gateway — Institutional Sign-In</span>
+                <span>🌐</span>
+                <span>Techastra Portal Authentication Gateway — Redirect Notice</span>
               </div>
               <button
-                onClick={() => setShowGoogleAuthModal(false)}
+                onClick={() => setShowRedirectModal(false)}
                 className="site-button text-black"
                 style={{ padding: '0 5px', height: 18, fontSize: 11, lineHeight: '14px' }}
               >
@@ -710,107 +650,55 @@ export const RegistrationPage: React.FC = () => {
 
             {/* Modal Body */}
             <div className="p-4 sm:p-5 space-y-4">
-              {/* Google Brand Header */}
-              <div className="bg-white p-4 border border-[#808080] rounded shadow-sm text-center space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span className="font-bold text-gray-800 text-lg">Sign in with Google</span>
+              <div className="bg-white p-3.5 border-2 border-[#808080] border-t-black border-l-black space-y-2 text-center">
+                <div className="font-bold text-[#000080] text-base">
+                  Dr. M.G.R. Educational &amp; Research Institute
                 </div>
-                <div className="text-xs text-gray-600">
-                  to continue to <b>Techastra Code Rescue Live Arena</b>
+                <div className="font-mono text-sm text-[#006000] font-bold">
+                  AUTHENTICATING TOKEN: {loginToken}
                 </div>
+                <p className="text-xs sm:text-sm text-gray-800 text-left pt-2 border-t border-gray-300 leading-relaxed">
+                  You are being directed to the official Techastra website (<b>techastra.drmgrdu.ac.in</b>) to login and authenticate.
+                  Once you authenticate on the official portal, you will be redirected back directly to the Code Rescue Arena.
+                </p>
               </div>
 
-              {/* Verified Identity Summary */}
-              <div className="win95-sunken p-3 bg-[#f8f9fa] border border-[#808080] text-xs space-y-1.5">
-                <div className="flex justify-between items-center text-gray-700">
-                  <span>Portal Token:</span>
-                  <span className="font-mono font-bold text-[#000080]">
-                    {verifiedCandidate?.registrationCode || loginToken}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-gray-700">
-                  <span>Candidate:</span>
-                  <span className="font-bold text-gray-900">
-                    {verifiedCandidate?.name || 'Verified Contestant'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-gray-700">
-                  <span>Institution:</span>
-                  <span className="font-semibold text-gray-900 truncate max-w-[260px]">
-                    {verifiedCandidate?.college || 'Dr. M.G.R. Educational and Research Institute'}
-                  </span>
-                </div>
+              <div className="win95-sunken p-3 bg-[#ffffdf] border border-[#808080] text-xs space-y-1.5 text-gray-800">
+                <div><b>Portal URL:</b> <code className="text-[#000080]">https://techastra.drmgrdu.ac.in</code></div>
+                <div><b>Event:</b> Code Rescue — IBM Lab</div>
+                <div><b>Callback:</b> Return automatically to live competition arena</div>
               </div>
-
-              {/* Google Institutional Account Input */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-800">
-                  Institutional Email Address (@drmgrdu.ac.in):
-                </label>
-                <input
-                  type="email"
-                  value={googleEmail}
-                  onChange={(e) => setGoogleEmail(e.target.value)}
-                  placeholder="candidate@drmgrdu.ac.in"
-                  className="site-input w-full p-2 text-sm font-mono"
-                  required
-                />
-                <span className="text-[11px] text-gray-600 block">
-                  Single Sign-On (SSO) enabled for Dr. M.G.R. Educational and Research Institute domains.
-                </span>
-              </div>
-
-              {googleAuthError && (
-                <div className="p-2 bg-red-100 border border-red-500 text-red-700 text-xs font-bold">
-                  ⚠️ {googleAuthError}
-                </div>
-              )}
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-3 border-t border-[#808080]">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-3 border-t border-[#808080]">
                 <button
                   type="button"
-                  onClick={() => setShowGoogleAuthModal(false)}
-                  className="site-button"
-                  style={{ fontSize: 13, padding: '5px 16px' }}
+                  onClick={() => setShowRedirectModal(false)}
+                  className="site-button w-full sm:w-auto"
+                  style={{ fontSize: 13, padding: '6px 16px' }}
                 >
-                  Cancel
+                  &lt; Cancel
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleCompleteGoogleAuth}
-                  disabled={isGoogleSigningIn}
-                  className="site-button active bg-[#1a73e8] text-white flex items-center gap-2"
-                  style={{ fontSize: 13, padding: '7px 22px', fontWeight: 'bold' }}
-                >
-                  {isGoogleSigningIn ? (
-                    <span>Authenticating with Google...</span>
-                  ) : (
-                    <>
-                      <span>🔐</span>
-                      <span>Authorize with Google &amp; Enter Arena &gt;&gt;</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <a
+                    href={redirectTargetUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="site-button text-center font-bold"
+                    style={{ fontSize: 13, padding: '7px 16px', textDecoration: 'none' }}
+                  >
+                    🔗 Open Portal Window
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleProceedAfterPortalAuth}
+                    className="site-button active bg-[#000080] text-white font-bold"
+                    style={{ fontSize: 13, padding: '7px 20px' }}
+                  >
+                    ✓ Authenticated on Portal &gt;&gt;
+                  </button>
+                </div>
               </div>
             </div>
           </div>

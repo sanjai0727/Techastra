@@ -128,10 +128,11 @@ const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
     const arenaUrl = React.useMemo(() => {
         try {
             const href = window.location.href.split('?')[0].split('#')[0];
+            const search = window.location.search || '';
             const baseDir = href.endsWith('/')
                 ? href
                 : href.substring(0, href.lastIndexOf('/') + 1);
-            return `${baseDir}coderescue/index.html`;
+            return `${baseDir}coderescue/index.html${search}`;
         } catch {
             return './coderescue/index.html';
         }
