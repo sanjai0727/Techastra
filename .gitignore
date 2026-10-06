@@ -11,10 +11,8 @@ public/
 .DS_Store
 Thumbs.db
 
-# Old subfolder references (prevent re-tracking)
-portfolio-inner-site/
+# Build & Temp references
 portfolio-website/
-Techastra-CodeRescue/
 dist_unified/
 *old.jpg
 *.bak

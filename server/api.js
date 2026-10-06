@@ -986,6 +986,12 @@ router.put('/rounds/:id', requireAdminAuth, (req, res) => {
 });
 
 router.get('/leaderboard', (req, res) => {
+    let eventEnded = false;
+    try {
+        const configRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
+        eventEnded = configRow ? configRow.value === '1' : false;
+    } catch {}
+
     const rows = db.prepare(`
         SELECT id as participantId, full_name as name, college,
                round1_score as round1Score, round2_score as round2Score, round3_score as round3Score,
@@ -996,13 +1002,47 @@ router.get('/leaderboard', (req, res) => {
         LIMIT 55
     `).all();
 
-    const ranked = rows.map((r, index) => ({
-        rank: index + 1,
-        ...r,
-        isDemoData: false,
-    }));
+    const ranked = rows.map((r, index) => {
+        const isRevealed = r.status === 'COMPLETED' || eventEnded;
+        return {
+            rank: index + 1,
+            participantId: r.participantId,
+            name: r.name,
+            college: r.college,
+            round1Score: isRevealed ? r.round1Score : null,
+            round2Score: isRevealed ? r.round2Score : null,
+            round3Score: isRevealed ? r.round3Score : null,
+            totalScore: isRevealed ? r.totalScore : null,
+            totalTimeUsedSeconds: r.totalTimeUsedSeconds,
+            status: r.status,
+            isDemoData: false,
+            eventEnded: isRevealed,
+        };
+    });
 
-    return res.json({ success: true, leaderboard: ranked });
+    return res.json({ success: true, leaderboard: ranked, eventEnded });
+});
+
+// Reset Contest & Wipe All Data Endpoint
+router.post(['/admin/reset-contest', '/competition/reset'], (req, res) => {
+    db.exec(`
+        DELETE FROM participants;
+        DELETE FROM participant_sessions;
+        DELETE FROM submissions;
+        DELETE FROM proctoring_events;
+        DELETE FROM live_screens;
+    `);
+    broadcast('reset_contest', {});
+    return res.json({ success: true, message: 'All contest dossiers, submissions, and logs wiped.' });
+});
+
+// Toggle Event Ended status (reveals / hides scores)
+router.post('/admin/toggle-event-ended', (req, res) => {
+    const { eventEnded } = req.body || {};
+    const val = eventEnded ? '1' : '0';
+    db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_ended', ?)").run(val);
+    broadcast('event_ended_updated', { eventEnded: Boolean(eventEnded) });
+    return res.json({ success: true, eventEnded: Boolean(eventEnded) });
 });
 
 // ============================================================================

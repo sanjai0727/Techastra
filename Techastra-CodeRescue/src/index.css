@@ -1,0 +1,311 @@
+@import "tailwindcss";
+
+:root {
+  --button-highlight: #ffffff;
+  --button-face: #dfdfdf;
+  --button-shadow: #808080;
+  --window-frame: #000000;
+  --surface: #c0c0c0;
+  --surface-hover: #d4d4d4;
+  --border-field: inset -1px -1px var(--button-highlight),
+    inset 1px 1px var(--button-shadow), inset -2px -2px var(--button-face),
+    inset 2px 2px var(--window-frame);
+  --border-raised-outer: inset -1px -1px var(--window-frame),
+    inset 1px 1px var(--button-highlight);
+  --border-raised-inner: inset -2px -2px var(--button-shadow),
+    inset 2px 2px var(--button-face);
+  --border-status: inset -1px -1px var(--button-highlight),
+    inset 1px 1px var(--button-shadow);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #c0c0c0;
+  color: #000000;
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  color: #000000;
+  margin: 0;
+}
+
+code, pre, .font-mono {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+}
+
+/* Windows 95 Button */
+.site-button, .win95-btn {
+  box-sizing: border-box;
+  background: var(--surface);
+  box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+  border-radius: 0;
+  border: none;
+  color: #000000;
+  font-size: 11px;
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-weight: normal;
+  padding: 3px 12px;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 23px;
+  outline: none;
+}
+
+.site-button:hover, .win95-btn:hover {
+  background-color: var(--surface);
+}
+
+.site-button:active, .site-button.active, .win95-btn:active, .win95-btn.active {
+  box-shadow: var(--border-raised-inner), var(--border-raised-outer);
+  background-color: var(--surface);
+  padding: 4px 11px 2px 13px;
+}
+
+.site-button:disabled, .win95-btn:disabled {
+  color: #808080;
+  text-shadow: 1px 1px #ffffff;
+  cursor: not-allowed;
+  box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+}
+
+/* Windows 95 Sunken Text Input / Control */
+.site-input, .win95-input {
+  width: 100%;
+  padding: 3px 6px;
+  box-sizing: border-box;
+  border: none;
+  box-shadow: var(--border-field);
+  background-color: #ffffff;
+  color: #000000;
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-size: 12px;
+  outline: none;
+}
+
+.site-input:focus, .win95-input:focus {
+  outline: none;
+  background-color: #ffffff;
+}
+
+/* Windows 95 Sunken Frame Container */
+.site-inset, .win95-sunken {
+  box-shadow: var(--border-field);
+  background-color: #ffffff;
+}
+
+/* Windows 95 GroupBox / Fieldset */
+fieldset.win95-fieldset, .win95-fieldset {
+  border: 2px groove #dfdfdf !important;
+  padding: 8px 12px 10px 12px !important;
+  margin: 8px 0 !important;
+  background-color: transparent;
+  box-sizing: border-box;
+  display: block !important;
+}
+
+legend.win95-legend, .win95-legend {
+  display: block !important;
+  float: none !important;
+  width: max-content !important;
+  max-width: calc(100% - 16px) !important;
+  font-weight: bold !important;
+  padding: 0 4px !important;
+  margin-left: 6px !important;
+  font-size: 11px !important;
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif !important;
+  color: #000000;
+  background: #c0c0c0;
+  line-height: 1.2 !important;
+}
+
+/* Windows 95 Status Bar / Sunken Panel */
+.win95-statusbar {
+  background: #c0c0c0;
+  border-top: 1px solid #808080;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.win95-status-panel {
+  box-shadow: var(--border-status);
+  padding: 2px 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Windows 95 Badges / Status Chips */
+.win95-badge, .cyber-pill {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-weight: normal;
+  border-radius: 0;
+  background: var(--surface);
+  color: #000000;
+  box-shadow: var(--border-status);
+}
+
+.cyber-pill-green {
+  background: #c0c0c0;
+  color: #006000;
+  font-weight: bold;
+}
+
+.cyber-pill-red {
+  background: #c0c0c0;
+  color: #a00000;
+  font-weight: bold;
+}
+
+.cyber-pill-amber {
+  background: #c0c0c0;
+  color: #704000;
+  font-weight: bold;
+}
+
+.cyber-pill-cyan {
+  background: #c0c0c0;
+  color: #000080;
+  font-weight: bold;
+}
+
+/* Windows 95 Table */
+.retro-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11px;
+  background: #ffffff;
+  box-shadow: var(--border-field);
+}
+
+.retro-table th {
+  background: #c0c0c0;
+  box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+  padding: 3px 6px;
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  font-weight: bold;
+  text-align: left;
+  border: none;
+  user-select: none;
+}
+
+.retro-table td {
+  border-bottom: 1px solid #d4d4d4;
+  border-right: 1px solid #d4d4d4;
+  padding: 3px 6px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+}
+
+/* Windows 95 Menu Bar */
+.win95-menubar {
+  background: #c0c0c0;
+  border-bottom: 1px solid #808080;
+  padding: 1px 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+}
+
+.win95-menu-item {
+  padding: 2px 6px;
+  cursor: pointer;
+  color: #000000;
+  user-select: none;
+}
+
+.win95-menu-item:hover, .win95-menu-item.active {
+  background: #000080;
+  color: #ffffff;
+}
+
+/* Windows 95 Property Sheet Tab */
+.win95-tab {
+  background: #c0c0c0;
+  box-shadow: inset -1px 0 #000000, inset 1px 1px #ffffff, inset 0 2px #dfdfdf;
+  padding: 3px 10px 2px 10px;
+  font-size: 11px;
+  font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  cursor: pointer;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  margin-right: 2px;
+  margin-top: 2px;
+}
+
+.win95-tab.active {
+  background: #ffffff;
+  box-shadow: inset -1px 0 #000000, inset 1px 1px #ffffff, inset 0 2px #ffffff;
+  font-weight: bold;
+  margin-top: 0;
+  padding-top: 5px;
+  padding-bottom: 4px;
+  z-index: 10;
+}
+
+/* Horizontal Etched Divider */
+.win95-divider {
+  border: none;
+  border-top: 1px solid #808080;
+  border-bottom: 1px solid #ffffff;
+  margin: 6px 0;
+  height: 2px;
+}
+
+/* Windows 95 Tool Window Titlebar (like Visual Studio 97 docked panes) */
+.win95-tool-title {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  border-bottom: 1px solid #808080;
+}
+
+/* Windows 95 Dialog Frame */
+.win95-dialog-frame {
+  background-color: #c0c0c0;
+  box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+  border: 1px solid #dfdfdf;
+}
+
+/* Windows 95 Digital / LED readouts */
+.win95-led {
+  background: #000000;
+  color: #00ff00;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-weight: bold;
+  padding: 1px 6px;
+  box-shadow: inset -1px -1px #ffffff, inset 1px 1px #808080;
+  display: inline-flex;
+  align-items: center;
+}
+
+.win95-led-red {
+  color: #ff3333;
+}
+

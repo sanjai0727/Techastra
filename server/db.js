@@ -160,7 +160,19 @@ function initSchema() {
             author TEXT NOT NULL DEFAULT 'SYSTEM',
             created_at TEXT NOT NULL
         );
+
+        -- Competition Global Settings
+        CREATE TABLE IF NOT EXISTS competition_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
     `);
+
+    // Ensure event_ended flag defaults to 0 (scores hidden until event ends)
+    const checkEventEnded = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
+    if (!checkEventEnded) {
+        db.prepare("INSERT INTO competition_settings (key, value) VALUES ('event_ended', '0')").run();
+    }
 
     // Seed default Admin if not exists
     const checkAdmin = db.prepare('SELECT id FROM admins WHERE username = ?').get('admin');
