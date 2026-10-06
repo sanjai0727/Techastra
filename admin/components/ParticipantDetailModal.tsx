@@ -194,21 +194,75 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                 )}
             </div>
 
-            {/* Actions */}
+            {/* Workstation Controls & Actions */}
+            <div style={{ backgroundColor: '#eef2f7', border: '1px solid #7a92ad', padding: 10, marginBottom: 12 }}>
+                <div style={{ fontWeight: 'bold', fontSize: 12, color: '#000080', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    🎮 INDIVIDUAL WORKSTATION COMMAND &amp; TELEMETRY CONTROL
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button
+                        className="admin-btn"
+                        style={{ backgroundColor: '#2e7d32', color: '#fff', fontWeight: 'bold' }}
+                        onClick={async () => {
+                            const res = await ParticipantService.adjustParticipantTimer(participant.id, 300);
+                            alert(res.success ? `✓ Granted +5 minutes extra time to ${participant.name} (${participant.id})` : `Failed: ${res.error}`);
+                        }}
+                    >
+                        ⏱ +5m Extra Time
+                    </button>
+                    <button
+                        className="admin-btn"
+                        style={{ backgroundColor: '#388e3c', color: '#fff' }}
+                        onClick={async () => {
+                            const res = await ParticipantService.adjustParticipantTimer(participant.id, 60);
+                            alert(res.success ? `✓ Granted +1 minute extra time to ${participant.name}` : `Failed: ${res.error}`);
+                        }}
+                    >
+                        ⏱ +1m Extra Time
+                    </button>
+                    <button
+                        className="admin-btn"
+                        style={{ backgroundColor: '#0288d1', color: '#fff' }}
+                        onClick={async () => {
+                            const confirmed = window.confirm(`Reset workstation session for ${participant.name} (${participant.id})?\n\nThis will pardon all strikes (reset to 0), clear security flags, and reinstate status to ACTIVE.`);
+                            if (!confirmed) return;
+                            const res = await ParticipantService.resetSession(participant.id);
+                            alert(res.success ? `✓ Workstation session reset for ${participant.name}` : `Failed: ${res.error}`);
+                        }}
+                    >
+                        🔄 Pardon Strikes &amp; Reset Session
+                    </button>
+                    <button
+                        className="admin-btn admin-btn-danger"
+                        onClick={() => {
+                            if (window.confirm(`Disqualify/flag participant ${participant.name}?`)) {
+                                onFlag(participant.id);
+                            }
+                        }}
+                    >
+                        🚩 Flag / Disqualify
+                    </button>
+                    <button
+                        className="admin-btn admin-btn-primary"
+                        onClick={() => {
+                            onReinstate(participant.id);
+                            alert(`✓ Reinstated ${participant.name} to ACTIVE status.`);
+                        }}
+                    >
+                        ✅ Reinstate Session
+                    </button>
+                </div>
+            </div>
+
+            {/* Actions Footer */}
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
                 {submissions.length > 0 && (
                     <button className="admin-btn" onClick={() => onViewSubmission(submissions[0])}>
-                        VIEW SUBMISSION
+                        VIEW LATEST CODE SUBMISSION
                     </button>
                 )}
-                <button className="admin-btn admin-btn-danger" onClick={() => onFlag(participant.id)}>
-                    FLAG PARTICIPANT
-                </button>
-                <button className="admin-btn admin-btn-primary" onClick={() => onReinstate(participant.id)}>
-                    REINSTATE SESSION
-                </button>
                 <button className="admin-btn" onClick={onClose}>
-                    CLOSE
+                    CLOSE DOSSIER
                 </button>
             </div>
         </div>

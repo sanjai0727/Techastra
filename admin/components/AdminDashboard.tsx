@@ -26,12 +26,41 @@ interface AdminDashboardProps {
     onLogout: () => void;
 }
 
+interface SystemStats {
+    totalParticipants: number;
+    activeParticipants: number;
+    qualifiedParticipants: number;
+    flaggedParticipants: number;
+    totalSubmissions: number;
+    totalEvents: number;
+    sseClients: number;
+    eventEnded: boolean;
+    uptimeSeconds: number;
+    serverTime: string;
+}
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     const [activeTab, setActiveTab] = useState<DashboardTab>('participants');
     const [participants, setParticipants] = useState<Participant[]>(ParticipantService.getParticipants());
     const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
     const [inspectedSubmission, setInspectedSubmission] = useState<Submission | null>(null);
     const [streamStatus, setStreamStatus] = useState<StreamConnectionStatus>('CONNECTING');
+    const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
+    const [isTogglingScore, setIsTogglingScore] = useState<boolean>(false);
+
+    const fetchSystemStats = async () => {
+        try {
+            const res = await fetch('/api/admin/system-stats', {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`,
+                },
+            });
+            const data = await res.json();
+            if (data.success && data.stats) {
+                setSystemStats(data.stats);
+            }
+        } catch {}
+    };
 
     useEffect(() => {
         // Initialize Realtime SSE Stream
@@ -45,24 +74,70 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                 if (refreshed) setSelectedParticipant(refreshed);
             }
         });
+
+        fetchSystemStats();
+        const statsInterval = setInterval(fetchSystemStats, 5000);
+
         return () => {
             unsubsStatus();
             unsubscribe();
+            clearInterval(statsInterval);
         };
     }, [selectedParticipant]);
 
     const handleFlag = (id: string) => {
         ParticipantService.flagParticipant(id, 'Coordinator manual flag');
+        fetchSystemStats();
     };
 
     const handleReinstate = (id: string) => {
         ParticipantService.reinstateSession(id);
+        fetchSystemStats();
     };
 
     const handleViewSubmissionFromModal = (submission: Submission) => {
         setInspectedSubmission(submission);
         setSelectedParticipant(null);
         setActiveTab('submissions');
+    };
+
+    const handleToggleScorePrivacy = async () => {
+        if (!systemStats) return;
+        const nextState = !systemStats.eventEnded;
+        const msg = nextState
+            ? '⚠️ REVEAL ALL SCORES & FINAL STANDINGS?\n\nThis will publish final marks and reveal complete leaderboards across all contestant terminals.\n\nProceed to REVEAL?'
+            : '🔒 CONCEAL SCORES & LEADERBOARDS?\n\nThis will re-mask scores on contestant screens to keep competition results confidential.\n\nProceed to CONCEAL?';
+
+        if (!window.confirm(msg)) return;
+
+        setIsTogglingScore(true);
+        try {
+            const res = await fetch('/api/admin/toggle-event-ended', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`,
+                },
+                body: JSON.stringify({ eventEnded: nextState }),
+            });
+            const d = await res.json();
+            if (d.success) {
+                setSystemStats(prev => prev ? { ...prev, eventEnded: d.eventEnded } : null);
+                alert(d.eventEnded ? '✓ Scores are now REVEALED publicly!' : '✓ Scores are now CONCEALED.');
+            } else {
+                alert(`Error: ${d.error || 'Unauthorized'}`);
+            }
+        } catch (e: any) {
+            alert(`Failed: ${e.message}`);
+        } finally {
+            setIsTogglingScore(false);
+        }
+    };
+
+    const formatUptime = (seconds: number) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
 
     return (
@@ -74,10 +149,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     <div className="admin-cc-sub">Department of Computer Science &amp; Engineering &bull; Department of Cyber Security</div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     {streamStatus === 'CONNECTED' ? (
                         <span style={{ fontSize: 11, fontWeight: 'bold', color: '#0d652d', backgroundColor: '#e6f4ea', padding: '2px 8px', border: '1px solid #137333' }}>
-                            🟢 REAL-TIME STREAM ACTIVE (0ms)
+                            🟢 SSE STREAM ACTIVE (0ms)
                         </span>
                     ) : streamStatus === 'CONNECTING' ? (
                         <span style={{ fontSize: 11, fontWeight: 'bold', color: '#b06000', backgroundColor: '#fef7e0', padding: '2px 8px', border: '1px solid #b06000' }}>
@@ -88,6 +163,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                             🔴 OFFLINE (POLLING ACTIVE)
                         </span>
                     )}
+
+                    {/* Master Score Reveal Quick Toggle */}
+                    {systemStats && (
+                        <button
+                            className="admin-btn"
+                            disabled={isTogglingScore}
+                            onClick={handleToggleScorePrivacy}
+                            style={{
+                                padding: '3px 10px',
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                backgroundColor: systemStats.eventEnded ? '#2e7d32' : '#7a5200',
+                                color: '#fff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                            }}
+                            title="Toggle whether scores are hidden or revealed to contestants"
+                        >
+                            {systemStats.eventEnded ? '🔓 SCORES REVEALED (Public)' : '🔒 SCORES LOCKED (Private)'}
+                        </button>
+                    )}
+
                     <button
                         className="admin-btn admin-btn-primary"
                         onClick={async () => {
@@ -95,6 +193,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                                 const res = await fetch('/api/coordinator/sync', { method: 'POST' });
                                 const d = await res.json();
                                 alert(d.success ? `Successfully synced ${d.synced} contestants from Techastra Event Portal!` : `Sync error: ${d.error}`);
+                                ParticipantService.pollServerTelemetry();
+                                fetchSystemStats();
                             } catch (e: any) {
                                 alert(`Failed to connect to sync endpoint: ${e.message}`);
                             }
@@ -104,6 +204,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     >
                         🔄 Sync Live Portal
                     </button>
+
                     <button
                         className="admin-btn admin-btn-danger"
                         onClick={async () => {
@@ -128,6 +229,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                                 if (d.success) {
                                     alert('✓ ' + d.message);
                                     ParticipantService.pollServerTelemetry();
+                                    fetchSystemStats();
                                 } else {
                                     alert(`Reset error: ${d.error || 'Unauthorized'}`);
                                 }
@@ -140,6 +242,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     >
                         ⚠️ Reset Contest Data
                     </button>
+
                     <span style={{ fontSize: 12, color: '#333' }}>
                         Coordinator: <b>{user.username}</b>
                     </span>
@@ -152,6 +255,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     </button>
                 </div>
             </div>
+
+            {/* System Infrastructure Telemetry Ribbon */}
+            {systemStats && (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 8,
+                    marginBottom: 10,
+                    padding: '6px 10px',
+                    backgroundColor: '#d8e4f0',
+                    border: '1px solid #7a92ad',
+                    fontSize: 11,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-between',
+                }}>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span>👥 Enrolled: <b>{systemStats.totalParticipants}</b></span>
+                        <span style={{ color: '#0d652d' }}>🟢 Active Terminals: <b>{systemStats.activeParticipants}</b></span>
+                        <span style={{ color: '#000080' }}>🏆 Qualified: <b>{systemStats.qualifiedParticipants}</b></span>
+                        <span style={{ color: systemStats.flaggedParticipants > 0 ? '#c5221f' : '#333' }}>
+                            🚩 Flagged/Strikes: <b>{systemStats.flaggedParticipants}</b>
+                        </span>
+                        <span>💾 Code Submissions: <b>{systemStats.totalSubmissions}</b></span>
+                        <span>🛡️ Proctoring Events: <b>{systemStats.totalEvents}</b></span>
+                        <span>📡 Live SSE Pool: <b>{systemStats.sseClients}</b></span>
+                    </div>
+                    <div style={{ color: '#555', fontStyle: 'italic' }}>
+                        ⏱ Uptime: {formatUptime(systemStats.uptimeSeconds)} &bull; {new Date(systemStats.serverTime).toLocaleTimeString()}
+                    </div>
+                </div>
+            )}
 
             {/* Overview Stat Cards */}
             <OverviewCards participants={participants} />
@@ -186,19 +321,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     className={`admin-tab-btn ${activeTab === 'rounds' ? 'active' : ''}`}
                     onClick={() => setActiveTab('rounds')}
                 >
-                    ⚙️ Round Management
+                    ⚙️ Round &amp; Timer Controls
                 </button>
                 <button
                     className={`admin-tab-btn ${activeTab === 'announcements' ? 'active' : ''}`}
                     onClick={() => setActiveTab('announcements')}
                 >
-                    📢 Announcements
+                    📢 Wire Broadcasts
                 </button>
                 <button
                     className={`admin-tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
                     onClick={() => setActiveTab('reports')}
                 >
-                    📈 Reports &amp; Exports
+                    📈 Reports &amp; Score Reveal
                 </button>
             </div>
 
@@ -206,7 +341,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
             {activeTab === 'participants' && (
                 <div>
                     <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        LIVE PARTICIPANT MONITOR
+                        LIVE PARTICIPANT MONITOR &amp; WORKSTATION CONTROLS
                     </h4>
                     <LiveParticipantMonitor
                         participants={participants}
@@ -247,7 +382,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
             {activeTab === 'rounds' && (
                 <div>
                     <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        TOURNAMENT ROUNDS &amp; QUALIFICATION CUTOFF CONFIGURATION
+                        MASTER CLOCK &amp; TOURNAMENT ROUND CONTROLS
                     </h4>
                     <RoundManagement />
                 </div>
@@ -256,7 +391,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
             {activeTab === 'announcements' && (
                 <div>
                     <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        SYSTEM ANNOUNCEMENTS &amp; WIRE BROADCAST
+                        SYSTEM ANNOUNCEMENTS &amp; ARENA WIRE BROADCAST
                     </h4>
                     <AnnouncementsPanel />
                 </div>
@@ -265,7 +400,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
             {activeTab === 'reports' && (
                 <div>
                     <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        TOURNAMENT SCORECARD &amp; OFFICIAL REPORTS
+                        TOURNAMENT SCORECARD, DATA EXPORTS &amp; AUDIT REPORTS
                     </h4>
                     <ReportsPanel participants={participants} />
                 </div>

@@ -174,18 +174,21 @@ function initSchema() {
         db.prepare("INSERT INTO competition_settings (key, value) VALUES ('event_ended', '0')").run();
     }
 
-    // Seed default Admin if not exists
-    const checkAdmin = db.prepare('SELECT id FROM admins WHERE username = ?').get('admin');
-    if (!checkAdmin) {
-        const defaultPass = process.env.ADMIN_PASSKEY || 'techastra2026';
-        const defaultUser = process.env.ADMIN_ID || 'admin';
-        const hashedPassword = hashPassword(defaultPass);
-        db.prepare(`
-            INSERT INTO admins (username, password_hash, name, role, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        `).run(defaultUser, hashedPassword, 'Chief Event Coordinator', 'ADMINISTRATOR', new Date().toISOString());
-        console.log(`[DB] Initialized default admin user: ${defaultUser}`);
-    }
+    // Seed default Admins if not exist
+    const ensureAdmin = (user, pass, name) => {
+        const existing = db.prepare('SELECT id FROM admins WHERE LOWER(username) = LOWER(?)').get(user);
+        if (!existing) {
+            const hashedPassword = hashPassword(pass);
+            db.prepare(`
+                INSERT INTO admins (username, password_hash, name, role, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            `).run(user, hashedPassword, name, 'ADMINISTRATOR', new Date().toISOString());
+            console.log(`[DB] Initialized admin user: ${user}`);
+        }
+    };
+
+    ensureAdmin('admin', process.env.ADMIN_PASSKEY || 'techastra2026', 'Chief Event Coordinator');
+    ensureAdmin('coderescue@techastra.drmgrdu.ac.in', 'TechDay26', 'Code Rescue Event Coordinator');
 
     // Seed Rounds configuration if not exists
     const countRounds = db.prepare('SELECT COUNT(*) as count FROM rounds').get();

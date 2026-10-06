@@ -134,6 +134,23 @@ export class RoundService {
         }).catch(() => {});
     }
 
+    public static async adjustRoundTimer(roundId: string, additionalSeconds?: number, setSeconds?: number): Promise<boolean> {
+        try {
+            const res = await fetch('/api/rounds/adjust-timer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AdminAuthService.getAuthHeader(),
+                },
+                body: JSON.stringify({ roundId, additionalSeconds, setSeconds }),
+            });
+            const data = await res.json();
+            return !!data.success;
+        } catch {
+            return false;
+        }
+    }
+
     public static subscribe(listener: (rounds: RoundStatus[]) => void): () => void {
         this.init();
         this.listeners.push(listener);

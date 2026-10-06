@@ -264,6 +264,68 @@ export class ParticipantService {
         return changed;
     }
 
+    public static async adjustParticipantTimer(id: string, additionalSeconds?: number, setSeconds?: number): Promise<boolean> {
+        try {
+            const res = await fetch(`/api/participants/${encodeURIComponent(id)}/adjust-timer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AdminAuthService.getAuthHeader(),
+                },
+                body: JSON.stringify({ additionalSeconds, setSeconds }),
+            });
+            const data = await res.json();
+            return !!data.success;
+        } catch {
+            return false;
+        }
+    }
+
+    public static async resetSession(id: string): Promise<boolean> {
+        try {
+            const res = await fetch(`/api/participants/${encodeURIComponent(id)}/reset-session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AdminAuthService.getAuthHeader(),
+                },
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.pollServerTelemetry();
+            }
+            return !!data.success;
+        } catch {
+            return false;
+        }
+    }
+
+    public static async registerParticipant(data: {
+        participantId?: string;
+        fullName: string;
+        college: string;
+        department: string;
+        year: string;
+    }): Promise<{ success: boolean; error?: string; participant?: any }> {
+        try {
+            const res = await fetch('/api/participants/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AdminAuthService.getAuthHeader(),
+                },
+                body: JSON.stringify(data),
+            });
+            const result = await res.json();
+            if (result.success) {
+                this.pollServerTelemetry();
+            }
+            return result;
+        } catch (e: any) {
+            return { success: false, error: e.message || 'Registration failed' };
+        }
+    }
+
     public static subscribe(listener: (participants: Participant[]) => void): () => void {
         this.initTelemetryListener();
         this.listeners.push(listener);

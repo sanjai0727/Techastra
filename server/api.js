@@ -254,9 +254,9 @@ router.post('/admin/login', async (req, res) => {
         });
     }
 
-    const { adminId, username, passkey } = req.body || {};
+    const { adminId, username, passkey, password } = req.body || {};
     const trimmedId = typeof (adminId || username) === 'string' ? (adminId || username).trim() : '';
-    const trimmedPass = typeof passkey === 'string' ? passkey.trim() : '';
+    const trimmedPass = typeof (passkey || password) === 'string' ? (passkey || password).trim() : '';
 
     if (!trimmedId || !trimmedPass) {
         return res.status(400).json({ success: false, error: 'Administrator ID and Passkey are required.' });
@@ -1171,6 +1171,99 @@ router.put('/rounds/:id', requireAdminAuth, (req, res) => {
     broadcast('rounds_updated', getAllRoundsFormatted());
 
     return res.json({ success: true, message: `Round ${roundId} updated.` });
+});
+
+// Master Clock Adjustment (Rounds or Global)
+router.post('/rounds/adjust-timer', requireAdminAuth, (req, res) => {
+    const { roundId, additionalSeconds, setSeconds } = req.body || {};
+    const rId = (roundId || 'ALL').toUpperCase();
+
+    if (setSeconds !== undefined) {
+        const secs = Math.max(0, Number(setSeconds));
+        if (rId === 'ALL') {
+            db.prepare('UPDATE participants SET time_remaining = ?').run(secs);
+        } else {
+            db.prepare('UPDATE participants SET time_remaining = ? WHERE current_round = ?').run(secs, rId);
+        }
+        broadcast('round_timer_adjusted', { roundId: rId, setSeconds: secs });
+    } else if (additionalSeconds !== undefined) {
+        const delta = Number(additionalSeconds);
+        if (rId === 'ALL') {
+            db.prepare('UPDATE participants SET time_remaining = MAX(0, time_remaining + ?)').run(delta);
+        } else {
+            db.prepare('UPDATE participants SET time_remaining = MAX(0, time_remaining + ?) WHERE current_round = ?').run(delta, rId);
+        }
+        broadcast('round_timer_adjusted', { roundId: rId, additionalSeconds: delta });
+    }
+
+    broadcast('participants_updated', getAllParticipantsFormatted());
+    return res.json({ success: true, message: `Timer adjusted for ${rId}.` });
+});
+
+// Individual Participant Timer Adjustment
+router.post('/participants/:id/adjust-timer', requireAdminAuth, (req, res) => {
+    const id = req.params.id;
+    const { additionalSeconds, setSeconds } = req.body || {};
+    const p = db.prepare('SELECT time_remaining FROM participants WHERE id = ?').get(id);
+    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
+
+    let newTime = p.time_remaining;
+    if (setSeconds !== undefined) {
+        newTime = Math.max(0, Number(setSeconds));
+    } else if (additionalSeconds !== undefined) {
+        newTime = Math.max(0, p.time_remaining + Number(additionalSeconds));
+    }
+
+    db.prepare('UPDATE participants SET time_remaining = ? WHERE id = ?').run(newTime, id);
+    broadcast('participant_timer_adjusted', { participantId: id, timeRemaining: newTime });
+    broadcast('participants_updated', getAllParticipantsFormatted());
+    return res.json({ success: true, timeRemaining: newTime });
+});
+
+// Reset Individual Participant Session (Pardon strikes, restore active status)
+router.post('/participants/:id/reset-session', requireAdminAuth, (req, res) => {
+    const id = req.params.id;
+    const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
+
+    db.prepare("UPDATE participants SET strikes = 0, status = 'ACTIVE', last_event = 'Session Restored by Admin' WHERE id = ?").run(id);
+    db.prepare('DELETE FROM proctoring_events WHERE participant_id = ?').run(id);
+
+    broadcast('participants_updated', getAllParticipantsFormatted());
+    broadcast('events_updated', getAllEventsFormatted());
+    return res.json({ success: true, message: `Session reset for ${id}. Strikes cleared.` });
+});
+
+// Comprehensive System & Tournament Telemetry
+router.get('/admin/system-stats', requireAdminAuth, (req, res) => {
+    const totalParticipants = db.prepare('SELECT COUNT(*) as c FROM participants').get().c;
+    const activeParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'ACTIVE'").get().c;
+    const qualifiedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'QUALIFIED'").get().c;
+    const flaggedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'FLAGGED' OR strikes >= 2").get().c;
+    const totalSubmissions = db.prepare('SELECT COUNT(*) as c FROM submissions').get().c;
+    const totalEvents = db.prepare('SELECT COUNT(*) as c FROM proctoring_events').get().c;
+
+    let eventEnded = false;
+    try {
+        const configRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
+        eventEnded = configRow ? configRow.value === '1' : false;
+    } catch {}
+
+    return res.json({
+        success: true,
+        stats: {
+            totalParticipants,
+            activeParticipants,
+            qualifiedParticipants,
+            flaggedParticipants,
+            totalSubmissions,
+            totalEvents,
+            sseClients: sseClients.size,
+            eventEnded,
+            uptimeSeconds: Math.floor(process.uptime()),
+            serverTime: new Date().toISOString()
+        }
+    });
 });
 
 router.get('/leaderboard', (req, res) => {
