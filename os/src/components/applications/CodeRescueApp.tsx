@@ -1,35 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Window from '../os/Window';
-import useInitialWindowSize from '../../hooks/useInitialWindowSize';
 
 export interface CodeRescueAppProps extends WindowAppProps {}
 
 const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
     const getNormalSize = useCallback(() => {
-        const normalW = Math.min(1240, Math.max(940, window.innerWidth - 64));
-        const normalH = Math.min(840, Math.max(640, window.innerHeight - 74));
-        const normalTop = Math.max(8, Math.floor((window.innerHeight - 32 - normalH) / 2));
-        const normalLeft = Math.max(16, Math.floor((window.innerWidth - normalW) / 2));
+        const normalW = Math.min(1360, Math.max(980, window.innerWidth - 100));
+        const normalH = Math.min(880, Math.max(680, window.innerHeight - 90));
+        const normalTop = Math.max(14, Math.floor((window.innerHeight - 32 - normalH) / 2));
+        const normalLeft = Math.max(20, Math.floor((window.innerWidth - normalW) / 2));
         return { normalW, normalH, normalTop, normalLeft };
     }, []);
 
     const { normalW: initW, normalH: initH, normalTop: initT, normalLeft: initL } = getNormalSize();
-    const [width, setWidth] = useState(initW);
-    const [height, setHeight] = useState(initH);
-    const [top, setTop] = useState(initT);
-    const [left, setLeft] = useState(initL);
     const [isRoundActive, setIsRoundActive] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     const handleEnterFullscreen = useCallback(() => {
-        // Seamlessly maximize inside the inner OS desktop
         setIsRoundActive(true);
         setIsMaximized(true);
-        setTop(0);
-        setLeft(0);
-        setWidth(window.innerWidth);
-        setHeight(window.innerHeight - 32);
 
         // If running directly as top window, request browser fullscreen
         if (window.parent === window && !document.fullscreenElement) {
@@ -38,40 +28,14 @@ const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
     }, []);
 
     const handleExitFullscreen = useCallback(() => {
-        // Restore cleanly back to centered windowed size on the monitor desktop
-        const { normalW, normalH, normalTop, normalLeft } = getNormalSize();
         setIsRoundActive(false);
         setIsMaximized(false);
-        setTop(normalTop);
-        setLeft(normalLeft);
-        setWidth(normalW);
-        setHeight(normalH);
 
         // If running directly as top window, exit browser fullscreen
         if (window.parent === window && document.fullscreenElement) {
             document.exitFullscreen().catch(() => {});
         }
-    }, [getNormalSize]);
-
-    useEffect(() => {
-        const handleResize = () => {
-            if (isRoundActive) {
-                setTop(0);
-                setLeft(0);
-                setWidth(window.innerWidth);
-                setHeight(window.innerHeight - 32);
-            } else if (!isMaximized) {
-                const { normalW, normalH, normalTop, normalLeft } = getNormalSize();
-                setTop(normalTop);
-                setLeft(normalLeft);
-                setWidth(normalW);
-                setHeight(normalH);
-            }
-        };
-
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, [isRoundActive, isMaximized, getNormalSize]);
+    }, []);
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -130,30 +94,6 @@ const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
         };
     }, [handleEnterFullscreen, handleExitFullscreen]);
 
-    const handleMaximizeChange = (maximized: boolean) => {
-        setIsMaximized(maximized);
-        if (!maximized) {
-            if (isRoundActive) {
-                try {
-                    iframeRef.current?.contentWindow?.postMessage(
-                        { type: 'ARENA_FULLSCREEN_LOST' },
-                        '*'
-                    );
-                } catch (e) {}
-            }
-            const { normalW, normalH, normalTop, normalLeft } = getNormalSize();
-            setTop(normalTop);
-            setLeft(normalLeft);
-            setWidth(normalW);
-            setHeight(normalH);
-        } else {
-            setTop(0);
-            setLeft(0);
-            setWidth(window.innerWidth);
-            setHeight(window.innerHeight - 32);
-        }
-    };
-
     const handleMinimizeWindow = () => {
         if (isRoundActive) {
             try {
@@ -199,23 +139,27 @@ const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
 
     return (
         <Window
-            top={top}
-            left={left}
-            width={width}
-            height={height}
+            top={initT}
+            left={initL}
+            width={initW}
+            height={initH}
             isMaximized={isMaximized}
-            onMaximizeChange={handleMaximizeChange}
+            onMaximizeChange={(max) => {
+                setIsMaximized(max);
+                if (!max && isRoundActive) {
+                    try {
+                        iframeRef.current?.contentWindow?.postMessage(
+                            { type: 'ARENA_FULLSCREEN_LOST' },
+                            '*'
+                        );
+                    } catch (e) {}
+                }
+            }}
             windowTitle="TECHASTRA 2026 — Code Rescue Championship Arena"
             windowBarIcon="computerBig"
             closeWindow={handleCloseWindow}
             onInteract={props.onInteract}
             minimizeWindow={handleMinimizeWindow}
-            onWidthChange={(w) => {
-                if (!isMaximized) setWidth(w);
-            }}
-            onHeightChange={(h) => {
-                if (!isMaximized) setHeight(h);
-            }}
             bottomLeftText={'TECHASTRA 2026 • Code Rescue Live Debugging Platform'}
         >
             <div style={styles.container}>

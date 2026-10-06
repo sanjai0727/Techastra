@@ -27,7 +27,7 @@ export const FinalResultPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full max-w-5xl xl:max-w-6xl mx-auto my-2 sm:my-3 px-2 sm:px-4 select-none font-sans text-black text-sm">
+    <div className="w-full max-w-5xl xl:max-w-6xl mx-auto my-auto p-1 sm:p-2 select-none font-sans text-black text-sm">
       <div className="win95-dialog-frame shadow-md">
         {/* Titlebar */}
         <div className="bg-[#000080] text-white px-2 py-1 flex items-center justify-between font-bold text-xs">

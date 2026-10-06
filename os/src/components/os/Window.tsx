@@ -63,14 +63,19 @@ const Window: React.FC<WindowProps> = (props) => {
     useEffect(() => {
         if (typeof props.isMaximized === 'boolean') {
             setIsMaximized(props.isMaximized);
-            if (!props.isMaximized) {
-                if (typeof props.width === 'number') setWidth(props.width);
-                if (typeof props.height === 'number') setHeight(props.height);
-                if (typeof props.top === 'number') setTop(props.top);
-                if (typeof props.left === 'number') setLeft(props.left);
+            if (props.isMaximized) {
+                setWidth(window.innerWidth);
+                setHeight(window.innerHeight - 32);
+                setTop(0);
+                setLeft(0);
+            } else {
+                setWidth(preMaxSize.width || props.width || 1240);
+                setHeight(preMaxSize.height || props.height || 840);
+                setTop(preMaxSize.top || props.top || 16);
+                setLeft(preMaxSize.left || props.left || 20);
             }
         }
-    }, [props.isMaximized, props.width, props.height, props.top, props.left]);
+    }, [props.isMaximized]); // eslint-disable-line
 
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
@@ -78,6 +83,11 @@ const Window: React.FC<WindowProps> = (props) => {
     const startResize = (event: any) => {
         event.preventDefault();
         setIsResizing(true);
+        if (resizeRef.current) {
+            resizeRef.current.style.width = `${width}px`;
+            resizeRef.current.style.height = `${height}px`;
+            resizeRef.current.style.opacity = 1;
+        }
         window.addEventListener('mousemove', onResize, false);
         window.addEventListener('mouseup', stopResize, false);
     };
@@ -94,11 +104,15 @@ const Window: React.FC<WindowProps> = (props) => {
         setIsResizing(false);
         const newW = parseInt(resizeRef.current.style.width, 10);
         const newH = parseInt(resizeRef.current.style.height, 10);
-        if (!isNaN(newW)) {
+        if (!isNaN(newW) && newW > 400) {
             setWidth(newW);
+            setPreMaxSize((prev) => ({ ...prev, width: newW }));
+            props.onWidthChange && props.onWidthChange(newW);
         }
-        if (!isNaN(newH)) {
+        if (!isNaN(newH) && newH > 200) {
             setHeight(newH);
+            setPreMaxSize((prev) => ({ ...prev, height: newH }));
+            props.onHeightChange && props.onHeightChange(newH);
         }
         resizeRef.current.style.opacity = 0;
         window.removeEventListener('mousemove', onResize, false);
@@ -125,10 +139,10 @@ const Window: React.FC<WindowProps> = (props) => {
 
     const stopDrag = ({ clientX, clientY }: any) => {
         setIsDragging(false);
-        // dragRef.current.style.opacity = 0;
         const { x, y } = getXYFromDragProps(clientX, clientY);
         setTop(y);
         setLeft(x);
+        setPreMaxSize((prev) => ({ ...prev, top: y, left: x }));
         if (isMaximized) {
             setIsMaximized(false);
             props.onMaximizeChange && props.onMaximizeChange(false);
@@ -153,30 +167,6 @@ const Window: React.FC<WindowProps> = (props) => {
     useEffect(() => {
         dragRef.current.style.transform = `translate(${left}px, ${top}px)`;
     });
-
-    useEffect(() => {
-        props.onWidthChange && props.onWidthChange(contentWidth);
-    }, [props.onWidthChange, contentWidth]); // eslint-disable-line
-
-    useEffect(() => {
-        props.onHeightChange && props.onHeightChange(contentHeight);
-    }, [props.onHeightChange, contentHeight]); // eslint-disable-line
-
-    useEffect(() => {
-        if (typeof props.width === 'number' && props.width > 200) setWidth(props.width);
-    }, [props.width]);
-
-    useEffect(() => {
-        if (typeof props.height === 'number' && props.height > 200) setHeight(props.height);
-    }, [props.height]);
-
-    useEffect(() => {
-        if (typeof props.top === 'number' && props.top >= 0) setTop(props.top);
-    }, [props.top]);
-
-    useEffect(() => {
-        if (typeof props.left === 'number' && props.left >= 0) setLeft(props.left);
-    }, [props.left]);
 
     useEffect(() => {
         setContentWidth(contentRef.current.getBoundingClientRect().width);

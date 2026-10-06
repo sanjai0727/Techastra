@@ -86,10 +86,10 @@ export const LeaderboardPage: React.FC = () => {
 
 
   return (
-    <div className="w-full max-w-6xl mx-auto my-2 sm:my-4 px-2 sm:px-4 select-none font-sans text-black text-sm">
+    <div className="w-full max-w-6xl xl:max-w-7xl mx-auto my-auto p-1 sm:p-2 select-none font-sans text-black text-sm">
       <div className="win95-dialog-frame shadow-md">
         {/* Titlebar */}
-        <div className="bg-[#000080] text-white px-2 py-1 flex items-center justify-between font-bold text-xs">
+        <div className="bg-[#000080] text-white px-2.5 py-1.5 flex items-center justify-between font-bold text-xs sm:text-sm">
           <div className="flex items-center gap-1.5">
             <span>🏆</span>
             <span>Championship Arbitration Matrix — Live Standings</span>
@@ -97,47 +97,47 @@ export const LeaderboardPage: React.FC = () => {
           <button
             onClick={handleBack}
             className="site-button"
-            style={{ padding: '0 4px', height: 16, fontSize: 10, lineHeight: '12px' }}
+            style={{ padding: '0 5px', height: 18, fontSize: 11, lineHeight: '14px' }}
           >
             ✕
           </button>
         </div>
 
         {/* Toolbar */}
-        <div className="p-2 bg-[#c0c0c0] border-b border-[#808080] flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="p-2.5 bg-[#c0c0c0] border-b border-[#808080] flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={handleBack}
               className="site-button"
-              style={{ fontSize: 11, padding: '2px 10px' }}
+              style={{ fontSize: 13, padding: '4px 14px', fontWeight: 'bold' }}
             >
               &lt; Return
             </button>
-            <span className="font-bold text-sm text-black">
+            <span className="font-bold text-sm sm:text-base text-black">
               Official Championship Standings
             </span>
-            <span className="win95-badge font-mono text-[10px] bg-[#ffffdf] text-[#804000] border border-[#c0a000] px-1.5">
+            <span className="win95-badge font-mono text-xs bg-[#ffffdf] text-[#804000] border border-[#c0a000] px-2 py-0.5">
               🔒 SCORES REVEALED AFTER EVENT
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold font-mono">SEARCH:</span>
+            <span className="text-xs font-bold font-mono">SEARCH:</span>
             <input
               type="text"
               placeholder="Search contestant or college..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="site-input"
-              style={{ width: 220, padding: '2px 6px', fontSize: 11 }}
+              style={{ width: 240, padding: '4px 8px', fontSize: 13 }}
             />
           </div>
         </div>
 
         {/* Client Area / Table */}
-        <div className="p-2.5 bg-[#c0c0c0]">
-          <div className="win95-sunken p-1 bg-white overflow-x-auto">
-            <table className="retro-table text-xs">
+        <div className="p-3 bg-[#c0c0c0]">
+          <div className="win95-sunken p-1.5 bg-white overflow-x-auto">
+            <table className="retro-table text-sm">
               <thead>
                 <tr>
                   <th style={{ width: 45, textAlign: 'center' }}>Rank</th>

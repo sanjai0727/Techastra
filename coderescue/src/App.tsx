@@ -66,14 +66,14 @@ const AppContent: React.FC = () => {
   const isWorkspace = state.currentView.includes('workspace');
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden bg-[#c0c0c0] text-black flex flex-col select-none font-sans text-xs">
+    <div className="h-screen max-h-screen overflow-hidden bg-[#c0c0c0] text-black flex flex-col select-none font-sans text-sm">
       <Header />
-      <main className={`flex-1 ${isWorkspace ? 'overflow-hidden p-0' : 'overflow-auto p-2'} bg-[#c0c0c0]`}>
+      <main className={`flex-1 ${isWorkspace ? 'overflow-hidden p-0' : 'overflow-auto p-2 sm:p-4 flex flex-col justify-start items-center'} bg-[#c0c0c0]`}>
         {renderView()}
       </main>
       <footer className="win95-statusbar">
         <div className="win95-status-panel flex-1 truncate">
-          Techastra 2026 • Code Rescue Championship Arena • Dept of CSE
+          Techastra 2026 • Code Rescue Championship Arena • Dept of CSE &amp; Dept of Cyber Security
         </div>
         <div className="win95-status-panel">
           {state.currentView.toUpperCase().replace('_', ' ')}
