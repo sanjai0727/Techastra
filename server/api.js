@@ -8,8 +8,21 @@ const crypto = require('crypto');
 const { db, hashPassword, verifyPassword } = require('./db');
 
 const router = express.Router();
-const MAX_PARTICIPANTS = 55;
+const MAX_PARTICIPANTS = 1000;
 const loginAttempts = new Map();
+
+const {
+    fetchLiveRoster,
+    syncRosterToDatabase,
+    markAttendanceOnPortal,
+    getSyncStatus,
+} = require('./coordinatorSync');
+
+// Automatically sync with Dr. M.G.R. Techastra Portal on boot and periodically
+syncRosterToDatabase().catch((err) => console.error('[Portal Sync] Boot sync warning:', err.message));
+setInterval(() => {
+    syncRosterToDatabase().catch(() => {});
+}, 2 * 60 * 1000);
 
 // Real-Time SSE Connected Clients Pool
 const sseClients = new Set();
@@ -32,7 +45,7 @@ function getClientIp(req) {
     return req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 }
 
-// Helper: Parse participant slot number (1..55)
+// Helper: Parse participant slot number (e.g. SYM2026-0036 -> 36)
 function parseParticipantSlot(id) {
     if (!id || typeof id !== 'string') return null;
     const match = id.match(/(\d+)$/);
@@ -355,6 +368,11 @@ router.post('/participants/register', (req, res) => {
     let assignedId = participantId ? participantId.trim().toUpperCase() : '';
 
     if (assignedId) {
+        // Ensure standard format if provided as pure number or partial
+        if (/^\d+$/.test(assignedId)) {
+            assignedId = `SYM2026-${String(assignedId).padStart(4, '0')}`;
+            slot = parseInt(assignedId, 10);
+        }
         // Check if ID is already registered
         const existing = db.prepare('SELECT id FROM participants WHERE id = ?').get(assignedId);
         if (existing) {
@@ -365,25 +383,18 @@ router.post('/participants/register', (req, res) => {
         }
     }
 
-    if (!slot) {
-        // Find first available slot 1..55
+    if (!slot || !assignedId) {
+        // Find first available slot (start from 1, format as SYM2026-0001, etc.)
         const existingSlots = new Set(
             db.prepare('SELECT slot_number FROM participants').all().map((r) => r.slot_number)
         );
         for (let i = 1; i <= MAX_PARTICIPANTS; i++) {
             if (!existingSlots.has(i)) {
                 slot = i;
-                assignedId = `CR-2026-${String(i).padStart(3, '0')}`;
+                assignedId = `SYM2026-${String(i).padStart(4, '0')}`;
                 break;
             }
         }
-    }
-
-    if (!slot || slot > MAX_PARTICIPANTS) {
-        return res.status(400).json({
-            success: false,
-            error: `Invalid Token ID: Must be an authorized participant slot between 1 and ${MAX_PARTICIPANTS}.`,
-        });
     }
 
     const nowIso = new Date().toISOString();
@@ -395,14 +406,14 @@ router.post('/participants/register', (req, res) => {
             current_round, current_question, score, total_score,
             round1_score, round2_score, round3_score, time_remaining,
             status, strikes, last_event, last_seen, registered_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 2700, 'ACTIVE', 0, 'Registered in Arena', ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 1200, 'ACTIVE', 0, 'Registered in Arena', ?, ?)
     `);
 
     insertStmt.run(
         assignedId,
-        slot,
-        fullName || `Contestant ${slot}`,
-        college || 'College of Engineering, Guindy',
+        slot || 1,
+        fullName || `Contestant ${assignedId}`,
+        college || 'Engineering College',
         department || 'Computer Science & Engineering',
         year || '3rd Year',
         nowMs,
@@ -428,8 +439,8 @@ router.post('/participants/register', (req, res) => {
         token,
         participant: {
             id: assignedId,
-            fullName: fullName || `Contestant ${slot}`,
-            college: college || 'College of Engineering, Guindy',
+            fullName: fullName || `Contestant ${assignedId}`,
+            college: college || 'Engineering College',
             department: department || 'Computer Science & Engineering',
             year: year || '3rd Year',
             slotNumber: slot,
@@ -440,19 +451,69 @@ router.post('/participants/register', (req, res) => {
     });
 });
 
-router.post('/participants/login', (req, res) => {
+router.post('/participants/login', async (req, res) => {
     const { participantId } = req.body || {};
-    const trimmedId = typeof participantId === 'string' ? participantId.trim().toUpperCase() : '';
+    let trimmedId = typeof participantId === 'string' ? participantId.trim().toUpperCase() : '';
 
     if (!trimmedId) {
         return res.status(400).json({ success: false, error: 'Participant Token ID is required.' });
     }
 
-    const participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(trimmedId);
+    // Auto-normalize if user enters 36 -> SYM2026-0036
+    if (/^\d+$/.test(trimmedId)) {
+        trimmedId = `SYM2026-${String(trimmedId).padStart(4, '0')}`;
+    }
+
+    let participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(trimmedId);
+
+    // If not found in local DB, attempt live lookup against official Techastra Coordinator Portal
+    if (!participant) {
+        try {
+            const roster = await fetchLiveRoster();
+            const match = roster.find(
+                (r) =>
+                    (r.registrationCode && r.registrationCode.toUpperCase() === trimmedId) ||
+                    (r.registrationId && r.registrationId.toUpperCase() === trimmedId)
+            );
+
+            if (match) {
+                const code = match.registrationCode || trimmedId;
+                const numMatch = code.match(/(\d+)$/);
+                const slotNum = numMatch ? parseInt(numMatch[1], 10) : 1;
+                const nowMs = Date.now();
+                const nowIso = new Date().toISOString();
+
+                db.prepare(`
+                    INSERT INTO participants (
+                        id, slot_number, full_name, college, department, year,
+                        current_round, current_question, score, total_score,
+                        round1_score, round2_score, round3_score, time_remaining,
+                        status, strikes, last_event, last_seen, registered_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 1200, 'ACTIVE', 0, 'Verified on Official Portal', ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET full_name = excluded.full_name, college = excluded.college
+                `).run(
+                    code,
+                    slotNum,
+                    match.name || `Contestant ${code}`,
+                    match.college || 'Engineering College',
+                    'Computer Science and Engineering',
+                    'Senior Engineering',
+                    nowMs,
+                    nowIso
+                );
+
+                participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(code);
+                broadcast('participants_updated', getAllParticipantsFormatted());
+            }
+        } catch (err) {
+            console.error('[Portal Live Lookup] Error checking portal:', err.message);
+        }
+    }
+
     if (!participant) {
         return res.status(401).json({
             success: false,
-            error: `Access Denied: Participant Token '${trimmedId}' was not found in the competition roster. Please register first.`,
+            error: `Access Denied: Participant Token '${trimmedId}' was not found in the official Techastra roster. Please verify your token or register below.`,
         });
     }
 
@@ -488,6 +549,81 @@ router.post('/participants/login', (req, res) => {
             strikes: participant.strikes,
         },
     });
+});
+
+// Coordinator Portal Live Synchronization Endpoints
+router.get('/coordinator/status', (req, res) => {
+    return res.json({ success: true, ...getSyncStatus() });
+});
+
+router.post('/coordinator/sync', async (req, res) => {
+    try {
+        const result = await syncRosterToDatabase();
+        broadcast('participants_updated', getAllParticipantsFormatted());
+        return res.json(result);
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.get('/coordinator/roster', async (req, res) => {
+    try {
+        const roster = await fetchLiveRoster();
+        return res.json({ success: true, count: roster.length, roster });
+    } catch (err) {
+        // Fallback to SQLite cached participants
+        const local = db.prepare('SELECT id as registrationCode, full_name as name, college FROM participants').all();
+        return res.json({ success: true, count: local.length, roster: local, fallback: true });
+    }
+});
+
+router.get('/coordinator/lookup/:code', async (req, res) => {
+    const rawCode = req.params.code ? req.params.code.trim().toUpperCase() : '';
+    let code = rawCode;
+    if (/^\d+$/.test(code)) {
+        code = `SYM2026-${String(code).padStart(4, '0')}`;
+    }
+
+    // 1. Check local DB
+    const local = db.prepare('SELECT * FROM participants WHERE id = ?').get(code);
+    if (local) {
+        return res.json({
+            success: true,
+            found: true,
+            participant: {
+                id: local.id,
+                name: local.full_name,
+                college: local.college,
+                department: local.department,
+                year: local.year,
+            },
+        });
+    }
+
+    // 2. Check live portal
+    try {
+        const roster = await fetchLiveRoster();
+        const match = roster.find(
+            (r) =>
+                (r.registrationCode && r.registrationCode.toUpperCase() === code) ||
+                (r.registrationId && r.registrationId.toUpperCase() === code)
+        );
+        if (match) {
+            return res.json({
+                success: true,
+                found: true,
+                participant: {
+                    id: match.registrationCode || code,
+                    name: match.name,
+                    college: match.college,
+                    department: 'Computer Science & Engineering',
+                    year: 'Senior Engineering',
+                },
+            });
+        }
+    } catch (e) {}
+
+    return res.json({ success: true, found: false });
 });
 
 router.get('/participants', (req, res) => {

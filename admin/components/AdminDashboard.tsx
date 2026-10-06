@@ -88,6 +88,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                             🔴 OFFLINE (POLLING ACTIVE)
                         </span>
                     )}
+                    <button
+                        className="admin-btn admin-btn-primary"
+                        onClick={async () => {
+                            try {
+                                const res = await fetch('/api/coordinator/sync', { method: 'POST' });
+                                const d = await res.json();
+                                alert(d.success ? `Successfully synced ${d.synced} contestants from Techastra Event Portal!` : `Sync error: ${d.error}`);
+                            } catch (e: any) {
+                                alert(`Failed to connect to sync endpoint: ${e.message}`);
+                            }
+                        }}
+                        style={{ padding: '3px 10px', fontSize: 11, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 4 }}
+                        title="Synchronize contestants directly from Dr. M.G.R. Techastra Event Coordinator Portal"
+                    >
+                        🔄 Sync Live Portal
+                    </button>
                     <span style={{ fontSize: 12, color: '#333' }}>
                         Coordinator: <b>{user.username}</b>
                     </span>

@@ -53,7 +53,7 @@ export const DisqualifiedPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-gray-400">Token ID:</span>{' '}
-                <b className="text-yellow-300">{participant?.participantId || 'CR-UNKNOWN'}</b>
+                <b className="text-yellow-300">{participant?.participantId || 'SYM2026-UNKNOWN'}</b>
               </div>
               <div>
                 <span className="text-gray-400">Institution:</span>{' '}

@@ -11,37 +11,26 @@
           var platform = navigator.platform || '';
           var maxTouch = navigator.maxTouchPoints || 0;
           
-          // 1. Standard mobile user agent string
           if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(ua)) {
             return { blocked: true, reason: 'Mobile User-Agent' };
           }
-          
-          // 2. iOS 'Request Desktop Website' mode (spoofs MacIntel, but has touch hardware)
           if (platform === 'MacIntel' && maxTouch > 1) {
             return { blocked: true, reason: 'iOS Desktop-Site Mode' };
           }
-
-          // 3. Android 'Desktop site' mode (spoofs desktop Linux/Windows, but has coarse pointer and no hover)
           var hasHover = window.matchMedia ? window.matchMedia('(hover: hover)').matches : true;
           var hasCoarsePointer = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
           var hasFinePointer = window.matchMedia ? window.matchMedia('(pointer: fine)').matches : true;
-          
           if (!hasHover && hasCoarsePointer && maxTouch > 0) {
             return { blocked: true, reason: 'Android Desktop-Site Mode (Touchscreen / No Mouse)' };
           }
-
-          // 4. Client Hints API check
           if (navigator.userAgentData && navigator.userAgentData.mobile) {
             return { blocked: true, reason: 'Client Hints Mobile Hardware' };
           }
-
-          // 5. Touch device with portrait aspect ratio (no laptops operate in tall portrait mode)
           var sw = window.screen ? window.screen.width : window.innerWidth;
           var sh = window.screen ? window.screen.height : window.innerHeight;
           if (maxTouch > 1 && sh > sw * 1.25 && !hasFinePointer) {
             return { blocked: true, reason: 'Portrait Touch Device' };
           }
-
           return { blocked: false };
         }
 
@@ -55,11 +44,10 @@
         }
       })();
     </script>
-    <script defer src="./assets/index-dYeWjqcp.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-5F7nsUTE.css">
-    <link rel="stylesheet" href="./arena-readability.css">
-  </head>
+  <script type="module" crossorigin src="./assets/index--iQNV-sF.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BPozwuWv.css">
+
   <body style="background-color: #c0c0c0; color: #000000; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;">
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>

@@ -380,11 +380,11 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const organizerAutofillParticipant = () => {
     const demoParticipant: Participant = {
-      fullName: 'Sanjai K',
-      college: 'TechAstra University',
-      department: 'Computer Science & Engineering',
-      year: '3rd Year',
-      participantId: 'CR-2026-LIVE',
+      fullName: 'RAMATHATCHANA M',
+      college: 'R.M.D ENGINEERING COLLEGE',
+      department: 'Computer Science and Engineering',
+      year: 'Senior Engineering',
+      participantId: 'SYM2026-0036',
       registeredAt: Date.now()
     };
     registerParticipant(demoParticipant);
