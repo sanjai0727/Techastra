@@ -3,7 +3,7 @@ import { useCompetition } from '../context/CompetitionContext';
 import confetti from 'canvas-confetti';
 
 export const FinalResultPage: React.FC = () => {
-  const { state, setView, resetCompetition } = useCompetition();
+  const { state, setView } = useCompetition();
 
   const r1Score = Object.values(state.bestScores).slice(0, 10).reduce((a, b) => a + b, 0);
   const r2Score = Object.values(state.bestScores).slice(10, 15).reduce((a, b) => a + b, 0);
@@ -27,8 +27,8 @@ export const FinalResultPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="max-w-3xl mx-auto my-3 select-none font-sans text-black text-xs">
-      <div className="win95-dialog-frame">
+    <div className="w-full max-w-5xl xl:max-w-6xl mx-auto my-2 sm:my-3 px-2 sm:px-4 select-none font-sans text-black text-sm">
+      <div className="win95-dialog-frame shadow-md">
         {/* Titlebar */}
         <div className="bg-[#000080] text-white px-2 py-1 flex items-center justify-between font-bold text-xs">
           <div className="flex items-center gap-1.5">
@@ -117,18 +117,7 @@ export const FinalResultPage: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-2 border-t border-[#808080]">
-            <button
-              onClick={() => {
-                if (window.confirm('Reset all competition state and return to setup?')) {
-                  resetCompetition();
-                }
-              }}
-              className="site-button"
-              style={{ fontSize: 11, padding: '3px 12px' }}
-            >
-              Reset Championship Data
-            </button>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#808080]">
 
             <div className="flex items-center gap-2">
               <button

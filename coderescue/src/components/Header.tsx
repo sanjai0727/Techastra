@@ -87,13 +87,6 @@ export const Header: React.FC = () => {
           >
             <u>C</u>oordinator
           </span>
-          <span
-            onClick={() => setOrganizerMode(true)}
-            className="win95-menu-item"
-            title="Testing & Jump Tools"
-          >
-            <u>T</u>ools
-          </span>
 
           {isWorkspace && (
             <span className="win95-badge cyber-pill-cyan font-bold ml-2">
@@ -139,14 +132,6 @@ export const Header: React.FC = () => {
             </div>
           )}
 
-          <button
-            onClick={() => setOrganizerMode(true)}
-            className="site-button"
-            style={{ fontSize: 11, padding: '1px 8px', height: 20 }}
-            title="Fast-Track Jump & Testing Tools"
-          >
-            🛠 Tools
-          </button>
         </div>
       </div>
 

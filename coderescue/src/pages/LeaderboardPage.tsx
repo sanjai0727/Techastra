@@ -4,7 +4,7 @@ import { mockLeaderboardData } from '../data/leaderboardData';
 import { LeaderboardEntry } from '../types/competition';
 
 export const LeaderboardPage: React.FC = () => {
-  const { state, setView, resetCompetition } = useCompetition();
+  const { state, setView } = useCompetition();
   const [searchTerm, setSearchTerm] = useState('');
   const [liveEntries, setLiveEntries] = useState<LeaderboardEntry[]>([]);
   const [eventEnded, setEventEnded] = useState(false);
@@ -84,21 +84,10 @@ export const LeaderboardPage: React.FC = () => {
     }
   };
 
-  const handleResetAllData = () => {
-    if (window.confirm('WARNING: Wiping all local participant dossiers and resetting contest data.\n\nProceed?')) {
-      resetCompetition();
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {}
-      fetch('/api/admin/reset-contest', { method: 'POST' }).catch(() => {});
-      window.location.reload();
-    }
-  };
 
   return (
-    <div className="max-w-6xl mx-auto my-2 select-none font-sans text-black text-xs">
-      <div className="win95-dialog-frame">
+    <div className="w-full max-w-6xl mx-auto my-2 sm:my-4 px-2 sm:px-4 select-none font-sans text-black text-sm">
+      <div className="win95-dialog-frame shadow-md">
         {/* Titlebar */}
         <div className="bg-[#000080] text-white px-2 py-1 flex items-center justify-between font-bold text-xs">
           <div className="flex items-center gap-1.5">
@@ -133,14 +122,6 @@ export const LeaderboardPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleResetAllData}
-              className="site-button font-bold text-red-800"
-              style={{ fontSize: 11, padding: '2px 8px' }}
-              title="Reset all local contestant dossiers and contest state"
-            >
-              🗑️ Reset All Data
-            </button>
             <span className="text-[11px] font-bold font-mono">SEARCH:</span>
             <input
               type="text"
@@ -148,7 +129,7 @@ export const LeaderboardPage: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="site-input"
-              style={{ width: 200, padding: '2px 6px', fontSize: 11 }}
+              style={{ width: 220, padding: '2px 6px', fontSize: 11 }}
             />
           </div>
         </div>

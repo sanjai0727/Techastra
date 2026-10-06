@@ -267,18 +267,7 @@ export const AdminDashboardPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="pt-2 mt-2 border-t border-[#808080]">
-              <button
-                onClick={() => {
-                  organizerAutofillParticipant();
-                  setAdminNotice('Autofilled demo contestant profile.');
-                }}
-                className="site-button w-full"
-                style={{ fontSize: 11, padding: '3px 8px' }}
-              >
-                + Autofill Candidate Profile
-              </button>
-            </div>
+
           </fieldset>
 
           {/* Master Timer Controls */}
@@ -366,6 +355,11 @@ export const AdminDashboardPage: React.FC = () => {
                 onClick={() => {
                   if (window.confirm('WARNING: Are you sure you want to reset all contest data? This cannot be undone.')) {
                     resetCompetition();
+                    try {
+                      localStorage.clear();
+                      sessionStorage.clear();
+                    } catch (e) {}
+                    fetch('/api/admin/reset-contest', { method: 'POST' }).catch(() => {});
                     setView('welcome');
                   }
                 }}

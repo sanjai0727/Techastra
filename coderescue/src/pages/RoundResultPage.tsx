@@ -34,8 +34,8 @@ export const RoundResultPage: React.FC<RoundResultProps> = ({ round }) => {
   const nextRoundLabel = round === 1 ? 'Round 2 — Logic Breaker' : 'Round 3 — Code Rescue';
 
   return (
-    <div className="max-w-3xl mx-auto my-3 select-none font-sans text-black text-xs">
-      <div className="win95-dialog-frame">
+    <div className="w-full max-w-5xl xl:max-w-6xl mx-auto my-2 sm:my-3 px-2 sm:px-4 select-none font-sans text-black text-sm">
+      <div className="win95-dialog-frame shadow-md">
         {/* Titlebar */}
         <div className="bg-[#000080] text-white px-2 py-1 flex items-center justify-between font-bold text-xs">
           <div className="flex items-center gap-1.5">

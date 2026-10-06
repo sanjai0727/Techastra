@@ -338,6 +338,58 @@ router.get('/admin/me', requireAdminAuth, (req, res) => {
     return res.json({ success: true, admin });
 });
 
+router.post('/admin/reset-contest', requireAdminAuth, (req, res) => {
+    try {
+        const { hardReset } = req.body || {};
+
+        // 1. Clear all submissions
+        db.prepare('DELETE FROM submissions').run();
+
+        // 2. Clear all proctoring security events
+        db.prepare('DELETE FROM proctoring_events').run();
+
+        // 3. Reset participant scores and progress to initial state
+        db.prepare(`
+            UPDATE participants
+            SET score = 0,
+                total_score = 0,
+                round1_score = 0,
+                round2_score = 0,
+                round3_score = 0,
+                current_round = 'R1',
+                current_question = 'Q1',
+                strikes = 0,
+                status = 'ACTIVE',
+                time_remaining = 1200,
+                last_event = 'Contest reset by Event Coordinator'
+        `).run();
+
+        // 4. Reset rounds
+        db.prepare(`
+            UPDATE rounds
+            SET is_active = CASE WHEN round_id = 'R1' THEN 1 ELSE 0 END
+        `).run();
+
+        // 5. Broadcast real-time SSE telemetry updates to all screens
+        broadcast('participants_updated', getAllParticipantsFormatted());
+        broadcast('submissions_updated', getAllSubmissionsFormatted());
+        broadcast('events_updated', getAllEventsFormatted());
+        broadcast('rounds_updated', getAllRoundsFormatted());
+
+        console.log(`[Admin Security] Contest data successfully reset by coordinator: ${req.admin.username}`);
+
+        return res.json({
+            success: true,
+            message: 'Championship contest state successfully reset by administrator.',
+            resetBy: req.admin.username,
+            timestamp: new Date().toISOString(),
+        });
+    } catch (err) {
+        console.error('[Admin Security] Error executing contest reset:', err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============================================================================
 // 2. PARTICIPANT REGISTRATION & AUTHENTICATION
 // ============================================================================

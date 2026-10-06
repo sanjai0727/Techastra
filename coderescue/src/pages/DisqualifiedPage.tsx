@@ -2,7 +2,7 @@ import React from 'react';
 import { useCompetition } from '../context/CompetitionContext';
 
 export const DisqualifiedPage: React.FC = () => {
-  const { state, setView, resetSecurityState, resetCompetition } = useCompetition();
+  const { state, setView, resetSecurityState } = useCompetition();
   const participant = state.participant;
   const reason = state.securityState?.disqualificationReason || 'Multiple unauthorized tab switches detected during active round.';
   const violations = state.securityState?.violationLogs || [];
@@ -11,7 +11,7 @@ export const DisqualifiedPage: React.FC = () => {
     <div className="h-full w-full bg-[#000080] text-white font-mono flex flex-col select-none overflow-hidden">
       {/* Scrollable Main Report Content */}
       <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-3">
-        <div className="max-w-4xl mx-auto space-y-3">
+        <div className="w-full max-w-5xl mx-auto space-y-3.5">
           {/* Institution Header */}
           <div className="flex items-center justify-between bg-white/95 px-3 py-1.5 border border-white/50 text-black mb-1">
             <img
@@ -19,8 +19,8 @@ export const DisqualifiedPage: React.FC = () => {
               alt="Dr. M.G.R. Educational and Research Institute University"
               className="h-8 object-contain"
             />
-            <div className="text-right text-[10px] text-gray-800 hidden sm:block">
-              <span className="font-bold text-[#000080]">Dr. M.G.R. EDUCATIONAL &amp; RESEARCH INSTITUTE</span> • DEPT OF CSE
+            <div className="text-right text-xs text-gray-800 hidden sm:block">
+              <span className="font-bold text-[#000080]">Dr. M.G.R. EDUCATIONAL &amp; RESEARCH INSTITUTE</span> • DEPT OF CSE &bull; DEPT OF CYBER SECURITY
             </div>
           </div>
 
@@ -149,7 +149,7 @@ export const DisqualifiedPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => resetCompetition()}
+            onClick={() => setView('welcome')}
             className="site-button active"
             style={{
               padding: '5px 16px',

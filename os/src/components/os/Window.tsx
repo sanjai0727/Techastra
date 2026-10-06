@@ -92,8 +92,14 @@ const Window: React.FC<WindowProps> = (props) => {
 
     const stopResize = () => {
         setIsResizing(false);
-        setWidth(resizeRef.current.style.width);
-        setHeight(resizeRef.current.style.height);
+        const newW = parseInt(resizeRef.current.style.width, 10);
+        const newH = parseInt(resizeRef.current.style.height, 10);
+        if (!isNaN(newW)) {
+            setWidth(newW);
+        }
+        if (!isNaN(newH)) {
+            setHeight(newH);
+        }
         resizeRef.current.style.opacity = 0;
         window.removeEventListener('mousemove', onResize, false);
         window.removeEventListener('mouseup', stopResize, false);

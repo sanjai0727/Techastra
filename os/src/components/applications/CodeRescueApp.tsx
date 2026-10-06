@@ -6,9 +6,9 @@ export interface CodeRescueAppProps extends WindowAppProps {}
 
 const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
     const getNormalSize = useCallback(() => {
-        const normalW = Math.min(960, Math.max(780, window.innerWidth - 80));
-        const normalH = Math.min(650, Math.max(520, window.innerHeight - 90));
-        const normalTop = 24;
+        const normalW = Math.min(1240, Math.max(940, window.innerWidth - 64));
+        const normalH = Math.min(840, Math.max(640, window.innerHeight - 74));
+        const normalTop = Math.max(8, Math.floor((window.innerHeight - 32 - normalH) / 2));
         const normalLeft = Math.max(16, Math.floor((window.innerWidth - normalW) / 2));
         return { normalW, normalH, normalTop, normalLeft };
     }, []);
@@ -204,12 +204,18 @@ const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
             width={width}
             height={height}
             isMaximized={isMaximized}
+            onMaximizeChange={handleMaximizeChange}
             windowTitle="TECHASTRA 2026 — Code Rescue Championship Arena"
             windowBarIcon="computerBig"
             closeWindow={handleCloseWindow}
             onInteract={props.onInteract}
             minimizeWindow={handleMinimizeWindow}
-            onMaximizeChange={handleMaximizeChange}
+            onWidthChange={(w) => {
+                if (!isMaximized) setWidth(w);
+            }}
+            onHeightChange={(h) => {
+                if (!isMaximized) setHeight(h);
+            }}
             bottomLeftText={'TECHASTRA 2026 • Code Rescue Live Debugging Platform'}
         >
             <div style={styles.container}>
@@ -240,7 +246,7 @@ const styles: StyleSheetCSS = {
         height: '100%',
         border: 'none',
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#c0c0c0',
     },
 };
 

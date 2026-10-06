@@ -104,6 +104,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                     >
                         🔄 Sync Live Portal
                     </button>
+                    <button
+                        className="admin-btn admin-btn-danger"
+                        onClick={async () => {
+                            const confirmed = window.confirm(
+                                '⚠️ CRITICAL SECURITY WARNING: CONTEST RESET\n\n' +
+                                'Are you sure you want to reset all championship contest progress, submissions, strikes, and scores?\n\n' +
+                                'This action is restricted strictly to Event Coordinators.\n\n' +
+                                'Click OK to execute Reset.'
+                            );
+                            if (!confirmed) return;
+
+                            try {
+                                const res = await fetch('/api/admin/reset-contest', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${user.token}`,
+                                    },
+                                    body: JSON.stringify({ hardReset: false }),
+                                });
+                                const d = await res.json();
+                                if (d.success) {
+                                    alert('✓ ' + d.message);
+                                    ParticipantService.pollServerTelemetry();
+                                } else {
+                                    alert(`Reset error: ${d.error || 'Unauthorized'}`);
+                                }
+                            } catch (e: any) {
+                                alert(`Failed to contact server: ${e.message}`);
+                            }
+                        }}
+                        style={{ padding: '3px 10px', fontSize: 11, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 4 }}
+                        title="Emergency Coordinator Reset: Clear all submissions, strikes, and reset scores to 0"
+                    >
+                        ⚠️ Reset Contest Data
+                    </button>
                     <span style={{ fontSize: 12, color: '#333' }}>
                         Coordinator: <b>{user.username}</b>
                     </span>

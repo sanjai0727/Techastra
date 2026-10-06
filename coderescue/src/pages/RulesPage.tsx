@@ -31,10 +31,10 @@ export const RulesPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto my-2 select-none text-black font-sans text-xs">
-      <div className="win95-dialog-frame">
+    <div className="w-full max-w-6xl xl:max-w-7xl mx-auto my-2 sm:my-3 px-2 sm:px-4 select-none text-black font-sans text-sm">
+      <div className="win95-dialog-frame shadow-md">
         {/* Titlebar */}
-        <div className="bg-[#000080] text-white px-2 py-1 flex items-center justify-between font-bold text-xs">
+        <div className="bg-[#000080] text-white px-2.5 py-1.5 flex items-center justify-between font-bold text-xs sm:text-sm">
           <div className="flex items-center gap-1.5">
             <span>📜</span>
             <span>Rules & Engagement Directives — Code Rescue Championship</span>
@@ -43,7 +43,8 @@ export const RulesPage: React.FC = () => {
             <button
               onClick={() => setView('welcome')}
               className="site-button"
-              style={{ padding: '0 4px', height: 16, fontSize: 10, lineHeight: '12px' }}
+              style={{ padding: '0 5px', height: 18, fontSize: 11, lineHeight: '14px' }}
+              title="Close and return to welcome"
             >
               ✕
             </button>
@@ -51,34 +52,34 @@ export const RulesPage: React.FC = () => {
         </div>
 
         {/* Dialog Body */}
-        <div className="p-3 space-y-3 bg-[#c0c0c0]">
+        <div className="p-3 sm:p-5 space-y-3.5 sm:space-y-4 bg-[#c0c0c0]">
           {/* Institutional Header Banner */}
-          <div className="bg-white p-2 border-2 border-[#808080] border-t-black border-l-black flex items-center justify-between">
+          <div className="bg-white p-3 sm:p-4 border-2 border-[#808080] border-t-black border-l-black flex items-center justify-between shadow-sm">
             <img
               src="./mgr_university_logo.png"
               alt="Dr. M.G.R. Educational and Research Institute University"
-              className="h-9 sm:h-11 object-contain"
+              className="h-11 sm:h-14 object-contain"
             />
-            <div className="text-right text-[10px] text-gray-700 hidden sm:block">
-              <p className="font-bold text-[#000080]">Dr. M.G.R. EDUCATIONAL AND RESEARCH INSTITUTE</p>
-              <p>(Deemed to be University • NAAC A+)</p>
+            <div className="text-right text-xs sm:text-sm text-gray-800 hidden sm:block">
+              <p className="font-bold text-[#000080] text-sm sm:text-base">Dr. M.G.R. EDUCATIONAL AND RESEARCH INSTITUTE</p>
+              <p className="text-xs sm:text-sm text-gray-600 font-medium">(Deemed to be University • NAAC A+)</p>
             </div>
           </div>
 
           {/* Header */}
-          <div className="p-2 bg-[#c0c0c0] border-b border-[#808080] flex items-center justify-between">
+          <div className="p-2.5 bg-[#c0c0c0] border-b border-[#808080] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <h1 className="text-base font-bold text-black font-sans">
+              <h1 className="text-lg sm:text-2xl font-bold text-black font-sans">
                 Official Competition Protocol & Ethics Agreement
               </h1>
-              <p className="text-[11px] text-gray-700">
+              <p className="text-xs sm:text-sm text-gray-700 mt-0.5">
                 Department of Computer Science & Engineering • Department of Cyber Security • Techastra 2026
               </p>
             </div>
             <button
               onClick={() => setView('welcome')}
               className="site-button"
-              style={{ fontSize: 11, padding: '2px 8px' }}
+              style={{ fontSize: 13, padding: '5px 14px', fontWeight: 'bold' }}
             >
               &lt; Return to Home
             </button>
@@ -86,18 +87,18 @@ export const RulesPage: React.FC = () => {
 
           {/* Prohibited AI Alert Banner */}
           <fieldset className="win95-fieldset">
-            <legend className="win95-legend font-bold text-red-800">
+            <legend className="win95-legend font-bold text-sm sm:text-base text-red-800">
               [!] ZERO SYNTHETIC AI GENERATION POLICY
             </legend>
-            <div className="win95-sunken p-2.5 bg-[#fff8f8] text-xs space-y-2">
+            <div className="win95-sunken p-3.5 bg-[#fff8f8] text-xs sm:text-sm space-y-2.5">
               <p className="text-gray-900 leading-relaxed">
                 The following generative AI systems and automated coding tools are <b>strictly forbidden</b> during all three rounds. Use of unauthorized assistance triggers immediate disqualification:
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {prohibitedAiTools.map((tool) => (
                   <span
                     key={tool}
-                    className="win95-badge cyber-pill-red font-mono"
+                    className="win95-badge cyber-pill-red font-mono text-xs sm:text-sm px-2.5 py-1 font-bold"
                   >
                     ✗ {tool}
                   </span>
@@ -106,22 +107,22 @@ export const RulesPage: React.FC = () => {
             </div>
           </fieldset>
 
-          {/* Rule Sections Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          {/* Rule Sections Grid (3 Columns on Large Screens) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
             {competitionRules.map((section, idx) => (
               <fieldset
                 key={idx}
                 className="win95-fieldset"
                 style={{ margin: 0 }}
               >
-                <legend className="win95-legend font-bold">
+                <legend className="win95-legend font-bold text-xs sm:text-sm text-[#000080]">
                   {section.title}
                 </legend>
-                <div className="win95-sunken p-2 bg-white text-xs space-y-1.5 h-full">
-                  <ul className="space-y-1 text-gray-900 leading-relaxed text-[11px]">
+                <div className="win95-sunken p-3 bg-white text-xs sm:text-sm space-y-2 h-full">
+                  <ul className="space-y-2 text-gray-900 leading-relaxed">
                     {section.points.map((pt, pIdx) => (
-                      <li key={pIdx} className="flex items-start gap-1">
-                        <span className="font-bold">•</span>
+                      <li key={pIdx} className="flex items-start gap-1.5">
+                        <span className="font-bold text-[#000080]">•</span>
                         <span>{pt}</span>
                       </li>
                     ))}
@@ -132,23 +133,23 @@ export const RulesPage: React.FC = () => {
           </div>
 
           {/* Next Stage Info */}
-          <div className="win95-sunken p-2 bg-[#ffffdf] flex items-center justify-between text-xs">
+          <div className="win95-sunken p-3.5 bg-[#ffffdf] border border-[#a0a060] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs sm:text-sm">
             <div>
-              <span className="font-bold">Next Stage: Round 1 — Bug Hunt</span>
-              <div className="text-[11px] text-gray-700 font-mono">
+              <span className="font-bold text-sm sm:text-base text-[#403000]">Next Stage: Round 1 — Bug Hunt</span>
+              <div className="text-xs sm:text-sm text-gray-800 font-mono mt-0.5">
                 10 Work Orders • 20 Minutes • Qualification Cutoff: 50 Points
               </div>
             </div>
-            <span className="win95-badge cyber-pill-amber font-mono font-bold">
+            <span className="win95-badge cyber-pill-amber font-mono font-bold text-xs sm:text-sm px-3 py-1">
               Timer starts upon entry
             </span>
           </div>
 
           {/* Agreement Checkbox & Actions */}
           <fieldset className="win95-fieldset">
-            <legend className="win95-legend font-bold">Acknowledgment & Consent</legend>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer font-sans text-xs bg-white p-2 win95-sunken">
+            <legend className="win95-legend font-bold text-xs sm:text-sm">Acknowledgment & Consent</legend>
+            <div className="space-y-3 p-1.5">
+              <label className="flex items-center gap-3 cursor-pointer font-sans text-xs sm:text-sm bg-white p-3 win95-sunken border border-[#808080]">
                 <input
                   type="checkbox"
                   checked={agreed}
@@ -156,24 +157,24 @@ export const RulesPage: React.FC = () => {
                     setAgreed(e.target.checked);
                     setAttemptedStartWithoutAgree(false);
                   }}
-                  style={{ width: 14, height: 14, cursor: 'pointer' }}
+                  style={{ width: 18, height: 18, cursor: 'pointer' }}
                 />
-                <span>
+                <span className="font-medium text-gray-900 text-xs sm:text-sm">
                   I have read, understood, and agree to abide by all the competition rules, regulations, and honor directives.
                 </span>
               </label>
 
               {attemptedStartWithoutAgree && (
-                <div className="win95-sunken p-1.5 bg-[#fff0f0] text-red-800 font-bold text-xs">
+                <div className="win95-sunken p-2.5 bg-[#fff0f0] text-red-800 font-bold text-xs sm:text-sm border border-red-400">
                   [NOTICE] You must acknowledge and check the agreement box before entering Round 1.
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-2 border-t border-[#808080]">
                 <button
                   onClick={() => setView('welcome')}
                   className="site-button"
-                  style={{ fontSize: 12, padding: '4px 14px' }}
+                  style={{ fontSize: 13, padding: '6px 18px', fontWeight: 'bold' }}
                 >
                   &lt; Cancel
                 </button>
@@ -181,8 +182,8 @@ export const RulesPage: React.FC = () => {
                 <button
                   onClick={handleStart}
                   disabled={!agreed}
-                  className="site-button active font-bold"
-                  style={{ fontSize: 13, padding: '5px 22px' }}
+                  className="site-button active font-bold text-white bg-[#000080]"
+                  style={{ fontSize: 15, padding: '8px 28px' }}
                 >
                   ▶ Enter Round 1 — Bug Hunt &gt;&gt;
                 </button>
@@ -194,4 +195,5 @@ export const RulesPage: React.FC = () => {
     </div>
   );
 };
+
 export default RulesPage;
