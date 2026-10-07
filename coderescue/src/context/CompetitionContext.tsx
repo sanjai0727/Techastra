@@ -40,6 +40,7 @@ interface CompetitionContextType {
   triggerClipboardWarning: (message: string) => void;
   clearClipboardWarning: () => void;
   disqualifyContestant: (reason: string) => void;
+  pardonStrikesAndRestoreSession: () => void;
 }
 
 const CompetitionContext = createContext<CompetitionContextType | null>(null);
@@ -195,6 +196,71 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     return () => clearInterval(interval);
   }, [finalizeRound]);
 
+  // Session reinstatement & strike pardon handler (triggered by Admin broadcast or heartbeat response)
+  const pardonStrikesAndRestoreSession = useCallback(() => {
+    setState(prev => {
+      // Determine what view to return to:
+      // If contestant was disqualified, return them to their current round workspace
+      let nextView: ActiveView = prev.currentView;
+      if (prev.currentView === 'disqualified') {
+        if (prev.currentRound === 1) nextView = 'round1_workspace';
+        else if (prev.currentRound === 2) nextView = 'round2_workspace';
+        else if (prev.currentRound === 3) nextView = 'round3_workspace';
+        else nextView = 'welcome';
+      }
+
+      // Restore active timer for the current round if time remaining > 0
+      const newTimers = { ...prev.timers };
+      if (prev.currentRound === 1 && newTimers.round1Remaining > 0) {
+        newTimers.round1Active = true;
+      } else if (prev.currentRound === 2 && newTimers.round2Remaining > 0) {
+        newTimers.round2Active = true;
+      } else if (prev.currentRound === 3 && newTimers.round3Remaining > 0) {
+        newTimers.round3Active = true;
+      }
+
+      // Re-enter fullscreen if parent is listening
+      try {
+        if (window.parent && window.parent !== window && nextView.includes('workspace')) {
+          window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
+        }
+      } catch (e) {}
+
+      return {
+        ...prev,
+        currentView: nextView,
+        timers: newTimers,
+        securityState: {
+          ...prev.securityState,
+          isDisqualified: false,
+          disqualificationReason: undefined,
+          showTabSwitchWarning: false,
+          tabSwitchCount: 0,
+          graceExpiresAt: null,
+          violationLogs: [
+            ...(prev.securityState?.violationLogs || []),
+            {
+              type: 'PARDON',
+              message: 'Session strikes pardoned & reinstated by Coordinator/Administrator',
+              timestamp: Date.now()
+            }
+          ]
+        }
+      };
+    });
+  }, []);
+
+  // Listen for real-time broadcast session resets / pardons from Admin
+  useEffect(() => {
+    if (!state.participant) return;
+    const unsub = telemetryService.onSessionReset((targetId) => {
+      if (!targetId || targetId.toUpperCase() === state.participant?.participantId?.toUpperCase()) {
+        pardonStrikesAndRestoreSession();
+      }
+    });
+    return () => unsub();
+  }, [state.participant, pardonStrikesAndRestoreSession]);
+
   // Real-Time Telemetry Heartbeat Effect to Admin & Backend Server
   useEffect(() => {
     if (!state.participant) return;
@@ -222,8 +288,8 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     const curQuestion = [...round1Questions, ...round2Questions, round3Question].find(q => q.id === state.activeQuestionId);
     const qTitle = curQuestion ? `Q${curQuestion.number}: ${curQuestion.title}` : state.activeQuestionId;
 
-    const sendHeartbeatNow = () => {
-      telemetryService.sendTelemetryHeartbeat({
+    const sendHeartbeatNow = async () => {
+      const resp = await telemetryService.sendTelemetryHeartbeat({
         participantId: state.participant!.participantId,
         fullName: state.participant!.fullName,
         college: state.participant!.college,
@@ -243,6 +309,23 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
           ? `DISQUALIFIED: ${state.securityState?.disqualificationReason || 'Integrity Violation'}`
           : `Active in Round ${roundNum} (${qTitle})`,
       });
+
+      if (resp?.reinstated || resp?.pardoned) {
+        pardonStrikesAndRestoreSession();
+      }
+
+      if (resp?.timeRemaining !== undefined && Math.abs(resp.timeRemaining - remainingSeconds) > 3) {
+        setState(prev => {
+          const key = roundNum === 1 ? 'round1Remaining' : (roundNum === 2 ? 'round2Remaining' : 'round3Remaining');
+          return {
+            ...prev,
+            timers: {
+              ...prev.timers,
+              [key]: resp.timeRemaining!
+            }
+          };
+        });
+      }
     };
 
     // Send immediately on state update
@@ -261,7 +344,8 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     state.securityState?.isDisqualified,
     state.securityState?.tabSwitchCount,
     state.securityState?.disqualificationReason,
-    state.bestScores
+    state.bestScores,
+    pardonStrikesAndRestoreSession
   ]);
 
   const setView = (view: ActiveView) => {
@@ -733,7 +817,8 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         dismissTabSwitchWarning,
         triggerClipboardWarning,
         clearClipboardWarning,
-        disqualifyContestant
+        disqualifyContestant,
+        pardonStrikesAndRestoreSession
       }}
     >
       {children}

@@ -128,7 +128,7 @@ export type ActiveView =
   | 'disqualified';
 
 export interface SecurityViolationLog {
-  type: 'TAB_SWITCH' | 'BLUR' | 'CLIPBOARD' | 'CONTEXT_MENU' | 'KEYBOARD';
+  type: 'TAB_SWITCH' | 'BLUR' | 'CLIPBOARD' | 'CONTEXT_MENU' | 'KEYBOARD' | 'PARDON';
   message: string;
   timestamp: number;
 }

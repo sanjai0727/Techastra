@@ -876,6 +876,20 @@ router.post('/telemetry/heartbeat', (req, res) => {
 
         const strikes = payload.strikes !== undefined ? Number(payload.strikes) : p.strikes;
         let status = payload.status || p.status;
+
+        // If participant was pardoned or reinstated by admin on the server,
+        // but the client is still sending DISQUALIFIED from prior local state:
+        if (p.status === 'ACTIVE' && p.strikes === 0 && (payload.status === 'DISQUALIFIED' || Number(payload.strikes) > 0)) {
+            return res.json({
+                success: true,
+                reinstated: true,
+                pardoned: true,
+                status: 'ACTIVE',
+                strikes: 0,
+                timeRemaining: p.time_remaining
+            });
+        }
+
         if (strikes >= 3 || status === 'DISQUALIFIED') {
             status = 'DISQUALIFIED';
         } else if (strikes >= 2 && status !== 'DISQUALIFIED') {
@@ -932,6 +946,15 @@ router.post('/telemetry/heartbeat', (req, res) => {
         if (status !== p.status || strikes !== p.strikes) {
             broadcast('participants_updated', getAllParticipantsFormatted());
         }
+
+        return res.json({
+            success: true,
+            status,
+            strikes,
+            timeRemaining,
+            reinstated: status === 'ACTIVE' && strikes === 0,
+            pardoned: strikes === 0
+        });
     }
 
     return res.json({ success: true });
@@ -1159,6 +1182,9 @@ router.post('/telemetry/reinstate', requireAdminAuth, (req, res) => {
 
     // Instant broadcast
     broadcast('participants_updated', getAllParticipantsFormatted());
+    broadcast('session_reset', { participantId: id });
+    broadcast('participant_reinstated', { participantId: id });
+    broadcast('events_updated', getAllEventsFormatted());
     broadcast('security_event', {
         id: eventId,
         participantId: id,
@@ -1398,7 +1424,7 @@ router.post('/rounds/:id/cutoff', requireAdminAuth, handleRoundUpdate);
 
 // Individual Participant Timer Adjustment
 router.post('/participants/:id/adjust-timer', requireAdminAuth, (req, res) => {
-    const id = req.params.id;
+    const id = req.params.id ? req.params.id.trim().toUpperCase() : '';
     const { additionalSeconds, setSeconds } = req.body || {};
     const p = db.prepare('SELECT time_remaining FROM participants WHERE id = ?').get(id);
     if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
@@ -1418,13 +1444,15 @@ router.post('/participants/:id/adjust-timer', requireAdminAuth, (req, res) => {
 
 // Reset Individual Participant Session (Pardon strikes, restore active status)
 router.post('/participants/:id/reset-session', requireAdminAuth, (req, res) => {
-    const id = req.params.id;
+    const id = req.params.id ? req.params.id.trim().toUpperCase() : '';
     const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
     if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
 
     db.prepare("UPDATE participants SET strikes = 0, status = 'ACTIVE', last_event = 'Session Restored by Admin' WHERE id = ?").run(id);
     db.prepare('DELETE FROM proctoring_events WHERE participant_id = ?').run(id);
 
+    broadcast('session_reset', { participantId: id });
+    broadcast('participant_reinstated', { participantId: id });
     broadcast('participants_updated', getAllParticipantsFormatted());
     broadcast('events_updated', getAllEventsFormatted());
     return res.json({ success: true, message: `Session reset for ${id}. Strikes cleared.` });

@@ -74,8 +74,8 @@ class TelemetryService {
   }
 
   // 1. Live Heartbeat Dispatch
-  public async sendTelemetryHeartbeat(payload: TelemetryHeartbeatPayload): Promise<void> {
-    if (!payload.participantId) return;
+  public async sendTelemetryHeartbeat(payload: TelemetryHeartbeatPayload): Promise<{ success: boolean; reinstated?: boolean; pardoned?: boolean; timeRemaining?: number }> {
+    if (!payload.participantId) return { success: false };
 
     // Cross-tab zero latency push
     try {
@@ -93,14 +93,29 @@ class TelemetryService {
 
     // HTTP POST to server
     try {
-      await fetch('/api/telemetry/heartbeat', {
+      const res = await fetch('/api/telemetry/heartbeat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      const data = await res.json();
+      return data;
     } catch (err) {
-      // Non-blocking telemetry network error
+      return { success: false };
     }
+  }
+
+  // Cross-tab session reset / pardon listener
+  public onSessionReset(callback: (participantId?: string) => void): () => void {
+    if (!this.broadcastChannel) return () => {};
+    const handler = (e: MessageEvent) => {
+      const data = e.data;
+      if (data?.type === 'SESSION_RESET' || data?.type === 'PARTICIPANT_REINSTATED') {
+        callback(data.participantId);
+      }
+    };
+    this.broadcastChannel.addEventListener('message', handler);
+    return () => this.broadcastChannel?.removeEventListener('message', handler);
   }
 
   // 2. Proctoring Security Event Dispatch (Instant on Tab Switch, Blur, Cut/Copy, Disqualification)

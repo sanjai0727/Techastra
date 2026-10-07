@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Participant, Submission, LiveScreenData } from '../types';
 import { SubmissionService } from '../services/submissionService';
 import { LiveScreenService } from '../services/liveScreenService';
+import { ParticipantService } from '../services/participantService';
 
 interface ParticipantDetailModalProps {
     participant: Participant;
@@ -24,7 +25,22 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
     onViewSubmission,
 }) => {
     const submissions = SubmissionService.getSubmissionsByParticipant(participant.id);
+    const [curParticipant, setCurParticipant] = useState<Participant>(participant);
     const [liveScreen, setLiveScreen] = useState<LiveScreenData | undefined>(LiveScreenService.getScreen(participant.id));
+
+    useEffect(() => {
+        setCurParticipant(participant);
+    }, [participant]);
+
+    useEffect(() => {
+        const unsub = ParticipantService.subscribe((list) => {
+            const found = list.find((p) => p.id === participant.id);
+            if (found) {
+                setCurParticipant(found);
+            }
+        });
+        return () => unsub();
+    }, [participant.id]);
 
     useEffect(() => {
         const unsub = LiveScreenService.subscribeToParticipant(participant.id, (screen) => {
@@ -40,15 +56,15 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
         return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
     };
 
-    const curTimeRemaining = liveScreen ? liveScreen.timeRemaining : (participant.timeRemaining || 0);
-    const curCode = liveScreen?.code || participant.currentCode || '';
-    const curQuestion = liveScreen?.questionTitle || participant.currentQuestion;
+    const curTimeRemaining = liveScreen ? liveScreen.timeRemaining : (curParticipant.timeRemaining || 0);
+    const curCode = liveScreen?.code || curParticipant.currentCode || '';
+    const curQuestion = liveScreen?.questionTitle || curParticipant.currentQuestion;
 
     return (
         <div className="admin-box" style={{ marginTop: 16, backgroundColor: '#f0f0f0' }}>
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #808080', paddingBottom: 6, marginBottom: 12 }}>
                 <span style={{ fontWeight: 'bold', fontSize: 14, color: '#000080' }}>
-                    PARTICIPANT DOSSIER — {participant.id}: {participant.name}
+                    PARTICIPANT DOSSIER — {curParticipant.id}: {curParticipant.name}
                 </span>
                 <button className="admin-btn" onClick={onClose} style={{ padding: '2px 8px', fontSize: 11 }}>
                     ✕ Close Dossier
@@ -58,10 +74,10 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
             {/* Header Summary */}
             <div style={{ marginBottom: 12 }}>
                 <p style={{ margin: '0 0 4px 0', fontSize: 13 }}>
-                    <b>College:</b> {participant.college} &bull; <b>Dept:</b> {participant.department} (Year {participant.year}) &bull;{' '}
+                    <b>College:</b> {curParticipant.college} &bull; <b>Dept:</b> {curParticipant.department} (Year {curParticipant.year}) &bull;{' '}
                     <b>Status:</b>{' '}
-                    <span className={`status-badge status-badge-${participant.status}`}>
-                        {participant.status}
+                    <span className={`status-badge status-badge-${curParticipant.status}`}>
+                        {curParticipant.status}
                     </span>
                 </p>
             </div>
@@ -71,8 +87,8 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                 <div style={{ backgroundColor: '#ffffff', border: '1px solid #ccc', padding: 10 }}>
                     <div style={{ fontWeight: 'bold', fontSize: 12, color: '#000080', marginBottom: 6 }}>CURRENT SESSION</div>
                     <div style={{ fontSize: 12, lineHeight: 1.6 }}>
-                        <div><b>Round:</b> {participant.currentRound} ({participant.currentQuestion})</div>
-                        <div><b>Current Score:</b> {participant.score}/{participant.currentRound === 'R1' ? 10 : (participant.currentRound === 'R2' ? 20 : 5)}</div>
+                        <div><b>Round:</b> {curParticipant.currentRound} ({curParticipant.currentQuestion})</div>
+                        <div><b>Current Score:</b> {curParticipant.score}/{curParticipant.currentRound === 'R1' ? 10 : (curParticipant.currentRound === 'R2' ? 20 : 5)}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                             <b>Timer:</b>
                             <span style={{
@@ -86,18 +102,18 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                                 ⏱ {formatRemaining(curTimeRemaining)} remaining
                             </span>
                         </div>
-                        <div><b>Connection:</b> {participant.sessionActive ? '🟢 Connected (0ms stream)' : '🔴 Inactive / Blocked'}</div>
+                        <div><b>Connection:</b> {curParticipant.sessionActive ? '🟢 Connected (0ms stream)' : '🔴 Inactive / Blocked'}</div>
                     </div>
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', border: '1px solid #ccc', padding: 10 }}>
                     <div style={{ fontWeight: 'bold', fontSize: 12, color: '#000080', marginBottom: 6 }}>SCORE MATRIX</div>
                     <div style={{ fontSize: 12, lineHeight: 1.6 }}>
-                        <div>Round 1 (Bug Hunt): <b>{participant.scores.round1}/10</b></div>
-                        <div>Round 2 (Logic Breaker): <b>{participant.scores.round2}/20</b></div>
-                        <div>Round 3 (Code Rescue): <b>{participant.scores.round3}/5</b></div>
+                        <div>Round 1 (Bug Hunt): <b>{curParticipant.scores.round1}/10</b></div>
+                        <div>Round 2 (Logic Breaker): <b>{curParticipant.scores.round2}/20</b></div>
+                        <div>Round 3 (Code Rescue): <b>{curParticipant.scores.round3}/5</b></div>
                         <div style={{ borderTop: '1px solid #ddd', marginTop: 4, paddingTop: 2, fontWeight: 'bold', color: '#000080' }}>
-                            TOTAL SCORE: {participant.scores.total} / 35 marks
+                            TOTAL SCORE: {curParticipant.scores.total} / 35 marks
                         </div>
                     </div>
                 </div>
@@ -116,7 +132,7 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                 </div>
 
                 <div style={{ fontSize: 11, color: '#333', marginBottom: 6 }}>
-                    Active Work Order: <b>[{liveScreen?.roundId || participant.currentRound}] {curQuestion}</b>
+                    Active Work Order: <b>[{liveScreen?.roundId || curParticipant.currentRound}] {curQuestion}</b>
                 </div>
 
                 <div style={{
@@ -145,24 +161,24 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
             {/* Security Audit */}
             <div style={{ backgroundColor: '#ffffff', border: '1px solid #ccc', padding: 10, marginBottom: 14 }}>
                 <div style={{ fontWeight: 'bold', fontSize: 12, color: '#000080', marginBottom: 4 }}>
-                    SECURITY &amp; PROCTORING TELEMETRY (Strikes: {participant.strikes})
+                    SECURITY &amp; PROCTORING TELEMETRY (Strikes: {curParticipant.strikes})
                 </div>
                 <div style={{ fontSize: 12, lineHeight: 1.5 }}>
-                    {participant.strikes === 0 ? (
+                    {curParticipant.strikes === 0 ? (
                         <>
                             <div style={{ color: '#0d652d' }}>✓ Fullscreen maintained throughout workstation session</div>
-                            <div style={{ color: '#0d652d' }}>✓ No tab switch detected</div>
+                            <div style={{ color: '#0d652d' }}>✓ No tab switch detected (Strikes: 0)</div>
                             <div style={{ color: '#0d652d' }}>✓ Window focus continuous</div>
                         </>
-                    ) : participant.strikes === 1 ? (
+                    ) : curParticipant.strikes === 1 ? (
                         <>
-                            <div style={{ color: '#b06000' }}>⚠ Window blur detected ({participant.lastEvent})</div>
-                            <div style={{ color: '#0d652d' }}>✓ Fullscreen maintained</div>
+                            <div style={{ color: '#b06000' }}>⚠ Window blur detected ({curParticipant.lastEvent})</div>
+                            <div style={{ color: '#0d652d' }}>✓ Fullscreen maintained (Strike 1/3)</div>
                         </>
                     ) : (
                         <>
-                            <div style={{ color: '#c5221f', fontWeight: 'bold' }}>🚨 Malpractice Flag: Multiple strike events logged</div>
-                            <div style={{ color: '#c5221f' }}>⚠ Incident: {participant.lastEvent}</div>
+                            <div style={{ color: '#c5221f', fontWeight: 'bold' }}>🚨 Malpractice Flag: Multiple strike events logged ({curParticipant.strikes}/3)</div>
+                            <div style={{ color: '#c5221f' }}>⚠ Incident: {curParticipant.lastEvent}</div>
                         </>
                     )}
                 </div>
@@ -204,8 +220,12 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                         className="admin-btn"
                         style={{ backgroundColor: '#2e7d32', color: '#fff', fontWeight: 'bold' }}
                         onClick={async () => {
-                            const res = await ParticipantService.adjustParticipantTimer(participant.id, 300);
-                            alert(res.success ? `✓ Granted +5 minutes extra time to ${participant.name} (${participant.id})` : `Failed: ${res.error}`);
+                            const res = await ParticipantService.adjustParticipantTimer(curParticipant.id, 300);
+                            if (res.success) {
+                                alert(`✓ Granted +5 minutes extra time to ${curParticipant.name} (${curParticipant.id})`);
+                            } else {
+                                alert(`Failed to add time: ${res.error || 'Server error'}`);
+                            }
                         }}
                     >
                         ⏱ +5m Extra Time
@@ -214,8 +234,12 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                         className="admin-btn"
                         style={{ backgroundColor: '#388e3c', color: '#fff' }}
                         onClick={async () => {
-                            const res = await ParticipantService.adjustParticipantTimer(participant.id, 60);
-                            alert(res.success ? `✓ Granted +1 minute extra time to ${participant.name}` : `Failed: ${res.error}`);
+                            const res = await ParticipantService.adjustParticipantTimer(curParticipant.id, 60);
+                            if (res.success) {
+                                alert(`✓ Granted +1 minute extra time to ${curParticipant.name}`);
+                            } else {
+                                alert(`Failed to add time: ${res.error || 'Server error'}`);
+                            }
                         }}
                     >
                         ⏱ +1m Extra Time
@@ -224,19 +248,25 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                         className="admin-btn"
                         style={{ backgroundColor: '#0288d1', color: '#fff' }}
                         onClick={async () => {
-                            const confirmed = window.confirm(`Reset workstation session for ${participant.name} (${participant.id})?\n\nThis will pardon all strikes (reset to 0), clear security flags, and reinstate status to ACTIVE.`);
+                            const confirmed = window.confirm(`Reset workstation session for ${curParticipant.name} (${curParticipant.id})?\n\nThis will pardon all strikes (reset to 0), clear security flags, and reinstate status to ACTIVE.`);
                             if (!confirmed) return;
-                            const res = await ParticipantService.resetSession(participant.id);
-                            alert(res.success ? `✓ Workstation session reset for ${participant.name}` : `Failed: ${res.error}`);
+                            const res = await ParticipantService.resetSession(curParticipant.id);
+                            if (res.success) {
+                                alert(`✓ Workstation session reset for ${curParticipant.name}. Strikes cleared and status reinstated.`);
+                            } else {
+                                alert(`Failed to reset session: ${res.error || 'Server error'}`);
+                            }
                         }}
                     >
                         🔄 Pardon Strikes &amp; Reset Session
                     </button>
                     <button
                         className="admin-btn admin-btn-danger"
-                        onClick={() => {
-                            if (window.confirm(`Disqualify/flag participant ${participant.name}?`)) {
-                                onFlag(participant.id);
+                        onClick={async () => {
+                            if (window.confirm(`Disqualify/flag participant ${curParticipant.name}?`)) {
+                                await ParticipantService.flagParticipant(curParticipant.id, 'Coordinator manual intervention');
+                                onFlag(curParticipant.id);
+                                alert(`🚩 Flagged participant ${curParticipant.name}.`);
                             }
                         }}
                     >
@@ -244,9 +274,14 @@ export const ParticipantDetailModal: React.FC<ParticipantDetailModalProps> = ({
                     </button>
                     <button
                         className="admin-btn admin-btn-primary"
-                        onClick={() => {
-                            onReinstate(participant.id);
-                            alert(`✓ Reinstated ${participant.name} to ACTIVE status.`);
+                        onClick={async () => {
+                            const res = await ParticipantService.reinstateSession(curParticipant.id);
+                            if (res.success) {
+                                onReinstate(curParticipant.id);
+                                alert(`✓ Reinstated ${curParticipant.name} to ACTIVE status.`);
+                            } else {
+                                alert(`Failed to reinstate: ${res.error || 'Server error'}`);
+                            }
                         }}
                     >
                         ✅ Reinstate Session
