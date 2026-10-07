@@ -31,16 +31,19 @@ export const RoundWorkspacePage: React.FC = () => {
   const currentSubmissions = submissions[currentQuestion.id] || [];
   const bestScores = state.bestScores;
 
-  // Determine timer status
+  // Determine timer and schedule lockout status
   const currentSeconds = currentRound === 1 
     ? state.timers.round1Remaining 
     : currentRound === 2 
     ? state.timers.round2Remaining 
     : state.timers.round3Remaining;
   const isTimerExpired = currentSeconds <= 0;
+  const isEventEnded = Boolean(state.schedule?.isEnded);
+  const isAutoSubmitting = Boolean(state.isAutoSubmitting);
+  const isLocked = isTimerExpired || isEventEnded || isAutoSubmitting;
 
   const handleRunCode = async () => {
-    if (isRunning || isSubmitting) return;
+    if (isRunning || isSubmitting || isLocked) return;
     setIsRunning(true);
     try {
       const result = await runVisibleTests(currentQuestion, currentCode);
@@ -51,7 +54,7 @@ export const RoundWorkspacePage: React.FC = () => {
   };
 
   const handleSubmitSolution = async () => {
-    if (isRunning || isSubmitting || isTimerExpired) return;
+    if (isRunning || isSubmitting || isLocked) return;
     setIsSubmitting(true);
     try {
       const result = await submitSolution(currentQuestion, currentCode);
@@ -106,16 +109,44 @@ export const RoundWorkspacePage: React.FC = () => {
 
         {/* Right Actions: Finish Round */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Finish Round */}
-          <button
-            onClick={() => setShowFinishConfirm(true)}
-            className="site-button active font-bold"
-            style={{ fontSize: 11, padding: '2px 10px', backgroundColor: '#d8d8d8' }}
-          >
-            Finish Round 🏁
-          </button>
+          {isAutoSubmitting ? (
+            <span className="font-mono font-bold text-[11px] bg-red-800 text-white px-2 py-0.5 animate-pulse">
+              ⏱️ AUTO-SUBMITTING...
+            </span>
+          ) : isEventEnded ? (
+            <span className="font-mono font-bold text-[11px] bg-red-700 text-white px-2 py-0.5">
+              🛑 EVENT CONCLUDED
+            </span>
+          ) : (
+            <button
+              onClick={() => setShowFinishConfirm(true)}
+              className="site-button active font-bold"
+              style={{ fontSize: 11, padding: '2px 10px', backgroundColor: '#d8d8d8' }}
+            >
+              Finish Round 🏁
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Lockout & Auto-submit status alert */}
+      {isLocked && (
+        <div className="bg-[#fff0f0] border-b border-red-400 px-3 py-1 flex items-center justify-between text-xs text-red-900 font-bold shrink-0">
+          <div className="flex items-center gap-2">
+            <span>⚠️</span>
+            <span>
+              {isAutoSubmitting
+                ? 'Official time limit reached: Auto-submitting solutions and grading test suites...'
+                : (isEventEnded
+                  ? 'Official tournament end time reached: Workstation is locked. Final results recorded.'
+                  : 'Time limit expired: Workstation locked.')}
+            </span>
+          </div>
+          <span className="font-mono bg-red-700 text-white px-2 py-0.5 text-[10px]">
+            READ ONLY
+          </span>
+        </div>
+      )}
 
       {/* Main Workspace Body (Two-Pane Layout) */}
       <div className="flex-1 flex flex-row gap-1.5 p-1.5 overflow-hidden bg-[#c0c0c0] min-h-0">
@@ -136,7 +167,7 @@ export const RoundWorkspacePage: React.FC = () => {
               onSubmit={handleSubmitSolution}
               isRunning={isRunning}
               isSubmitting={isSubmitting}
-              readOnly={false}
+              readOnly={isLocked}
             />
           </div>
 

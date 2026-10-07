@@ -1,23 +1,54 @@
 // ============================================================================
 // REPORTS & DATA EXPORT PANEL — TECHASTRA 2026 ADMIN DASHBOARD
-// Exports participants CSV, tournament results CSV, submissions CSV, complete JSON dump,
-// printable dossier reports, and master Score Privacy / Reveal controls.
+// Exports participants CSV, tournament results CSV, submissions CSV, security audit CSV,
+// complete JSON telemetry snapshot, printable dossier reports, and master Score Privacy / Reveal controls.
 // ============================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Participant } from '../types';
+import { Participant, Submission, SecurityEvent } from '../types';
 import { ExportService } from '../services/exportService';
 import { SubmissionService } from '../services/submissionService';
+import { ProctoringService } from '../services/proctoringService';
+import { ParticipantService } from '../services/participantService';
 import { AdminAuthService } from '../services/adminAuthService';
 
 interface ReportsPanelProps {
-    participants: Participant[];
+    participants?: Participant[];
 }
 
-export const ReportsPanel: React.FC<ReportsPanelProps> = ({ participants }) => {
+export const ReportsPanel: React.FC<ReportsPanelProps> = ({ participants: initialParticipants = [] }) => {
+    const [participants, setParticipants] = useState<Participant[]>(
+        Array.isArray(initialParticipants) && initialParticipants.length > 0
+            ? initialParticipants
+            : ParticipantService.getParticipants()
+    );
+    const [submissions, setSubmissions] = useState<Submission[]>(SubmissionService.getSubmissions());
+    const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>(ProctoringService.getEvents());
     const [eventEnded, setEventEnded] = useState<boolean>(false);
     const [togglingScore, setTogglingScore] = useState<boolean>(false);
-    const submissions = SubmissionService.getAllSubmissions();
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [statusFilter, setStatusFilter] = useState<string>('ALL');
+
+    // Subscribe to live data streams
+    useEffect(() => {
+        const unsubParticipants = ParticipantService.subscribe((list) => {
+            if (Array.isArray(list)) setParticipants(list);
+        });
+
+        const unsubSubmissions = SubmissionService.subscribe((list) => {
+            if (Array.isArray(list)) setSubmissions(list);
+        });
+
+        const unsubEvents = ProctoringService.subscribe((list) => {
+            if (Array.isArray(list)) setSecurityEvents(list);
+        });
+
+        return () => {
+            unsubParticipants();
+            unsubSubmissions();
+            unsubEvents();
+        };
+    }, []);
 
     const fetchScoreStatus = async () => {
         try {
@@ -67,27 +98,55 @@ export const ReportsPanel: React.FC<ReportsPanelProps> = ({ participants }) => {
         }
     };
 
+    const safeParticipants = Array.isArray(participants) ? participants : [];
+
+    const filteredParticipants = safeParticipants.filter((p) => {
+        if (!p) return false;
+        const query = searchQuery.trim().toLowerCase();
+        const matchesQuery =
+            !query ||
+            (p.id && p.id.toLowerCase().includes(query)) ||
+            (p.name && p.name.toLowerCase().includes(query)) ||
+            (p.college && p.college.toLowerCase().includes(query)) ||
+            (p.department && p.department.toLowerCase().includes(query));
+
+        const matchesStatus = statusFilter === 'ALL' || p.status === statusFilter;
+        return matchesQuery && matchesStatus;
+    });
+
+    const sortedParticipants = [...filteredParticipants].sort((a, b) => {
+        const totalA = a.scores?.total ?? a.totalScore ?? 0;
+        const totalB = b.scores?.total ?? b.totalScore ?? 0;
+        return totalB - totalA;
+    });
+
     return (
         <div style={{ width: '100%', maxWidth: '100%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             {/* Master Score Reveal Control Box */}
-            <div className="admin-box" style={{
-                marginBottom: 14,
-                backgroundColor: eventEnded ? '#e6f4ea' : '#fef7e0',
-                borderColor: eventEnded ? '#137333' : '#b06000',
-            }}>
-                <div className="admin-box-title" style={{
-                    backgroundColor: eventEnded ? '#137333' : '#7a5200',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}>
+            <div
+                className="admin-box"
+                style={{
+                    marginBottom: 14,
+                    backgroundColor: eventEnded ? '#e6f4ea' : '#fef7e0',
+                    borderColor: eventEnded ? '#137333' : '#b06000',
+                }}
+            >
+                <div
+                    className="admin-box-title"
+                    style={{
+                        backgroundColor: eventEnded ? '#137333' : '#7a5200',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                    }}
+                >
                     <span>🏆 TOURNAMENT SCORE PRIVACY &amp; ARENA REVEAL CONTROL</span>
                     <span style={{ fontSize: 11, fontWeight: 'bold' }}>
                         STATUS: {eventEnded ? '🔓 PUBLICLY REVEALED' : '🔒 CONCEALED (PRIVATE)'}
                     </span>
                 </div>
 
-                <div style={{ padding: 4 }}>
+                <div style={{ padding: 6 }}>
                     <p style={{ fontSize: 12, margin: '0 0 10px 0', color: '#333', lineHeight: 1.4 }}>
                         {eventEnded ? (
                             <span>
@@ -114,6 +173,7 @@ export const ReportsPanel: React.FC<ReportsPanelProps> = ({ participants }) => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 6,
+                                cursor: togglingScore ? 'not-allowed' : 'pointer',
                             }}
                         >
                             {togglingScore ? 'Updating State...' : eventEnded ? '🔒 Conceal Scores (Lock Leaderboard)' : '🔓 Reveal Scores & Final Standings to All Terminals'}
@@ -126,112 +186,157 @@ export const ReportsPanel: React.FC<ReportsPanelProps> = ({ participants }) => {
             </div>
 
             {/* Official Export Actions */}
-            <div className="admin-box">
+            <div className="admin-box" style={{ marginBottom: 14 }}>
                 <div className="admin-box-title">
                     📁 OFFICIAL AUDIT REPORTS, ARCHIVES &amp; CERTIFICATION EXPORTS
                 </div>
 
-                <p style={{ fontSize: 12, margin: '0 0 12px 0', color: '#333' }}>
-                    Generate certified symposium tournament reports for accreditation, committee review, and score audit verification.
-                </p>
+                <div style={{ padding: 6 }}>
+                    <p style={{ fontSize: 12, margin: '0 0 12px 0', color: '#333' }}>
+                        Generate certified symposium tournament reports for accreditation, committee review, and score audit verification.
+                    </p>
 
-                <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                    <button
-                        className="admin-btn admin-btn-primary"
-                        onClick={() => ExportService.exportParticipantsCSV(participants)}
-                        title="Download roster CSV with enrolled contestants and their details"
-                    >
-                        👥 Export Participants CSV
-                    </button>
-                    <button
-                        className="admin-btn admin-btn-primary"
-                        onClick={() => ExportService.exportResultsCSV(participants)}
-                        title="Download official scorecard CSV with R1, R2, R3 marks"
-                    >
-                        📈 Export Results CSV
-                    </button>
-                    <button
-                        className="admin-btn admin-btn-primary"
-                        onClick={() => ExportService.exportSubmissionsCSV(submissions)}
-                        title="Download all code submissions and triage scores"
-                    >
-                        💾 Export Submissions CSV
-                    </button>
-                    <button
-                        className="admin-btn"
-                        onClick={() => ExportService.exportFullDumpJSON(participants, undefined, submissions)}
-                        title="Download complete JSON telemetry data snapshot"
-                    >
-                        📦 Export Full State (JSON)
-                    </button>
-                    <button
-                        className="admin-btn"
-                        onClick={() => ExportService.printReport()}
-                        title="Open browser print dialog for paper report / PDF archive"
-                    >
-                        🖨️ Print / Save Dossier PDF
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                        <button
+                            className="admin-btn admin-btn-primary"
+                            onClick={() => ExportService.exportParticipantsCSV(safeParticipants)}
+                            title="Download roster CSV with enrolled contestants and their details"
+                        >
+                            👥 Export Participants CSV ({safeParticipants.length})
+                        </button>
+                        <button
+                            className="admin-btn admin-btn-primary"
+                            onClick={() => ExportService.exportResultsCSV(safeParticipants)}
+                            title="Download official scorecard CSV with R1, R2, R3 marks"
+                        >
+                            📈 Export Results CSV ({safeParticipants.length})
+                        </button>
+                        <button
+                            className="admin-btn admin-btn-primary"
+                            onClick={() => ExportService.exportSubmissionsCSV(submissions)}
+                            title="Download all code submissions and triage scores"
+                        >
+                            💾 Export Submissions CSV ({submissions.length})
+                        </button>
+                        <button
+                            className="admin-btn admin-btn-primary"
+                            onClick={() => ExportService.exportProctoringEventsCSV(securityEvents)}
+                            title="Download proctoring violations and security audit trail"
+                        >
+                            🚨 Export Security Audit CSV ({securityEvents.length})
+                        </button>
+                        <button
+                            className="admin-btn"
+                            onClick={() => ExportService.exportFullDumpJSON(safeParticipants, undefined, submissions, securityEvents)}
+                            title="Download complete JSON telemetry data snapshot"
+                        >
+                            📦 Export Full Tournament State (JSON)
+                        </button>
+                        <button
+                            className="admin-btn"
+                            onClick={() => ExportService.printReport()}
+                            title="Open browser print dialog for paper report / PDF archive"
+                        >
+                            🖨️ Print / Save Dossier PDF
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Standings Summary Preview */}
-            <h4 style={{ margin: '14px 0 8px 0', color: '#000080', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>TOURNAMENT SCORECARD &amp; RANKINGS PREVIEW</span>
-                <span style={{ fontSize: 11, fontWeight: 'normal', color: '#555' }}>
-                    Total Evaluated: <b>{participants.length}</b> &bull; Qualified: <b>{participants.filter(p => p.status === 'QUALIFIED').length}</b>
+            {/* Standings Summary Header & Filters */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                <h4 style={{ margin: 0, color: '#000080' }}>
+                    TOURNAMENT SCORECARD &amp; RANKINGS PREVIEW
+                </h4>
+                <span style={{ fontSize: 11, color: '#555' }}>
+                    Total Enrolled: <b>{safeParticipants.length}</b> &bull; Qualified: <b>{safeParticipants.filter(p => p.status === 'QUALIFIED').length}</b> &bull; Flagged: <b>{safeParticipants.filter(p => p.status === 'FLAGGED' || p.status === 'DISQUALIFIED').length}</b>
                 </span>
-            </h4>
+            </div>
 
+            {/* Filter Bar */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="Search by ID, name, or college..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ flex: 1, minWidth: 200 }}
+                />
+                <select
+                    className="admin-input"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    style={{ padding: '4px 8px' }}
+                >
+                    <option value="ALL">ALL STATUSES</option>
+                    <option value="ACTIVE">ACTIVE ONLY</option>
+                    <option value="QUALIFIED">QUALIFIED ONLY</option>
+                    <option value="FLAGGED">FLAGGED ONLY</option>
+                    <option value="DISQUALIFIED">DISQUALIFIED ONLY</option>
+                </select>
+                {(searchQuery || statusFilter !== 'ALL') && (
+                    <button
+                        className="admin-btn"
+                        onClick={() => {
+                            setSearchQuery('');
+                            setStatusFilter('ALL');
+                        }}
+                    >
+                        Clear Filter
+                    </button>
+                )}
+            </div>
+
+            {/* Table */}
             <div className="admin-table-container">
                 <table className="admin-table">
                     <thead>
                         <tr>
-                            <th>Rank</th>
-                            <th>Participant ID</th>
+                            <th style={{ width: 60, textAlign: 'center' }}>Rank</th>
+                            <th style={{ width: 140 }}>Participant ID</th>
                             <th>Name</th>
                             <th>College</th>
-                            <th>R1 (Bug Hunter)</th>
-                            <th>R2 (Logic Repair)</th>
-                            <th>R3 (Crisis Rescue)</th>
-                            <th>Total Score</th>
-                            <th>Status</th>
+                            <th style={{ width: 110 }}>R1 (Bug Hunt)</th>
+                            <th style={{ width: 120 }}>R2 (Logic Break)</th>
+                            <th style={{ width: 110 }}>R3 (Rescue)</th>
+                            <th style={{ width: 100 }}>Total Score</th>
+                            <th style={{ width: 120 }}>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {participants.length === 0 ? (
+                        {sortedParticipants.length === 0 ? (
                             <tr>
                                 <td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: '#555' }}>
-                                    No participant data available for ranking preview.
+                                    No participant records found matching criteria.
                                 </td>
                             </tr>
                         ) : (
-                            [...participants]
-                                .sort((a, b) => (b.scores?.total ?? b.totalScore ?? 0) - (a.scores?.total ?? a.totalScore ?? 0))
-                                .map((p, index) => {
-                                    const total = p.scores?.total ?? p.totalScore ?? 0;
-                                    const r1 = p.scores?.round1 ?? 0;
-                                    const r2 = p.scores?.round2 ?? 0;
-                                    const r3 = p.scores?.round3 ?? 0;
-                                    return (
-                                        <tr key={p.id}>
-                                            <td style={{ fontWeight: 'bold', textAlign: 'center' }}>#{index + 1}</td>
-                                            <td style={{ fontFamily: 'monospace' }}>{p.id}</td>
-                                            <td><b>{p.name}</b></td>
-                                            <td>{p.college}</td>
-                                            <td style={{ fontFamily: 'monospace' }}>{r1}/10</td>
-                                            <td style={{ fontFamily: 'monospace' }}>{r2}/20</td>
-                                            <td style={{ fontFamily: 'monospace' }}>{r3}/5</td>
-                                            <td style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#000080' }}>
-                                                {total}/35
-                                            </td>
-                                            <td>
-                                                <span className={`status-badge status-badge-${p.status}`}>
-                                                    {p.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
+                            sortedParticipants.map((p, index) => {
+                                const total = p.scores?.total ?? p.totalScore ?? 0;
+                                const r1 = p.scores?.round1 ?? 0;
+                                const r2 = p.scores?.round2 ?? 0;
+                                const r3 = p.scores?.round3 ?? 0;
+                                return (
+                                    <tr key={p.id || index}>
+                                        <td style={{ fontWeight: 'bold', textAlign: 'center' }}>#{index + 1}</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{p.id}</td>
+                                        <td><b>{p.name || p.id}</b></td>
+                                        <td>{p.college || 'N/A'}</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{r1}/10</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{r2}/20</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{r3}/5</td>
+                                        <td style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#000080' }}>
+                                            {total}/35
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge status-badge-${p.status || 'ACTIVE'}`}>
+                                                {p.status || 'ACTIVE'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
@@ -239,3 +344,4 @@ export const ReportsPanel: React.FC<ReportsPanelProps> = ({ participants }) => {
         </div>
     );
 };
+export default ReportsPanel;

@@ -86,22 +86,22 @@ export const LiveParticipantMonitor: React.FC<LiveParticipantMonitorProps> = ({
 
     const handleQuickAdd5m = async (p: Participant, e: React.MouseEvent) => {
         e.stopPropagation();
-        const ok = await ParticipantService.adjustParticipantTimer(p.id, 300);
-        if (ok) {
+        const res = await ParticipantService.adjustParticipantTimer(p.id, 300);
+        if (res.success) {
             alert(`✓ Added +5 minutes extra time to ${p.name} (${p.id})`);
         } else {
-            alert('Failed to adjust workstation timer.');
+            alert(`Failed to adjust workstation timer: ${res.error || 'Server error'}`);
         }
     };
 
     const handleQuickPardon = async (p: Participant, e: React.MouseEvent) => {
         e.stopPropagation();
         if (window.confirm(`Pardon strikes and reset session for ${p.name}?`)) {
-            const ok = await ParticipantService.resetSession(p.id);
-            if (ok) {
+            const res = await ParticipantService.resetSession(p.id);
+            if (res.success) {
                 alert(`✓ Strikes cleared and session restored for ${p.name}`);
             } else {
-                alert('Failed to reset participant session.');
+                alert(`Failed to reset participant session: ${res.error || 'Server error'}`);
             }
         }
     };
@@ -155,6 +155,7 @@ export const LiveParticipantMonitor: React.FC<LiveParticipantMonitorProps> = ({
                             <option value="QUALIFIED">QUALIFIED</option>
                             <option value="ELIMINATED">ELIMINATED</option>
                             <option value="FLAGGED">FLAGGED</option>
+                            <option value="DISQUALIFIED">DISQUALIFIED</option>
                         </select>
                     </div>
                 </div>

@@ -3,9 +3,11 @@ import { useCompetition } from '../context/CompetitionContext';
 import { competitionRules, prohibitedAiTools } from '../data/rulesData';
 
 export const RulesPage: React.FC = () => {
-  const { startRound, setView } = useCompetition();
+  const { state, startRound, setView } = useCompetition();
   const [agreed, setAgreed] = useState(false);
   const [attemptedStartWithoutAgree, setAttemptedStartWithoutAgree] = useState(false);
+
+  const isEventNotStarted = Boolean(state.schedule?.startTime && !state.schedule?.isStarted);
 
   const handleStart = () => {
     if (!agreed) {
@@ -27,6 +29,12 @@ export const RulesPage: React.FC = () => {
     } catch (e) {
       // Ignore
     }
+
+    if (isEventNotStarted) {
+      setView('waiting_room');
+      return;
+    }
+
     startRound(1);
   };
 
@@ -186,7 +194,7 @@ export const RulesPage: React.FC = () => {
                   className="site-button active font-bold text-white bg-[#000080]"
                   style={{ fontSize: 15, padding: '9px 30px' }}
                 >
-                  ▶ Enter Round 1 — Bug Hunt &gt;&gt;
+                  {isEventNotStarted ? '🔒 Enter Arena Gateway (Scheduled) >>' : '▶ Enter Round 1 — Bug Hunt >>'}
                 </button>
               </div>
             </div>

@@ -39,20 +39,28 @@ const Window: React.FC<WindowProps> = (props) => {
 
     const resizeRef = useRef<any>(null);
 
-    const [top, setTop] = useState(typeof props.top === 'number' && !isNaN(props.top) && props.top >= 0 ? props.top : 14);
-    const [left, setLeft] = useState(typeof props.left === 'number' && !isNaN(props.left) && props.left >= 0 ? props.left : 20);
+    const [top, setTop] = useState(
+        props.isMaximized ? 0 : (typeof props.top === 'number' && !isNaN(props.top) && props.top >= 0 ? props.top : 14)
+    );
+    const [left, setLeft] = useState(
+        props.isMaximized ? 0 : (typeof props.left === 'number' && !isNaN(props.left) && props.left >= 0 ? props.left : 20)
+    );
 
     const lastClickInside = useRef(false);
 
     const [width, setWidth] = useState(
-        typeof props.width === 'number' && !isNaN(props.width) && props.width >= 300
-            ? props.width
-            : 1360
+        props.isMaximized
+            ? (typeof window !== 'undefined' ? window.innerWidth : 1360)
+            : (typeof props.width === 'number' && !isNaN(props.width) && props.width >= 300
+                ? props.width
+                : 1360)
     );
     const [height, setHeight] = useState(
-        typeof props.height === 'number' && !isNaN(props.height) && props.height >= 200
-            ? props.height
-            : 880
+        props.isMaximized
+            ? (typeof window !== 'undefined' ? window.innerHeight - 32 : 880)
+            : (typeof props.height === 'number' && !isNaN(props.height) && props.height >= 200
+                ? props.height
+                : 880)
     );
 
     const [contentWidth, setContentWidth] = useState(props.width);
@@ -84,6 +92,19 @@ const Window: React.FC<WindowProps> = (props) => {
             }
         }
     }, [props.isMaximized]); // eslint-disable-line
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (isMaximized) {
+                setWidth(window.innerWidth);
+                setHeight(window.innerHeight - 32);
+                setTop(0);
+                setLeft(0);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [isMaximized]);
 
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState(false);

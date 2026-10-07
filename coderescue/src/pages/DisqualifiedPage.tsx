@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCompetition } from '../context/CompetitionContext';
 
 export const DisqualifiedPage: React.FC = () => {
@@ -8,12 +8,41 @@ export const DisqualifiedPage: React.FC = () => {
     readmitContestant,
     restartCurrentRound,
     restartCompetitionWithParticipant,
-    resetCompetition
+    resetCompetition,
+    pardonStrikesAndRestoreSession
   } = useCompetition();
-
   const participant = state.participant;
   const reason = state.securityState?.disqualificationReason || 'Multiple unauthorized tab switches detected during active round.';
   const violations = state.securityState?.violationLogs || [];
+  const [checking, setChecking] = useState(false);
+  const [checkStatus, setCheckStatus] = useState<string>('');
+
+  const checkPardonStatus = async () => {
+    if (!participant?.participantId) return;
+    try {
+      setChecking(true);
+      const res = await fetch(`/api/participants/${encodeURIComponent(participant.participantId)}`);
+      const data = await res.json();
+      if (data.success && data.participant) {
+        const p = data.participant;
+        if (p.status === 'ACTIVE' && (p.strikes === 0 || Number(p.strikes) === 0)) {
+          setCheckStatus('✓ Pardon confirmed! Restoring workstation session...');
+          pardonStrikesAndRestoreSession();
+          return;
+        }
+      }
+    } catch {}
+    finally {
+      setChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      checkPardonStatus();
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [participant?.participantId, pardonStrikesAndRestoreSession]);
 
   // Proctor Modal State
   const [showModal, setShowModal] = useState(false);
@@ -243,7 +272,8 @@ export const DisqualifiedPage: React.FC = () => {
       <div className="shrink-0 bg-[#000044] border-t-2 border-white/50 px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg z-10">
         <div className="text-xs text-yellow-300 font-bold flex items-center gap-1.5">
           <span>⚠️</span>
-          <span>Status: LOCKED // Proctor PIN required to resume or reset</span>
+          <span>Status: LOCKED // Proctor PIN required or Admin Remote Pardon</span>
+          {checkStatus && <span className="text-green-300 ml-2 animate-pulse">{checkStatus}</span>}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -266,6 +296,23 @@ export const DisqualifiedPage: React.FC = () => {
             }}
           >
             🔓 Unlock Workstation
+          </button>
+          <button
+            type="button"
+            onClick={checkPardonStatus}
+            disabled={checking}
+            className="site-button"
+            style={{
+              padding: '5px 14px',
+              fontSize: 11,
+              fontWeight: 'bold',
+              background: '#008000',
+              color: '#ffffff',
+              border: '2px solid #00ff00',
+              cursor: checking ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {checking ? 'Checking...' : '🔄 Check Remote Pardon'}
           </button>
           <button
             type="button"

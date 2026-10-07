@@ -25,6 +25,15 @@ export const DEFAULT_SECURITY_STATE = {
   graceExpiresAt: null
 };
 
+export const DEFAULT_SCHEDULE = {
+  startTime: '',
+  endTime: '',
+  serverTime: new Date().toISOString(),
+  isStarted: true,
+  isEnded: false,
+  status: 'IN_PROGRESS' as const
+};
+
 export const getInitialState = (): CompetitionState => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -40,6 +49,11 @@ export const getInitialState = (): CompetitionState => {
         return {
           ...parsed,
           qualificationConfig: safeQual,
+          schedule: {
+            ...DEFAULT_SCHEDULE,
+            ...(parsed.schedule || {})
+          },
+          isAutoSubmitting: false,
           securityState: {
             ...DEFAULT_SECURITY_STATE,
             ...(parsed.securityState || {})
@@ -58,6 +72,8 @@ export const getInitialState = (): CompetitionState => {
     activeQuestionId: 'r1-q1',
     qualificationConfig: { ...DEFAULT_QUALIFICATION_CONFIG },
     timers: { ...INITIAL_TIMERS },
+    schedule: { ...DEFAULT_SCHEDULE },
+    isAutoSubmitting: false,
     codeBuffers: {},
     submissions: {},
     bestScores: {},

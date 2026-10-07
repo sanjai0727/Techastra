@@ -9,10 +9,14 @@ import { RoundResultPage } from './pages/RoundResultPage';
 import { FinalResultPage } from './pages/FinalResultPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { DisqualifiedPage } from './pages/DisqualifiedPage';
+import { WaitingRoomPage } from './pages/WaitingRoomPage';
 import { ProctoringShield } from './components/ProctoringShield';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const AppContent: React.FC = () => {
   const { state } = useCompetition();
+
+  const isEventNotStarted = Boolean(state.schedule?.startTime && !state.schedule?.isStarted);
 
   const renderView = () => {
     if (state.currentView === 'disqualified') {
@@ -32,6 +36,11 @@ const AppContent: React.FC = () => {
       return <DisqualifiedPage />;
     }
 
+    // Gatekeeper: Lock all workspace views before official event start time
+    if (isEventNotStarted && (state.currentView.includes('workspace') || state.currentView === 'waiting_room')) {
+      return <WaitingRoomPage />;
+    }
+
     switch (state.currentView) {
       case 'welcome':
         return <WelcomePage />;
@@ -39,6 +48,8 @@ const AppContent: React.FC = () => {
         return <RegistrationPage />;
       case 'rules':
         return <RulesPage />;
+      case 'waiting_room':
+        return <WaitingRoomPage />;
       case 'round1_workspace':
       case 'round2_workspace':
       case 'round3_workspace':
@@ -57,11 +68,12 @@ const AppContent: React.FC = () => {
   };
 
   const isWorkspace = state.currentView.includes('workspace');
+  const isFullBleed = isWorkspace || state.currentView === 'disqualified' || state.currentView === 'waiting_room';
 
   return (
     <div className="h-screen max-h-screen overflow-hidden bg-[#c0c0c0] text-black flex flex-col select-none font-sans text-sm">
       <Header />
-      <main className={`flex-1 ${isWorkspace ? 'overflow-hidden p-0' : 'overflow-auto p-2 sm:p-4 flex flex-col justify-start items-center'} bg-[#c0c0c0]`}>
+      <main className={`flex-1 ${isFullBleed ? 'overflow-hidden p-0' : 'overflow-auto p-2 sm:p-4 flex flex-col justify-start items-center'} bg-[#c0c0c0]`}>
         {renderView()}
       </main>
       <footer className="win95-statusbar">
@@ -82,9 +94,11 @@ const AppContent: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <CompetitionProvider>
-      <AppContent />
-    </CompetitionProvider>
+    <ErrorBoundary>
+      <CompetitionProvider>
+        <AppContent />
+      </CompetitionProvider>
+    </ErrorBoundary>
   );
 };
 

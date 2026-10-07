@@ -14,6 +14,8 @@ const loginAttempts = new Map();
 const {
     fetchLiveRoster,
     syncRosterToDatabase,
+    seedOfficialRosterToDb,
+    OFFICIAL_MASTER_ROSTER,
     markAttendanceOnPortal,
     getSyncStatus,
 } = require('./coordinatorSync');
@@ -52,6 +54,84 @@ function parseParticipantSlot(id) {
     if (!match) return null;
     const num = parseInt(match[1], 10);
     return num >= 1 && num <= MAX_PARTICIPANTS ? num : null;
+}
+
+function getNextAvailableSlot() {
+    const existingSlots = new Set(
+        db.prepare('SELECT slot_number FROM participants').all().map((r) => r.slot_number)
+    );
+    for (let i = 1; i <= MAX_PARTICIPANTS; i++) {
+        if (!existingSlots.has(i)) {
+            return i;
+        }
+    }
+    return 1;
+}
+
+function ensureParticipant(id, meta = {}) {
+    if (!id || typeof id !== 'string') return null;
+    const cleanId = id.trim().toUpperCase();
+    let p = db.prepare('SELECT * FROM participants WHERE id = ?').get(cleanId);
+    if (p) return p;
+
+    let slot = null;
+    const numMatch = cleanId.match(/(\d+)$/);
+    if (numMatch) {
+        const potentialSlot = parseInt(numMatch[1], 10);
+        const existingSlot = db.prepare('SELECT id FROM participants WHERE slot_number = ?').get(potentialSlot);
+        if (!existingSlot) {
+            slot = potentialSlot;
+        }
+    }
+    if (!slot) {
+        slot = getNextAvailableSlot();
+    }
+
+    const nowMs = Date.now();
+    const nowIso = new Date().toISOString();
+    const pName = meta.participantName || meta.fullName || meta.name || `Contestant ${cleanId}`;
+    const pCollege = meta.college || 'Engineering College';
+    const pDept = meta.department || 'Computer Science & Engineering';
+    const pYear = meta.year || '3rd Year';
+    const pStatus = meta.status || 'ACTIVE';
+    const pStrikes = meta.strikes !== undefined ? Number(meta.strikes) : 0;
+    const pTime = meta.timeRemaining !== undefined ? Number(meta.timeRemaining) : 1200;
+
+    try {
+        db.prepare(`
+            INSERT INTO participants (
+                id, slot_number, full_name, college, department, year,
+                current_round, current_question, score, total_score,
+                round1_score, round2_score, round3_score, time_remaining,
+                status, strikes, last_event, last_seen, registered_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO NOTHING
+        `).run(
+            cleanId,
+            slot,
+            pName,
+            pCollege,
+            pDept,
+            pYear,
+            meta.currentRound || 'R1',
+            meta.currentQuestion || 'Q1',
+            meta.score || 0,
+            meta.totalScore || 0,
+            meta.round1Score || 0,
+            meta.round2Score || 0,
+            meta.round3Score || 0,
+            pTime,
+            pStatus,
+            pStrikes,
+            meta.lastEvent || meta.lastActivity || 'Connected to Arena',
+            nowMs,
+            nowIso
+        );
+    } catch (err) {
+        console.error('[ensureParticipant] Insert error:', err.message);
+    }
+
+    return db.prepare('SELECT * FROM participants WHERE id = ?').get(cleanId);
 }
 
 // Helper: Format participant records for client API
@@ -170,6 +250,59 @@ function getAllAnnouncementsFormatted() {
         roundTarget: a.priority === 'HIGH' ? 'R1' : 'ALL',
         broadcasted: true,
     }));
+}
+
+function getCompetitionSchedule() {
+    let startTime = '';
+    let endTime = '';
+    let eventEnded = false;
+    try {
+        const sRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_start_time'").get();
+        if (sRow && sRow.value) startTime = sRow.value;
+        const eRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_end_time'").get();
+        if (eRow && eRow.value) endTime = eRow.value;
+        const endRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
+        eventEnded = endRow ? endRow.value === '1' : false;
+    } catch (e) {
+        console.error('Error fetching competition schedule:', e);
+    }
+
+    const now = Date.now();
+    let isStarted = true;
+    let isEnded = eventEnded;
+
+    if (startTime) {
+        const startMs = Date.parse(startTime);
+        if (!isNaN(startMs)) {
+            isStarted = now >= startMs;
+        }
+    }
+
+    if (endTime) {
+        const endMs = Date.parse(endTime);
+        if (!isNaN(endMs)) {
+            if (now >= endMs) {
+                isEnded = true;
+            }
+        }
+    }
+
+    let status = 'IN_PROGRESS';
+    if (!isStarted) {
+        status = 'WAITING_TO_START';
+    } else if (isEnded) {
+        status = 'ENDED';
+    }
+
+    return {
+        startTime,
+        endTime,
+        serverTime: new Date().toISOString(),
+        isStarted,
+        isEnded,
+        eventEnded: isEnded,
+        status,
+    };
 }
 
 // Middleware: Authenticate Admin Session
@@ -515,70 +648,61 @@ router.post('/participants/verify', async (req, res) => {
         trimmedId = `SYM2026-${String(trimmedId).padStart(4, '0')}`;
     }
 
-    let participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(trimmedId);
-
-    if (!participant) {
-        try {
-            const roster = await fetchLiveRoster();
-            const match = roster.find(
-                (r) =>
-                    (r.registrationCode && r.registrationCode.toUpperCase() === trimmedId) ||
-                    (r.registrationId && r.registrationId.toUpperCase() === trimmedId)
-            );
-            if (match) {
-                const code = match.registrationCode || trimmedId;
-                const numMatch = code.match(/(\d+)$/);
-                const slotNum = numMatch ? parseInt(numMatch[1], 10) : 1;
-                const nowMs = Date.now();
-                const nowIso = new Date().toISOString();
-
-                db.prepare(`
-                    INSERT INTO participants (
-                        id, slot_number, full_name, college, department, year,
-                        current_round, current_question, score, total_score,
-                        round1_score, round2_score, round3_score, time_remaining,
-                        status, strikes, last_event, last_seen, registered_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 1200, 'ACTIVE', 0, 'Verified on Official Portal', ?, ?)
-                    ON CONFLICT(id) DO UPDATE SET full_name = excluded.full_name, college = excluded.college
-                `).run(
-                    code,
-                    slotNum,
-                    match.name || `Contestant ${code}`,
-                    match.college || 'Engineering College',
-                    'Computer Science and Engineering',
-                    'Senior Engineering',
-                    nowMs,
-                    nowIso
-                );
-
-                participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(code);
-                broadcast('participants_updated', getAllParticipantsFormatted());
+    // 1. Check local DB (already logged in or signed up)
+    const local = db.prepare('SELECT * FROM participants WHERE id = ?').get(trimmedId);
+    if (local) {
+        return res.json({
+            success: true,
+            verified: true,
+            participant: {
+                id: local.id,
+                slotNumber: local.slot_number,
+                name: local.full_name,
+                college: local.college,
+                department: local.department,
+                year: local.year,
+                currentRound: local.current_round,
+                status: local.status,
+                strikes: local.strikes,
             }
-        } catch (err) {}
-    }
-
-    if (!participant) {
-        return res.status(404).json({
-            success: false,
-            verified: false,
-            error: `Participant Token '${trimmedId}' was not found in the official Techastra roster. Please verify your token or register below.`,
         });
     }
 
-    return res.json({
-        success: true,
-        verified: true,
-        participant: {
-            id: participant.id,
-            slotNumber: participant.slot_number,
-            name: participant.full_name,
-            college: participant.college,
-            department: participant.department,
-            year: participant.year,
-            currentRound: participant.current_round,
-            status: participant.status,
-            strikes: participant.strikes,
+    // 2. Check live portal roster (without inserting into DB yet)
+    try {
+        const roster = await fetchLiveRoster();
+        const match = roster.find(
+            (r) =>
+                (r.registrationCode && r.registrationCode.toUpperCase() === trimmedId) ||
+                (r.registrationId && r.registrationId.toUpperCase() === trimmedId)
+        );
+        if (match) {
+            const code = match.registrationCode || trimmedId;
+            const numMatch = code.match(/(\d+)$/);
+            const slotNum = numMatch ? parseInt(numMatch[1], 10) : 1;
+
+            return res.json({
+                success: true,
+                verified: true,
+                participant: {
+                    id: code,
+                    slotNumber: slotNum,
+                    name: match.name || `Contestant ${code}`,
+                    college: match.college || 'Engineering College',
+                    department: 'Computer Science and Engineering',
+                    year: 'Senior Engineering',
+                    currentRound: 'R1',
+                    status: 'ACTIVE',
+                    strikes: 0,
+                }
+            });
         }
+    } catch (err) {}
+
+    return res.status(404).json({
+        success: false,
+        verified: false,
+        error: `Participant Token '${trimmedId}' was not found in the official Techastra roster. Please verify your token or register below.`,
     });
 });
 
@@ -712,11 +836,17 @@ router.get('/coordinator/roster', async (req, res) => {
 });
 
 router.get('/coordinator/lookup/:code', async (req, res) => {
-    const rawCode = req.params.code ? req.params.code.trim().toUpperCase() : '';
-    let code = rawCode;
-    if (/^\d+$/.test(code)) {
-        code = `SYM2026-${String(code).padStart(4, '0')}`;
+    let rawCode = req.params.code ? req.params.code.trim().toUpperCase() : '';
+    // Normalize e.g. "38" -> "SYM2026-0038", "SYM2026-38" -> "SYM2026-0038"
+    if (/^\d+$/.test(rawCode)) {
+        rawCode = `SYM2026-${String(rawCode).padStart(4, '0')}`;
+    } else {
+        const numMatch = rawCode.match(/^SYM2026-(\d+)$/i);
+        if (numMatch) {
+            rawCode = `SYM2026-${String(numMatch[1]).padStart(4, '0')}`;
+        }
     }
+    const code = rawCode;
 
     // 1. Check local DB
     const local = db.prepare('SELECT * FROM participants WHERE id = ?').get(code);
@@ -728,13 +858,14 @@ router.get('/coordinator/lookup/:code', async (req, res) => {
                 id: local.id,
                 name: local.full_name,
                 college: local.college,
-                department: local.department,
-                year: local.year,
+                department: local.department || 'Computer Science & Engineering',
+                year: local.year || '3rd Year',
+                venue: 'IBM Lab • Day 1 (Oct 8, 2026)',
             },
         });
     }
 
-    // 2. Check live portal
+    // 2. Check live / master portal roster
     try {
         const roster = await fetchLiveRoster();
         const match = roster.find(
@@ -750,8 +881,9 @@ router.get('/coordinator/lookup/:code', async (req, res) => {
                     id: match.registrationCode || code,
                     name: match.name,
                     college: match.college,
-                    department: 'Computer Science & Engineering',
-                    year: 'Senior Engineering',
+                    department: match.department || 'Computer Science & Engineering',
+                    year: match.year || '3rd Year',
+                    venue: match.venue || 'IBM Lab • Day 1 (Oct 8, 2026)',
                 },
             });
         }
@@ -791,19 +923,44 @@ router.post('/telemetry/heartbeat', (req, res) => {
     if (!id) return res.json({ success: false, error: 'No participantId' });
 
     const now = Date.now();
-    const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+    let p = ensureParticipant(id, payload);
 
     if (p) {
-        const roundNum = payload.currentRound ? String(payload.currentRound).replace('R', '') : '1';
+        const roundNum = payload.currentRound ? String(payload.currentRound).replace('R', '') : (p.current_round ? String(p.current_round).replace('R', '') : '1');
         const roundId = `R${roundNum}`;
         const qNum = payload.currentQuestion || p.current_question || 'Q1';
-        const timeRemaining = payload.roundTimeRemaining !== undefined ? payload.roundTimeRemaining : p.time_remaining;
+        const timeRemaining = payload.roundTimeRemaining !== undefined ? Number(payload.roundTimeRemaining) : (payload.timeRemaining !== undefined ? Number(payload.timeRemaining) : p.time_remaining);
 
-        const r1 = payload.round1Score !== undefined ? payload.round1Score : p.round1_score;
-        const r2 = payload.round2Score !== undefined ? payload.round2Score : p.round2_score;
-        const r3 = payload.round3Score !== undefined ? payload.round3Score : p.round3_score;
-        const total = r1 + r2 + r3;
-        const curScore = roundId === 'R1' ? r1 : roundId === 'R2' ? r2 : r3;
+        const r1 = payload.round1Score !== undefined ? Number(payload.round1Score) : p.round1_score;
+        const r2 = payload.round2Score !== undefined ? Number(payload.round2Score) : p.round2_score;
+        const r3 = payload.round3Score !== undefined ? Number(payload.round3Score) : p.round3_score;
+        const total = payload.totalScore !== undefined ? Number(payload.totalScore) : (r1 + r2 + r3);
+        const curScore = payload.score !== undefined ? Number(payload.score) : (roundId === 'R1' ? r1 : roundId === 'R2' ? r2 : r3);
+
+        const strikes = payload.strikes !== undefined ? Number(payload.strikes) : p.strikes;
+        let status = payload.status || p.status;
+
+        // If participant was pardoned or reinstated by admin on the server,
+        // but the client is still sending DISQUALIFIED from prior local state:
+        if (p.status === 'ACTIVE' && p.strikes === 0 && (payload.status === 'DISQUALIFIED' || Number(payload.strikes) > 0)) {
+            return res.json({
+                success: true,
+                reinstated: true,
+                pardoned: true,
+                status: 'ACTIVE',
+                strikes: 0,
+                timeRemaining: p.time_remaining,
+                schedule: getCompetitionSchedule()
+            });
+        }
+
+        if (strikes >= 3 || status === 'DISQUALIFIED') {
+            status = 'DISQUALIFIED';
+        } else if (strikes >= 2 && status !== 'DISQUALIFIED') {
+            status = 'FLAGGED';
+        }
+
+        const lastActivity = payload.lastActivity || payload.lastEvent || p.last_event || 'Active in Arena';
 
         db.prepare(`
             UPDATE participants
@@ -815,6 +972,8 @@ router.post('/telemetry/heartbeat', (req, res) => {
                 round2_score = ?,
                 round3_score = ?,
                 time_remaining = ?,
+                status = ?,
+                strikes = ?,
                 last_event = ?,
                 last_seen = ?
             WHERE id = ?
@@ -827,7 +986,9 @@ router.post('/telemetry/heartbeat', (req, res) => {
             r2,
             r3,
             timeRemaining,
-            payload.lastActivity || p.last_event || 'Active in Arena',
+            status,
+            strikes,
+            lastActivity,
             now,
             id
         );
@@ -840,11 +1001,28 @@ router.post('/telemetry/heartbeat', (req, res) => {
             score: curScore,
             totalScore: total,
             timeRemaining,
-            lastEvent: payload.lastActivity || p.last_event,
+            status,
+            strikes,
+            lastEvent: lastActivity,
+        });
+
+        // Broadcast roster updates when status or strikes change
+        if (status !== p.status || strikes !== p.strikes) {
+            broadcast('participants_updated', getAllParticipantsFormatted());
+        }
+
+        return res.json({
+            success: true,
+            status,
+            strikes,
+            timeRemaining,
+            reinstated: status === 'ACTIVE' && strikes === 0,
+            pardoned: strikes === 0,
+            schedule: getCompetitionSchedule()
         });
     }
 
-    return res.json({ success: true });
+    return res.json({ success: true, schedule: getCompetitionSchedule() });
 });
 
 // Real-Time Keystroke & Participant Code Stream
@@ -865,7 +1043,7 @@ router.post(['/telemetry/code-stream', '/telemetry/live-screen'], (req, res) => 
     const id = participantId ? participantId.trim().toUpperCase() : null;
     if (!id) return res.status(400).json({ success: false, error: 'participantId required' });
 
-    const p = db.prepare('SELECT full_name, time_remaining FROM participants WHERE id = ?').get(id);
+    let p = ensureParticipant(id, { participantName, roundId, questionId, timeRemaining });
     const name = p ? p.full_name : (participantName || id);
     const curTime = timeRemaining !== undefined ? Number(timeRemaining) : (p ? p.time_remaining : 2400);
     const nowMs = lastKeystrokeAt || Date.now();
@@ -944,7 +1122,7 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
 
     if (!screen) {
         // Return blank shell if not yet typing
-        const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+        const p = ensureParticipant(id);
         if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
         return res.json({
             success: true,
@@ -966,19 +1144,29 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
     }
 
     return res.json({ success: true, screen });
-});router.post(['/telemetry/event', '/proctoring/event'], (req, res) => {
+});
+
+router.post(['/telemetry/event', '/proctoring/event'], (req, res) => {
     const event = req.body || {};
     const id = event.participantId ? event.participantId.trim().toUpperCase() : null;
     if (!id) return res.status(400).json({ success: false, error: 'No participantId' });
 
-    const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
-    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
-    const pName = p.full_name || event.participantName || id;
+    let p = ensureParticipant(id, event);
+    const pName = p ? p.full_name : (event.participantName || id);
 
     const eventId = `SEC-${Date.now().toString().slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    const newStrikes = (p.strikes || 0) + 1;
-    const status = newStrikes >= 2 ? 'FLAGGED' : 'WARNING';
+    const newStrikes = event.strikeCount !== undefined ? Number(event.strikeCount) : ((p ? p.strikes : 0) + 1);
+    
+    // Status resolution: if strike 3 or explicit DISQUALIFIED, mark as DISQUALIFIED
+    let status = 'WARNING';
+    if (newStrikes >= 3 || event.status === 'DISQUALIFIED' || event.eventType === 'DISQUALIFIED') {
+        status = 'DISQUALIFIED';
+    } else if (newStrikes >= 2 || event.status === 'FLAGGED') {
+        status = 'FLAGGED';
+    }
+
     const nowTime = new Date().toTimeString().split(' ')[0];
+    const details = event.details || event.description || 'Proctoring violation recorded';
 
     db.prepare(`
         INSERT INTO proctoring_events (
@@ -989,7 +1177,7 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
         id,
         pName,
         event.eventType || 'WINDOW_BLUR',
-        event.details || event.description || 'Proctoring violation recorded',
+        details,
         newStrikes,
         status,
         nowTime,
@@ -999,17 +1187,18 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
     db.prepare(`
         UPDATE participants
         SET strikes = ?,
-            status = CASE WHEN ? >= 3 THEN 'FLAGGED' ELSE status END,
-            last_event = ?
+            status = ?,
+            last_event = ?,
+            last_seen = ?
         WHERE id = ?
-    `).run(newStrikes, newStrikes, event.details || event.description || 'Integrity Strike Logged', id);
+    `).run(newStrikes, status, details, Date.now(), id);
 
     const createdEvent = {
         id: eventId,
         participantId: id,
         participantName: pName,
         eventType: event.eventType || 'WINDOW_BLUR',
-        description: event.details || event.description || 'Proctoring violation recorded',
+        description: details,
         strikeCount: newStrikes,
         strikes: newStrikes,
         status,
@@ -1020,7 +1209,7 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
     broadcast('security_event', createdEvent);
     broadcast('participants_updated', getAllParticipantsFormatted());
 
-    return res.json({ success: true, eventId, strikes: newStrikes, strikeCount: newStrikes });
+    return res.json({ success: true, eventId, strikes: newStrikes, strikeCount: newStrikes, status });
 });
 
 router.get('/telemetry/participants', (req, res) => {
@@ -1058,6 +1247,9 @@ router.post('/telemetry/reinstate', requireAdminAuth, (req, res) => {
 
     // Instant broadcast
     broadcast('participants_updated', getAllParticipantsFormatted());
+    broadcast('session_reset', { participantId: id });
+    broadcast('participant_reinstated', { participantId: id });
+    broadcast('events_updated', getAllEventsFormatted());
     broadcast('security_event', {
         id: eventId,
         participantId: id,
@@ -1138,9 +1330,9 @@ router.post('/submissions', (req, res) => {
     const id = participantId ? participantId.trim().toUpperCase() : null;
     if (!id) return res.status(400).json({ success: false, error: 'participantId required' });
 
-    const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+    let p = ensureParticipant(id, { participantName, roundId, questionId });
     if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
-    const pName = p ? p.full_name : participantName || id;
+    const pName = p ? p.full_name : (participantName || id);
     const subId = `SUB-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const nowIso = new Date().toISOString();
 
@@ -1297,7 +1489,7 @@ router.post('/rounds/:id/cutoff', requireAdminAuth, handleRoundUpdate);
 
 // Individual Participant Timer Adjustment
 router.post('/participants/:id/adjust-timer', requireAdminAuth, (req, res) => {
-    const id = req.params.id;
+    const id = req.params.id ? req.params.id.trim().toUpperCase() : '';
     const { additionalSeconds, setSeconds } = req.body || {};
     const p = db.prepare('SELECT time_remaining FROM participants WHERE id = ?').get(id);
     if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
@@ -1317,13 +1509,15 @@ router.post('/participants/:id/adjust-timer', requireAdminAuth, (req, res) => {
 
 // Reset Individual Participant Session (Pardon strikes, restore active status)
 router.post('/participants/:id/reset-session', requireAdminAuth, (req, res) => {
-    const id = req.params.id;
+    const id = req.params.id ? req.params.id.trim().toUpperCase() : '';
     const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
     if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
 
     db.prepare("UPDATE participants SET strikes = 0, status = 'ACTIVE', last_event = 'Session Restored by Admin' WHERE id = ?").run(id);
     db.prepare('DELETE FROM proctoring_events WHERE participant_id = ?').run(id);
 
+    broadcast('session_reset', { participantId: id });
+    broadcast('participant_reinstated', { participantId: id });
     broadcast('participants_updated', getAllParticipantsFormatted());
     broadcast('events_updated', getAllEventsFormatted());
     return res.json({ success: true, message: `Session reset for ${id}. Strikes cleared.` });
@@ -1334,15 +1528,11 @@ router.get('/admin/system-stats', requireAdminAuth, (req, res) => {
     const totalParticipants = db.prepare('SELECT COUNT(*) as c FROM participants').get().c;
     const activeParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'ACTIVE'").get().c;
     const qualifiedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'QUALIFIED'").get().c;
-    const flaggedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'FLAGGED' OR strikes >= 2").get().c;
+    const flaggedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'FLAGGED' OR status = 'DISQUALIFIED' OR strikes >= 2").get().c;
     const totalSubmissions = db.prepare('SELECT COUNT(*) as c FROM submissions').get().c;
     const totalEvents = db.prepare('SELECT COUNT(*) as c FROM proctoring_events').get().c;
 
-    let eventEnded = false;
-    try {
-        const configRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
-        eventEnded = configRow ? configRow.value === '1' : false;
-    } catch {}
+    const schedule = getCompetitionSchedule();
 
     return res.json({
         success: true,
@@ -1354,7 +1544,8 @@ router.get('/admin/system-stats', requireAdminAuth, (req, res) => {
             totalSubmissions,
             totalEvents,
             sseClients: sseClients.size,
-            eventEnded,
+            eventEnded: schedule.isEnded,
+            schedule,
             uptimeSeconds: Math.floor(process.uptime()),
             serverTime: new Date().toISOString()
         }
@@ -1404,8 +1595,32 @@ router.post('/admin/toggle-event-ended', requireAdminAuth, (req, res) => {
     const { eventEnded } = req.body || {};
     const val = eventEnded ? '1' : '0';
     db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_ended', ?)").run(val);
+    const schedule = getCompetitionSchedule();
     broadcast('event_ended_updated', { eventEnded: Boolean(eventEnded) });
-    return res.json({ success: true, eventEnded: Boolean(eventEnded) });
+    broadcast('schedule_updated', schedule);
+    return res.json({ success: true, eventEnded: Boolean(eventEnded), schedule });
+});
+
+// Competition Schedule (Public view for contestants & arena terminals)
+router.get('/competition/schedule', (req, res) => {
+    return res.json({ success: true, schedule: getCompetitionSchedule() });
+});
+
+// Admin Update Competition Schedule (Strictly Admin Authenticated)
+router.post('/admin/schedule', requireAdminAuth, (req, res) => {
+    const { startTime, endTime, eventEnded } = req.body || {};
+    if (startTime !== undefined) {
+        db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_start_time', ?)").run(String(startTime || ''));
+    }
+    if (endTime !== undefined) {
+        db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_end_time', ?)").run(String(endTime || ''));
+    }
+    if (eventEnded !== undefined) {
+        db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_ended', ?)").run(eventEnded ? '1' : '0');
+    }
+    const schedule = getCompetitionSchedule();
+    broadcast('schedule_updated', schedule);
+    return res.json({ success: true, message: 'Competition schedule updated successfully.', schedule });
 });
 
 // ============================================================================
@@ -1444,29 +1659,153 @@ router.post('/announcements', requireAdminAuth, (req, res) => {
 });
 
 // ============================================================================
-// 7. HARD RESET / AUDIT PURGE (RESTRICTED TO CHIEF ADMIN)
+// 7. COMPREHENSIVE DATABASE RESET / AUDIT PURGE (COORDINATOR ACCESS)
 // ============================================================================
 
-router.post('/admin/reset-contest', requireAdminAuth, (req, res) => {
+router.get('/admin/database-stats', requireAdminAuth, (req, res) => {
+    try {
+        const participantsCount = db.prepare('SELECT COUNT(*) as c FROM participants').get().c;
+        const activeParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'ACTIVE'").get().c;
+        const submissionsCount = db.prepare('SELECT COUNT(*) as c FROM submissions').get().c;
+        const proctoringEventsCount = db.prepare('SELECT COUNT(*) as c FROM proctoring_events').get().c;
+        const sessionsCount = db.prepare('SELECT COUNT(*) as c FROM participant_sessions').get().c;
+        let liveScreensCount = 0;
+        try { liveScreensCount = db.prepare('SELECT COUNT(*) as c FROM live_screens').get().c; } catch (e) {}
+        const announcementsCount = db.prepare('SELECT COUNT(*) as c FROM announcements').get().c;
+
+        return res.json({
+            success: true,
+            stats: {
+                participantsCount,
+                activeParticipants,
+                submissionsCount,
+                proctoringEventsCount,
+                sessionsCount,
+                liveScreensCount,
+                announcementsCount,
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+function executeDatabaseReset(options = {}) {
+    const mode = options.mode || 'full'; // 'full' | 'sessions_only' | 'clean_slate' | 'seed_only'
+    const seedRoster = options.seedRoster !== false;
+
+    if (mode === 'seed_only') {
+        const seeded = seedOfficialRosterToDb();
+        return {
+            mode,
+            message: `Successfully seeded/restored ${seeded} official contestants into the database.`,
+            seededCount: seeded
+        };
+    }
+
+    if (mode === 'sessions_only') {
+        // Soft reset: Keep enrolled contestants, wipe telemetry & active test sessions
+        db.prepare('DELETE FROM submissions').run();
+        db.prepare('DELETE FROM proctoring_events').run();
+        db.prepare('DELETE FROM participant_sessions').run();
+        try { db.prepare('DELETE FROM live_screens').run(); } catch (e) {}
+
+        // Reset participant scores and strikes
+        db.prepare(`
+            UPDATE participants SET
+                score = 0,
+                total_score = 0,
+                round1_score = 0,
+                round2_score = 0,
+                round3_score = 0,
+                strikes = 0,
+                status = 'ACTIVE',
+                current_round = 'R1',
+                current_question = 'Q1',
+                time_remaining = 1200,
+                last_event = 'Session reset by coordinator'
+        `).run();
+
+        db.prepare('UPDATE rounds SET is_active = 0').run();
+        db.prepare("UPDATE rounds SET is_active = 1 WHERE round_id = 'R1'").run();
+
+        return {
+            mode,
+            message: 'All participant submissions, strikes, sessions, and screens have been reset to Round 1 (0 points). Roster retained.'
+        };
+    }
+
+    // Default 'full' or 'clean_slate':
     db.prepare('DELETE FROM submissions').run();
     db.prepare('DELETE FROM proctoring_events').run();
     db.prepare('DELETE FROM participant_sessions').run();
-    db.prepare('DELETE FROM participants').run();
     db.prepare('DELETE FROM announcements').run();
     try { db.prepare('DELETE FROM live_screens').run(); } catch (e) {}
+    try { db.prepare('DELETE FROM inquiries').run(); } catch (e) {}
 
     db.prepare('UPDATE rounds SET is_active = 0').run();
     db.prepare("UPDATE rounds SET is_active = 1 WHERE round_id = 'R1'").run();
+    try {
+        db.prepare("UPDATE competition_settings SET value = '0' WHERE key = 'event_ended'").run();
+    } catch (e) {}
 
-    // Broadcast reset event
-    broadcast('reset_contest', {});
-    broadcast('participants_updated', []);
-    broadcast('submissions_updated', []);
-    broadcast('events_updated', []);
-    broadcast('rounds_updated', getAllRoundsFormatted());
-    broadcast('announcements_updated', []);
+    let seededCount = 0;
+    if (mode === 'clean_slate') {
+        // Pristine empty state — contestants only enter upon login/signup
+        db.prepare('DELETE FROM participants').run();
+    } else {
+        // Full reset with official seed roster
+        db.prepare('DELETE FROM participants').run();
+        if (seedRoster) {
+            seededCount = seedOfficialRosterToDb();
+        }
+    }
 
-    return res.json({ success: true, message: 'Competition state reset to clean initial state.' });
+    return {
+        mode,
+        message: mode === 'clean_slate'
+            ? 'Database completely wiped to clean slate. Contestants will enter database upon login or sign-up.'
+            : `Full database reset complete! Seeded ${seededCount} official verified contestants from the Techastra Portal.`,
+        seededCount
+    };
+}
+
+router.post('/admin/reset-database', requireAdminAuth, (req, res) => {
+    try {
+        const result = executeDatabaseReset(req.body);
+
+        // Broadcast reset events via SSE
+        broadcast('reset_contest', {});
+        broadcast('participants_updated', getAllParticipantsFormatted());
+        broadcast('submissions_updated', []);
+        broadcast('events_updated', []);
+        broadcast('rounds_updated', getAllRoundsFormatted());
+        broadcast('announcements_updated', []);
+
+        console.log(`[Admin Security] Database reset executed by coordinator (${result.mode})`);
+        return res.json({ success: true, ...result });
+    } catch (err) {
+        console.error('[Admin Security] Database reset failed:', err.message);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/admin/reset-contest', requireAdminAuth, (req, res) => {
+    try {
+        const mode = req.body?.mode || (req.body?.hardReset ? 'clean_slate' : 'full');
+        const result = executeDatabaseReset({ mode, seedRoster: true });
+
+        broadcast('reset_contest', {});
+        broadcast('participants_updated', getAllParticipantsFormatted());
+        broadcast('submissions_updated', []);
+        broadcast('events_updated', []);
+        broadcast('rounds_updated', getAllRoundsFormatted());
+        broadcast('announcements_updated', []);
+
+        return res.json({ success: true, ...result });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 module.exports = router;

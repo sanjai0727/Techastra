@@ -201,7 +201,7 @@ export class ParticipantService {
         return this.participants.find((p) => p.id === id);
     }
 
-    public static flagParticipant(id: string, reason?: string): boolean {
+    public static async flagParticipant(id: string, reason?: string): Promise<{ success: boolean; error?: string }> {
         let changed = false;
         this.participants = this.participants.map((p) => {
             if (p.id === id) {
@@ -220,20 +220,31 @@ export class ParticipantService {
 
         if (changed) this.notify();
 
-        // Persist flag action directly to backend database
-        fetch('/api/telemetry/flag', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...AdminAuthService.getAuthHeader(),
-            },
-            body: JSON.stringify({ participantId: id, reason: reason || 'Coordinator manual flag' }),
-        }).catch(() => {});
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            try {
+                const bc = new BroadcastChannel('techastra_telemetry');
+                bc.postMessage({ type: 'PARTICIPANT_FLAGGED', participantId: id, reason });
+                bc.close();
+            } catch {}
+        }
 
-        return changed;
+        try {
+            const res = await fetch('/api/telemetry/flag', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AdminAuthService.getAuthHeader(),
+                },
+                body: JSON.stringify({ participantId: id, reason: reason || 'Coordinator manual flag' }),
+            });
+            const data = await res.json();
+            return { success: !!data.success, error: data.error };
+        } catch (e: any) {
+            return { success: false, error: e.message };
+        }
     }
 
-    public static reinstateSession(id: string): boolean {
+    public static async reinstateSession(id: string): Promise<{ success: boolean; error?: string }> {
         let changed = false;
         this.participants = this.participants.map((p) => {
             if (p.id === id) {
@@ -251,20 +262,34 @@ export class ParticipantService {
 
         if (changed) this.notify();
 
-        // Persist reinstate action directly to backend database
-        fetch('/api/telemetry/reinstate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...AdminAuthService.getAuthHeader(),
-            },
-            body: JSON.stringify({ participantId: id }),
-        }).catch(() => {});
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            try {
+                const bc = new BroadcastChannel('techastra_telemetry');
+                bc.postMessage({ type: 'PARTICIPANT_REINSTATED', participantId: id });
+                bc.close();
+            } catch {}
+        }
 
-        return changed;
+        try {
+            const res = await fetch('/api/telemetry/reinstate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AdminAuthService.getAuthHeader(),
+                },
+                body: JSON.stringify({ participantId: id }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.pollServerTelemetry();
+            }
+            return { success: !!data.success, error: data.error };
+        } catch (e: any) {
+            return { success: false, error: e.message };
+        }
     }
 
-    public static async adjustParticipantTimer(id: string, additionalSeconds?: number, setSeconds?: number): Promise<boolean> {
+    public static async adjustParticipantTimer(id: string, additionalSeconds?: number, setSeconds?: number): Promise<{ success: boolean; error?: string; timeRemaining?: number }> {
         try {
             const res = await fetch(`/api/participants/${encodeURIComponent(id)}/adjust-timer`, {
                 method: 'POST',
@@ -275,13 +300,33 @@ export class ParticipantService {
                 body: JSON.stringify({ additionalSeconds, setSeconds }),
             });
             const data = await res.json();
-            return !!data.success;
-        } catch {
-            return false;
+            if (data.success) {
+                if (data.timeRemaining !== undefined) {
+                    this.participants = this.participants.map((p) => {
+                        if (p.id === id) {
+                            return { ...p, timeRemaining: data.timeRemaining };
+                        }
+                        return p;
+                    });
+                    this.notify();
+                }
+                this.pollServerTelemetry();
+            }
+            return { success: !!data.success, error: data.error, timeRemaining: data.timeRemaining };
+        } catch (e: any) {
+            return { success: false, error: e.message };
         }
     }
 
-    public static async resetSession(id: string): Promise<boolean> {
+    public static async resetSession(id: string): Promise<{ success: boolean; error?: string; message?: string }> {
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            try {
+                const bc = new BroadcastChannel('techastra_telemetry');
+                bc.postMessage({ type: 'SESSION_RESET', participantId: id });
+                bc.close();
+            } catch {}
+        }
+
         try {
             const res = await fetch(`/api/participants/${encodeURIComponent(id)}/reset-session`, {
                 method: 'POST',
@@ -292,11 +337,24 @@ export class ParticipantService {
             });
             const data = await res.json();
             if (data.success) {
+                this.participants = this.participants.map((p) => {
+                    if (p.id === id) {
+                        return {
+                            ...p,
+                            status: 'ACTIVE' as ParticipantStatus,
+                            strikes: 0,
+                            sessionActive: true,
+                            lastEvent: 'Session Restored by Admin',
+                        };
+                    }
+                    return p;
+                });
+                this.notify();
                 this.pollServerTelemetry();
             }
-            return !!data.success;
-        } catch {
-            return false;
+            return { success: !!data.success, error: data.error, message: data.message };
+        } catch (e: any) {
+            return { success: false, error: e.message };
         }
     }
 

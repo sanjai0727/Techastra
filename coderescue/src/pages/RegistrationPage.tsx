@@ -98,6 +98,12 @@ export const RegistrationPage: React.FC = () => {
     if (/^\d+$/.test(cleanCode)) {
       cleanCode = `SYM2026-${cleanCode.padStart(4, '0')}`;
       setLoginToken(cleanCode);
+    } else {
+      const numMatch = cleanCode.match(/^SYM2026-(\d+)$/i);
+      if (numMatch) {
+        cleanCode = `SYM2026-${String(numMatch[1]).padStart(4, '0')}`;
+        setLoginToken(cleanCode);
+      }
     }
 
     setIsVerifying(true);
@@ -157,20 +163,7 @@ export const RegistrationPage: React.FC = () => {
         });
         setView('rules');
       } else {
-        const cand = await verifyToken(tokenToLogin);
-        if (cand) {
-          registerParticipant({
-            fullName: cand.name || `Contestant ${tokenToLogin}`,
-            college: cand.college || 'Engineering College',
-            department: cand.department || 'Computer Science and Engineering',
-            year: cand.year || 'Senior Engineering',
-            participantId: tokenToLogin,
-            registeredAt: Date.now(),
-          });
-          setView('rules');
-        } else {
-          setError(`Token '${tokenToLogin}' could not be verified in the official Techastra database.`);
-        }
+        setError(data.error || `Token '${tokenToLogin}' could not be verified in the official Techastra database.`);
       }
     } catch {
       setError('Unable to reach authentication server. Please check network connectivity.');
@@ -193,6 +186,12 @@ export const RegistrationPage: React.FC = () => {
     if (/^\d+$/.test(cleanToken)) {
       cleanToken = `SYM2026-${cleanToken.padStart(4, '0')}`;
       setLoginToken(cleanToken);
+    } else {
+      const numMatch = cleanToken.match(/^SYM2026-(\d+)$/i);
+      if (numMatch) {
+        cleanToken = `SYM2026-${String(numMatch[1]).padStart(4, '0')}`;
+        setLoginToken(cleanToken);
+      }
     }
 
     // Save pending token to session & local storage
