@@ -157,20 +157,7 @@ export const RegistrationPage: React.FC = () => {
         });
         setView('rules');
       } else {
-        const cand = await verifyToken(tokenToLogin);
-        if (cand) {
-          registerParticipant({
-            fullName: cand.name || `Contestant ${tokenToLogin}`,
-            college: cand.college || 'Engineering College',
-            department: cand.department || 'Computer Science and Engineering',
-            year: cand.year || 'Senior Engineering',
-            participantId: tokenToLogin,
-            registeredAt: Date.now(),
-          });
-          setView('rules');
-        } else {
-          setError(`Token '${tokenToLogin}' could not be verified in the official Techastra database.`);
-        }
+        setError(data.error || `Token '${tokenToLogin}' could not be verified in the official Techastra database.`);
       }
     } catch {
       setError('Unable to reach authentication server. Please check network connectivity.');

@@ -515,70 +515,61 @@ router.post('/participants/verify', async (req, res) => {
         trimmedId = `SYM2026-${String(trimmedId).padStart(4, '0')}`;
     }
 
-    let participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(trimmedId);
-
-    if (!participant) {
-        try {
-            const roster = await fetchLiveRoster();
-            const match = roster.find(
-                (r) =>
-                    (r.registrationCode && r.registrationCode.toUpperCase() === trimmedId) ||
-                    (r.registrationId && r.registrationId.toUpperCase() === trimmedId)
-            );
-            if (match) {
-                const code = match.registrationCode || trimmedId;
-                const numMatch = code.match(/(\d+)$/);
-                const slotNum = numMatch ? parseInt(numMatch[1], 10) : 1;
-                const nowMs = Date.now();
-                const nowIso = new Date().toISOString();
-
-                db.prepare(`
-                    INSERT INTO participants (
-                        id, slot_number, full_name, college, department, year,
-                        current_round, current_question, score, total_score,
-                        round1_score, round2_score, round3_score, time_remaining,
-                        status, strikes, last_event, last_seen, registered_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 1200, 'ACTIVE', 0, 'Verified on Official Portal', ?, ?)
-                    ON CONFLICT(id) DO UPDATE SET full_name = excluded.full_name, college = excluded.college
-                `).run(
-                    code,
-                    slotNum,
-                    match.name || `Contestant ${code}`,
-                    match.college || 'Engineering College',
-                    'Computer Science and Engineering',
-                    'Senior Engineering',
-                    nowMs,
-                    nowIso
-                );
-
-                participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(code);
-                broadcast('participants_updated', getAllParticipantsFormatted());
+    // 1. Check local DB (already logged in or signed up)
+    const local = db.prepare('SELECT * FROM participants WHERE id = ?').get(trimmedId);
+    if (local) {
+        return res.json({
+            success: true,
+            verified: true,
+            participant: {
+                id: local.id,
+                slotNumber: local.slot_number,
+                name: local.full_name,
+                college: local.college,
+                department: local.department,
+                year: local.year,
+                currentRound: local.current_round,
+                status: local.status,
+                strikes: local.strikes,
             }
-        } catch (err) {}
-    }
-
-    if (!participant) {
-        return res.status(404).json({
-            success: false,
-            verified: false,
-            error: `Participant Token '${trimmedId}' was not found in the official Techastra roster. Please verify your token or register below.`,
         });
     }
 
-    return res.json({
-        success: true,
-        verified: true,
-        participant: {
-            id: participant.id,
-            slotNumber: participant.slot_number,
-            name: participant.full_name,
-            college: participant.college,
-            department: participant.department,
-            year: participant.year,
-            currentRound: participant.current_round,
-            status: participant.status,
-            strikes: participant.strikes,
+    // 2. Check live portal roster (without inserting into DB yet)
+    try {
+        const roster = await fetchLiveRoster();
+        const match = roster.find(
+            (r) =>
+                (r.registrationCode && r.registrationCode.toUpperCase() === trimmedId) ||
+                (r.registrationId && r.registrationId.toUpperCase() === trimmedId)
+        );
+        if (match) {
+            const code = match.registrationCode || trimmedId;
+            const numMatch = code.match(/(\d+)$/);
+            const slotNum = numMatch ? parseInt(numMatch[1], 10) : 1;
+
+            return res.json({
+                success: true,
+                verified: true,
+                participant: {
+                    id: code,
+                    slotNumber: slotNum,
+                    name: match.name || `Contestant ${code}`,
+                    college: match.college || 'Engineering College',
+                    department: 'Computer Science and Engineering',
+                    year: 'Senior Engineering',
+                    currentRound: 'R1',
+                    status: 'ACTIVE',
+                    strikes: 0,
+                }
+            });
         }
+    } catch (err) {}
+
+    return res.status(404).json({
+        success: false,
+        verified: false,
+        error: `Participant Token '${trimmedId}' was not found in the official Techastra roster. Please verify your token or register below.`,
     });
 });
 

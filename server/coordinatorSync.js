@@ -90,49 +90,32 @@ async function fetchLiveRoster() {
 async function syncRosterToDatabase() {
   try {
     const roster = await fetchLiveRoster();
-    console.log(`[Portal Sync] Synchronizing ${roster.length} contestants from Dr. M.G.R. Portal...`);
+    console.log(`[Portal Sync] Cached ${roster.length} registered contestants from Dr. M.G.R. Portal for live verification.`);
 
-    const nowMs = Date.now();
-    const nowIso = new Date().toISOString();
-
-    const insertOrIgnore = db.prepare(`
-      INSERT INTO participants (
-        id, slot_number, full_name, college, department, year,
-        current_round, current_question, score, total_score,
-        round1_score, round2_score, round3_score, time_remaining,
-        status, strikes, last_event, last_seen, registered_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 1200, 'ACTIVE', 0, 'Synced from Official Portal', ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        full_name = excluded.full_name,
-        college = excluded.college
+    // Only update records for contestants who have ALREADY logged in / signed up locally
+    const updateExisting = db.prepare(`
+      UPDATE participants SET full_name = ?, college = ? WHERE id = ?
     `);
 
-    let importedCount = 0;
+    let updatedCount = 0;
     for (const item of roster) {
-      const code = item.registrationCode || item.registrationId;
+      const code = (item.registrationCode || item.registrationId || '').trim().toUpperCase();
       if (!code) continue;
 
-      // Extract slot number from code (e.g. SYM2026-0036 -> 36)
-      const numMatch = code.match(/(\d+)$/);
-      const slotNum = numMatch ? parseInt(numMatch[1], 10) : (importedCount + 1);
-
-      insertOrIgnore.run(
-        code.trim().toUpperCase(),
-        slotNum,
+      const res = updateExisting.run(
         item.name || `Contestant ${code}`,
         item.college || 'Engineering College',
-        'Computer Science and Engineering',
-        'Senior Engineering',
-        nowMs,
-        nowIso
+        code
       );
-      importedCount++;
+      if (res.changes > 0) {
+        updatedCount++;
+      }
     }
 
-    console.log(`[Portal Sync] ✅ Successfully upserted ${importedCount} live contestants into SQLite.`);
     return {
       success: true,
-      syncedCount: importedCount,
+      cachedCount: roster.length,
+      syncedCount: updatedCount,
       roster: roster,
       lastSyncTime
     };
