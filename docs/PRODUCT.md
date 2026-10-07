@@ -31,7 +31,7 @@ Unlike traditional algorithmic platforms (LeetCode, HackerRank, Codeforces) wher
   3. Official Rules & Anti-AI Agreement (Enforcing manual debugging; ChatGPT, Claude, Gemini, Copilot prohibited)
   4. Round 1 — BUG HUNT (Basic syntax, variables, conditions; 10 questions, 15 minutes, 10 marks — 1 mark each)
   5. Round 1 Result & Qualification Gate (Configurable cutoff, default 50% = 5 marks)
-  6. Round 2 — LOGIC BREAKER (Intermediate logic, loop boundaries, runtime crashes; 10 questions, 20 minutes, 20 marks — 2 marks each)
+  6. Round 2 — LOGIC BREAKER (Intermediate logic, loop boundaries, runtime crashes; 5 questions, 20 minutes, 20 marks — 4 marks each)
   7. Round 2 Result & Qualification Gate (Configurable cutoff, default 50% = 10 marks)
   8. Round 3 — CODE RESCUE (Advanced broken application with multi-layered bugs; 1 question, 25 minutes, 5 marks)
   9. Final Result & Winner Evaluation (35 marks cumulative score, accuracy, tie-breaker analytics)

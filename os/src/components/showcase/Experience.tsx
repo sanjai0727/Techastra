@@ -60,12 +60,12 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
                         <h1>Round 2: LOGIC BREAKER</h1>
-                        <h4>20 Minutes • 10 Questions</h4>
+                        <h4>20 Minutes • 5 Questions</h4>
                     </div>
                     <div style={styles.headerRow}>
                         <h3>Intermediate Logic &amp; Runtime Triage</h3>
                         <b>
-                            <p>Max Score: 20 Marks (2 marks/question)</p>
+                            <p>Max Score: 20 Marks (4 marks/question)</p>
                         </b>
                     </div>
                 </div>
@@ -104,7 +104,7 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
                         <h1>Round 3: CODE RESCUE</h1>
-                        <h4>25 Minutes • 1 Major Broken System</h4>
+                        <h4>25 Minutes • 1 Question</h4>
                     </div>
                     <div style={styles.headerRow}>
                         <h3>Advanced Legacy Application Disaster Recovery</h3>
@@ -148,7 +148,7 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
                         <h1>Scoring & Tie-Breaker Protocol</h1>
-                        <h4>300 Cumulative Maximum</h4>
+                        <h4>35 Marks Cumulative Maximum</h4>
                     </div>
                     <div style={styles.headerRow}>
                         <h3>Official Regulations & Integrity</h3>
@@ -166,7 +166,7 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                 <br />
                 <ul>
                     <li style={styles.row}>
-                        <p>• <b>Total Score:</b> Cumulative points earned across Rounds 1, 2, and 3 (Max 300 pts).</p>
+                        <p>• <b>Total Score:</b> Cumulative marks earned across Rounds 1, 2, and 3 (Max 35 Marks: R1=10, R2=20, R3=5).</p>
                     </li>
                     <li style={styles.row}>
                         <p>• <b>Primary Tie-Breaker:</b> Earliest timestamp of final valid submission.</p>

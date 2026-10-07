@@ -33,7 +33,7 @@ export class RoundService {
             participantsCount: 0,
             qualifiedCount: 0,
             timeLimitMinutes: 20,
-            totalQuestions: 10,
+            totalQuestions: 5,
             description: 'Insidious logical hazards: Off-by-one loops, zero-division hazards, mutable default argument traps, and boundary cases.',
         },
         {

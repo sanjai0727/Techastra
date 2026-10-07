@@ -92,7 +92,7 @@ export const WelcomePage: React.FC = () => {
                   </p>
                 </div>
                 <div className="space-y-1 font-mono text-xs sm:text-sm pt-2.5 border-t border-gray-200 text-gray-800 bg-[#f8f8f8] p-2.5 rounded-sm">
-                  <div><b>Orders:</b> 10 Work Orders (2 Pts each)</div>
+                  <div><b>Orders:</b> 5 Work Orders (4 Pts each)</div>
                   <div><b>Clock:</b> 20 Minutes</div>
                   <div><b>Max Points:</b> 20 Pts</div>
                 </div>

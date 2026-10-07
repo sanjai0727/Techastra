@@ -10,7 +10,7 @@ const ArtProjects: React.FC<ArtProjectsProps> = (props) => {
             <h3>Multi-Bug System Disaster Recovery</h3>
             <br />
             <p>
-                <b>Format:</b> 1 Comprehensive Broken System • 40 Minutes • 100 Max Points • Advanced Difficulty
+                <b>Format:</b> 1 Comprehensive Broken System (1 Question) • 25 Minutes • 5 Max Marks (5 marks/question) • Advanced Difficulty
             </p>
             <br />
             <ResumeDownload altText="Download Official Code Rescue Rulebook (PDF)" />

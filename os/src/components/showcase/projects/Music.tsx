@@ -10,7 +10,7 @@ const MusicProjects: React.FC<MusicProjectsProps> = (props) => {
             <h3>Runtime Exceptions & Logical Traps</h3>
             <br />
             <p>
-                <b>Format:</b> 5 Questions • 25 Minutes • 100 Max Points (20 pts/question) • Intermediate Difficulty
+                <b>Format:</b> 5 Questions • 20 Minutes • 20 Max Marks (4 marks/question) • Intermediate Difficulty
             </p>
             <br />
             <ResumeDownload altText="Download Official Code Rescue Rulebook (PDF)" />

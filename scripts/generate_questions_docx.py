@@ -199,9 +199,9 @@ def main():
 
     row_data = [
         ["Round 1", "Bug Hunt (Syntax & Lexical)", "10", "1 Mark", "10 Marks", "15 Mins", "≥ 5 Marks (50%)"],
-        ["Round 2", "Logic Breaker (Logic & Runtime)", "10", "2 Marks", "20 Marks", "20 Mins", "≥ 10 Marks (50%)"],
+        ["Round 2", "Logic Breaker (Logic & Runtime)", "5", "4 Marks", "20 Marks", "20 Mins", "≥ 10 Marks (50%)"],
         ["Round 3", "Code Rescue (Legacy System)", "1", "5 Marks", "5 Marks", "25 Mins", "Championship Finale"],
-        ["TOTAL", "Full Championship Gauntlet", "21", "—", "35 Marks", "60 Mins", "Cumulative Standing"]
+        ["TOTAL", "Full Championship Gauntlet", "16", "—", "35 Marks", "60 Mins", "Cumulative Standing"]
     ]
 
     for r_idx, r_vals in enumerate(row_data):

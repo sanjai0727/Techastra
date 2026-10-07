@@ -227,7 +227,7 @@ function initSchema() {
             cutoff: 10,
             max_score: 20,
             time_limit_minutes: 20,
-            total_questions: 10,
+            total_questions: 5,
             description: 'Insidious logical hazards: Off-by-one loops, zero-division hazards, mutable default argument traps, and boundary cases.',
         },
         {

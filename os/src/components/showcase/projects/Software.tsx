@@ -10,7 +10,7 @@ const SoftwareProjects: React.FC<SoftwareProjectsProps> = (props) => {
             <h3>Syntax & Grammar Diagnostics</h3>
             <br />
             <p>
-                <b>Format:</b> 10 Questions • 20 Minutes • 100 Max Points (10 pts/question) • Basic Difficulty
+                <b>Format:</b> 10 Questions • 15 Minutes • 10 Max Marks (1 mark/question) • Basic Difficulty
             </p>
             <br />
             <ResumeDownload altText="Download Official Code Rescue Rulebook (PDF)" />
