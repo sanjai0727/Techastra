@@ -11,6 +11,7 @@ import { LeaderboardPage } from './pages/LeaderboardPage';
 import { DisqualifiedPage } from './pages/DisqualifiedPage';
 import { WaitingRoomPage } from './pages/WaitingRoomPage';
 import { ProctoringShield } from './components/ProctoringShield';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const AppContent: React.FC = () => {
   const { state } = useCompetition();
@@ -93,9 +94,11 @@ const AppContent: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <CompetitionProvider>
-      <AppContent />
-    </CompetitionProvider>
+    <ErrorBoundary>
+      <CompetitionProvider>
+        <AppContent />
+      </CompetitionProvider>
+    </ErrorBoundary>
   );
 };
 

@@ -49,6 +49,7 @@ const CompetitionContext = createContext<CompetitionContextType | null>(null);
 export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<CompetitionState>(getInitialState);
   const autoSubmitRef = useRef<(roundNum?: 1 | 2 | 3) => Promise<void>>(async () => {});
+  const startRoundRef = useRef<(round: 1 | 2 | 3) => void>(() => {});
 
   // Sync state to LocalStorage
   useEffect(() => {
@@ -200,7 +201,9 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         // If event just started and contestant is on waiting room, enter Round 1!
         if (newIsStarted && !newIsEnded && prev.currentView === 'waiting_room') {
           setTimeout(() => {
-            startRound(1);
+            if (startRoundRef.current) {
+              startRoundRef.current(1);
+            }
           }, 10);
         }
 
@@ -259,7 +262,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startRound]);
+  }, []);
 
   // Session reinstatement & strike pardon handler (triggered by Admin broadcast or heartbeat response)
   const pardonStrikesAndRestoreSession = useCallback(() => {
@@ -484,6 +487,46 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
       };
     });
   };
+
+  startRoundRef.current = startRound;
+
+  // Initial schedule sync and SSE / BroadcastChannel subscription
+  useEffect(() => {
+    telemetryService.fetchSchedule().then((sch) => {
+      if (sch) {
+        setState(prev => ({
+          ...prev,
+          schedule: {
+            ...prev.schedule,
+            ...sch
+          }
+        }));
+      }
+    });
+
+    const unsubsReset = telemetryService.onSessionReset((id) => {
+      if (!id || id === state.participant?.participantId) {
+        pardonStrikesAndRestoreSession();
+      }
+    });
+
+    const unsubsSchedule = telemetryService.onScheduleUpdate((sch) => {
+      if (sch) {
+        setState(prev => ({
+          ...prev,
+          schedule: {
+            ...prev.schedule,
+            ...sch
+          }
+        }));
+      }
+    });
+
+    return () => {
+      unsubsReset();
+      unsubsSchedule();
+    };
+  }, [pardonStrikesAndRestoreSession, state.participant?.participantId]);
 
   const selectQuestion = (questionId: string) => {
     setState(prev => ({ ...prev, activeQuestionId: questionId }));
