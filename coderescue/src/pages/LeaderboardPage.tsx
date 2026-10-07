@@ -11,7 +11,13 @@ export const LeaderboardPage: React.FC = () => {
   // Fetch live server standings from SQLite backend
   useEffect(() => {
     fetch('/api/leaderboard')
-      .then(res => res.json())
+      .then(res => {
+        const ct = res.headers.get('content-type') || '';
+        if (res.ok && ct.includes('application/json')) {
+          return res.json();
+        }
+        return null;
+      })
       .then(data => {
         if (data && data.success && Array.isArray(data.leaderboard)) {
           setLiveEntries(data.leaderboard);

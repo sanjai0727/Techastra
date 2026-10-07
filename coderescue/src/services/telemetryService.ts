@@ -95,11 +95,15 @@ class TelemetryService {
     try {
       const res = await fetch('/api/telemetry/heartbeat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const data = await res.json();
-      return data;
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.includes('application/json')) {
+        const data = await res.json();
+        return data;
+      }
+      return { success: false };
     } catch (err) {
       return { success: false };
     }
@@ -108,10 +112,15 @@ class TelemetryService {
   // Fetch official competition schedule from server
   public async fetchSchedule(): Promise<any> {
     try {
-      const res = await fetch('/api/competition/schedule');
-      const data = await res.json();
-      if (data && data.success) {
-        return data.schedule;
+      const res = await fetch('/api/competition/schedule', {
+        headers: { 'Accept': 'application/json' }
+      });
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.includes('application/json')) {
+        const data = await res.json();
+        if (data && data.success) {
+          return data.schedule;
+        }
       }
       return null;
     } catch {

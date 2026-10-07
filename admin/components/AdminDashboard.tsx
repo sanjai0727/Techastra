@@ -55,11 +55,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
             const res = await fetch('/api/admin/system-stats', {
                 headers: {
                     'Authorization': `Bearer ${user.token}`,
+                    'Accept': 'application/json',
                 },
             });
-            const data = await res.json();
-            if (data.success && data.stats) {
-                setSystemStats(data.stats);
+            const contentType = res.headers.get('content-type') || '';
+            if (res.ok && contentType.includes('application/json')) {
+                const data = await res.json();
+                if (data.success && data.stats) {
+                    setSystemStats(data.stats);
+                }
             }
         } catch {}
     };

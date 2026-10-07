@@ -14,13 +14,16 @@ export const DisqualifiedPage: React.FC = () => {
     try {
       setChecking(true);
       const res = await fetch(`/api/participants/${encodeURIComponent(participant.participantId)}`);
-      const data = await res.json();
-      if (data.success && data.participant) {
-        const p = data.participant;
-        if (p.status === 'ACTIVE' && (p.strikes === 0 || Number(p.strikes) === 0)) {
-          setCheckStatus('✓ Pardon confirmed! Restoring workstation session...');
-          pardonStrikesAndRestoreSession();
-          return;
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.includes('application/json')) {
+        const data = await res.json();
+        if (data.success && data.participant) {
+          const p = data.participant;
+          if (p.status === 'ACTIVE' && (p.strikes === 0 || Number(p.strikes) === 0)) {
+            setCheckStatus('✓ Pardon confirmed! Restoring workstation session...');
+            pardonStrikesAndRestoreSession();
+            return;
+          }
         }
       }
     } catch {}

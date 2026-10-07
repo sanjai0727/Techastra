@@ -28,7 +28,9 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install --legacy-peer-deps
+          npm --prefix coderescue install
 
       - name: Build Techastra Platform
         run: npm run build
@@ -39,3 +41,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           publish_branch: gh-pages
+          cname: coderescue.techastra.pp.ua

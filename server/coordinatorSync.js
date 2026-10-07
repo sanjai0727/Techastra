@@ -149,6 +149,42 @@ const OFFICIAL_MASTER_ROSTER = [
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
+  },
+  {
+    registrationId: 'cmuy0a1420001sxqrparvesh01',
+    registrationCode: 'SYM2026-0142',
+    name: 'Parvesh',
+    college: 'VEL TECH MULTITECH DR.RANGARAJAN DR.SHAKUNTHALA ENGINEERING COLLEGE',
+    department: 'Computer Science & Engineering',
+    year: '3rd Year',
+    venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
+  },
+  {
+    registrationId: 'cmuy0b1470002sxqrpraganya02',
+    registrationCode: 'SYM2026-0147',
+    name: 'Praganya Dharshini D',
+    college: 'Vel Tech Multi Tech Dr.Rangarajan Dr.Sakunthala Engineering College',
+    department: 'Computer Science & Engineering',
+    year: '3rd Year',
+    venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
+  },
+  {
+    registrationId: 'cmuy0c1520003sxqrsanjay003',
+    registrationCode: 'SYM2026-0152',
+    name: 'Sanjay',
+    college: 'vel tech multi tech dr.rangarajan dr.sakunthala engneering college',
+    department: 'Computer Science & Engineering',
+    year: '3rd Year',
+    venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
+  },
+  {
+    registrationId: 'cmuy0d1570004sxqrnavaneeth4',
+    registrationCode: 'SYM2026-0157',
+    name: 'Navaneeth',
+    college: 'VEL TECH MULTI TECH DR RANGARAJAN DR SAKUNTHALA ENGINEERING COLLEGE',
+    department: 'Computer Science & Engineering',
+    year: '3rd Year',
+    venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   }
 ];
 
@@ -216,20 +252,42 @@ async function syncRosterToDatabase() {
     const roster = await fetchLiveRoster();
     console.log(`[Portal Sync] Cached ${roster.length} registered contestants from Dr. M.G.R. Portal for live verification.`);
 
-    // Only update records for contestants who have ALREADY logged in / signed up locally
-    const updateExisting = db.prepare(`
-      UPDATE participants SET full_name = ?, college = ? WHERE id = ?
+    // Upsert records for contestants from the official portal
+    const upsertParticipant = db.prepare(`
+      INSERT INTO participants (
+        id, slot_number, full_name, college, department, year,
+        current_round, current_question, score, total_score,
+        round1_score, round2_score, round3_score, time_remaining,
+        status, strikes, last_event, last_seen, registered_at
+      ) VALUES (?, ?, ?, ?, ?, ?, 'R1', 'Q1', 0, 0, 0, 0, 0, 1200, 'ACTIVE', 0, 'Official Portal Verified', ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        full_name = excluded.full_name,
+        college = excluded.college,
+        department = excluded.department,
+        year = excluded.year
     `);
 
+    const nowMs = Date.now();
+    const nowIso = new Date().toISOString();
     let updatedCount = 0;
-    for (const item of roster) {
+
+    for (let i = 0; i < roster.length; i++) {
+      const item = roster[i];
       const code = (item.registrationCode || item.registrationId || '').trim().toUpperCase();
       if (!code) continue;
 
-      const res = updateExisting.run(
+      const numMatch = code.match(/(\d+)$/);
+      const slot = numMatch ? parseInt(numMatch[1], 10) : i + 1;
+
+      const res = upsertParticipant.run(
+        code,
+        slot,
         item.name || `Contestant ${code}`,
         item.college || 'Engineering College',
-        code
+        item.department || 'Computer Science & Engineering',
+        item.year || '3rd Year',
+        nowMs,
+        nowIso
       );
       if (res.changes > 0) {
         updatedCount++;
