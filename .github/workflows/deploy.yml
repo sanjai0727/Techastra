@@ -30,7 +30,11 @@ jobs:
       - name: Install Dependencies
         run: |
           npm install --legacy-peer-deps
-          npm --prefix coderescue install
+          cd coderescue
+          rm -f package-lock.json
+          npm install
+          npm install @tailwindcss/oxide-linux-x64-gnu || true
+          cd ..
 
       - name: Build Techastra Platform
         run: npm run build
