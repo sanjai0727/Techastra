@@ -465,3 +465,80 @@ div[style*="shortcutContainer"] span {
     font-size: 15px !important;
     white-space: nowrap !important;
 }
+
+/* ==========================================================================
+   OS WINDOW DIMENSION GUARANTEE & EXPANSION FIX
+   Prevents any window, borders, or inner iframe from collapsing
+   ========================================================================== */
+
+/* Outer Window Frame */
+div[style*="position: absolute"][style*="background-color: rgb(192, 192, 192)"],
+div[style*="position: absolute"][style*="background-color: #c0c0c0"] {
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    min-width: 600px !important;
+    min-height: 400px !important;
+}
+
+/* Outer 3D Border */
+div[style*="border-top-color: rgb(192, 192, 192)"][style*="border-left-color: rgb(192, 192, 192)"],
+div[style*="border-top-color: #c0c0c0"][style*="border-left-color: #c0c0c0"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Inner 3D Border */
+div[style*="border-top-color: rgb(255, 255, 255)"][style*="border-left-color: rgb(255, 255, 255)"][style*="flex-direction: column"],
+div[style*="border-top-color: #ffffff"][style*="border-left-color: #ffffff"][style*="flex-direction: column"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Content Area Sunken Frames */
+div[style*="overflow: hidden"][style*="flex-grow: 1"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+div[style*="overflow: hidden"][style*="flex: 1"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+div[style*="overflow-x: hidden"][style*="background-color: rgb(255, 255, 255)"],
+div[style*="overflow-x: hidden"][style*="background-color: #ffffff"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Code Rescue Arena iFrame in OS Window */
+iframe[title="Code Rescue Arena"] {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 520px !important;
+    flex: 1 1 auto !important;
+    display: block !important;
+    border: none !important;
+    background-color: #c0c0c0 !important;
+}
