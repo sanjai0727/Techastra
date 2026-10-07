@@ -349,14 +349,9 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
   ]);
 
   const setView = (view: ActiveView) => {
-    const isWorkspace = view.includes('workspace');
     try {
       if (window.parent && window.parent !== window) {
-        if (isWorkspace) {
-          window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
-        } else {
-          window.parent.postMessage({ type: 'CODE_RESCUE_EXIT_FULLSCREEN' }, '*');
-        }
+        window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
       }
     } catch (e) {}
     setState(prev => ({ ...prev, currentView: view }));
@@ -732,13 +727,8 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const disqualifyContestant = useCallback((reason: string) => {
     try {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-    } catch (e) {}
-    try {
       if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'CODE_RESCUE_EXIT_FULLSCREEN' }, '*');
+        window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
       }
     } catch (e) {}
 

@@ -56,12 +56,12 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const isWorkspace = state.currentView.includes('workspace');
+  const isFullBleed = isWorkspace || state.currentView === 'disqualified';
 
   return (
     <div className="h-screen max-h-screen overflow-hidden bg-[#c0c0c0] text-black flex flex-col select-none font-sans text-sm">
       <Header />
-      <main className={`flex-1 ${isWorkspace ? 'overflow-hidden p-0' : 'overflow-auto p-2 sm:p-4 flex flex-col justify-start items-center'} bg-[#c0c0c0]`}>
+      <main className={`flex-1 ${isFullBleed ? 'overflow-hidden p-0' : 'overflow-auto p-2 sm:p-4 flex flex-col justify-start items-center'} bg-[#c0c0c0]`}>
         {renderView()}
       </main>
       <footer className="win95-statusbar">

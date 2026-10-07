@@ -14,7 +14,7 @@ const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
 
     const { normalW: initW, normalH: initH, normalTop: initT, normalLeft: initL } = getNormalSize();
     const [isRoundActive, setIsRoundActive] = useState(false);
-    const [isMaximized, setIsMaximized] = useState(false);
+    const [isMaximized, setIsMaximized] = useState(true);
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     const handleEnterFullscreen = useCallback(() => {
@@ -29,11 +29,22 @@ const CodeRescueApp: React.FC<CodeRescueAppProps> = (props) => {
 
     const handleExitFullscreen = useCallback(() => {
         setIsRoundActive(false);
-        setIsMaximized(false);
-
-        // If running directly as top window, exit browser fullscreen
+        // Keep window maximized inside the desktop OS
         if (window.parent === window && document.fullscreenElement) {
             document.exitFullscreen().catch(() => {});
+        }
+    }, []);
+
+    useEffect(() => {
+        // Automatically request full window when Code Rescue opens
+        setIsMaximized(true);
+        if (window.parent && window.parent !== window) {
+            try {
+                window.parent.postMessage(
+                    { type: 'CODE_RESCUE_ENTER_FULLSCREEN' },
+                    '*'
+                );
+            } catch (e) {}
         }
     }, []);
 
