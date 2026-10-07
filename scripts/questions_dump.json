@@ -1,0 +1,1123 @@
+{
+  "r1": [
+    {
+      "id": "r1-q1",
+      "round": 1,
+      "number": 1,
+      "title": "Fix the Function Header & Return",
+      "description": "The following function is supposed to calculate and return the sum of two integers. However, it contains a syntax error in the definition line and does not return the computed value correctly.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Syntax Error",
+      "brokenCode": "def calculate_sum(a, b)\n    result = a + b\n    # Fix the missing return and function header syntax\n\nprint(calculate_sum(10, 20))",
+      "solutionCode": "def calculate_sum(a, b):\n    result = a + b\n    return result\n\nprint(calculate_sum(10, 20))",
+      "expectedBehavior": "Function definition must include a colon, and explicitly return the calculated sum.",
+      "inputFormat": "Two integers a and b",
+      "outputFormat": "Integer sum",
+      "constraints": [
+        "Both numbers are valid integers"
+      ],
+      "hints": "Check line 1 for Python syntax requirements and ensure a return statement is present.",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q1-t1",
+          "input": "10, 20",
+          "expectedOutput": "30",
+          "description": "Basic addition: 10 + 20"
+        },
+        {
+          "id": "r1-q1-t2",
+          "input": "0, 5",
+          "expectedOutput": "5",
+          "description": "Zero identity: 0 + 5"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q1-h1",
+          "input": "-5, 15",
+          "expectedOutput": "10",
+          "description": "Negative and positive addition"
+        },
+        {
+          "id": "r1-q1-h2",
+          "input": "100, 250",
+          "expectedOutput": "350",
+          "description": "Larger numbers"
+        },
+        {
+          "id": "r1-q1-h3",
+          "input": "-40, -60",
+          "expectedOutput": "-100",
+          "description": "Two negative numbers"
+        }
+      ]
+    },
+    {
+      "id": "r1-q2",
+      "round": 1,
+      "number": 2,
+      "title": "Variable Scope & Typo",
+      "description": "The calculate_area function should multiply width by height. The author made a typo referencing an undeclared variable name, causing a NameError at runtime.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Runtime Error",
+      "brokenCode": "def calculate_area(width, height):\n    tot_area = width * heigth\n    return tot_area\n\nprint(calculate_area(5, 8))",
+      "solutionCode": "def calculate_area(width, height):\n    tot_area = width * height\n    return tot_area\n\nprint(calculate_area(5, 8))",
+      "expectedBehavior": "Correctly reference the height parameter without spelling mistakes.",
+      "inputFormat": "Two numeric dimensions",
+      "outputFormat": "Calculated area",
+      "constraints": [
+        "width > 0, height > 0"
+      ],
+      "hints": "Inspect the variable spelling on line 2 carefully.",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q2-t1",
+          "input": "5, 8",
+          "expectedOutput": "40",
+          "description": "5 * 8"
+        },
+        {
+          "id": "r1-q2-t2",
+          "input": "10, 10",
+          "expectedOutput": "100",
+          "description": "Square dimensions 10 * 10"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q2-h1",
+          "input": "12, 4",
+          "expectedOutput": "48",
+          "description": "Rectangular dimensions"
+        },
+        {
+          "id": "r1-q2-h2",
+          "input": "7, 3",
+          "expectedOutput": "21",
+          "description": "Prime dimensions"
+        },
+        {
+          "id": "r1-q2-h3",
+          "input": "25, 4",
+          "expectedOutput": "100",
+          "description": "Boundary case"
+        }
+      ]
+    },
+    {
+      "id": "r1-q3",
+      "round": 1,
+      "number": 3,
+      "title": "Even Number Condition",
+      "description": "This function should check if an integer is even and return True, or False if odd. The programmer wrote the wrong modulo comparison.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def is_even(num):\n    # Bug: currently returns True for odd numbers\n    if num % 2 == 1:\n        return True\n    else:\n        return False\n\nprint(is_even(4))",
+      "solutionCode": "def is_even(num):\n    if num % 2 == 0:\n        return True\n    else:\n        return False\n\nprint(is_even(4))",
+      "expectedBehavior": "Return True when num % 2 == 0, False otherwise.",
+      "inputFormat": "Integer num",
+      "outputFormat": "Boolean (True or False)",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q3-t1",
+          "input": "4",
+          "expectedOutput": "True",
+          "description": "Even number: 4"
+        },
+        {
+          "id": "r1-q3-t2",
+          "input": "7",
+          "expectedOutput": "False",
+          "description": "Odd number: 7"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q3-h1",
+          "input": "0",
+          "expectedOutput": "True",
+          "description": "Zero is even"
+        },
+        {
+          "id": "r1-q3-h2",
+          "input": "-2",
+          "expectedOutput": "True",
+          "description": "Negative even number"
+        },
+        {
+          "id": "r1-q3-h3",
+          "input": "99",
+          "expectedOutput": "False",
+          "description": "Large odd number"
+        }
+      ]
+    },
+    {
+      "id": "r1-q4",
+      "round": 1,
+      "number": 4,
+      "title": "List Index Out of Range",
+      "description": "The print_first_n function attempts to print the first N elements of a list, but the range limit exceeds the available indices, causing an IndexError.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Runtime Error",
+      "brokenCode": "def print_first_element(items):\n    # Error: Accessing index len(items) raises IndexError\n    first = items[len(items)]\n    return first\n\nprint(print_first_element([10, 20, 30]))",
+      "solutionCode": "def print_first_element(items):\n    first = items[0]\n    return first\n\nprint(print_first_element([10, 20, 30]))",
+      "expectedBehavior": "Return the first element (index 0) of the list.",
+      "inputFormat": "Non-empty list of integers",
+      "outputFormat": "First integer element",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q4-t1",
+          "input": "[10, 20, 30]",
+          "expectedOutput": "10",
+          "description": "First element of [10, 20, 30]"
+        },
+        {
+          "id": "r1-q4-t2",
+          "input": "[99]",
+          "expectedOutput": "99",
+          "description": "Single element list"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q4-h1",
+          "input": "[42, 13, 7]",
+          "expectedOutput": "42",
+          "description": "Multiple elements"
+        },
+        {
+          "id": "r1-q4-h2",
+          "input": "[-5, 0, 5]",
+          "expectedOutput": "-5",
+          "description": "Negative start element"
+        },
+        {
+          "id": "r1-q4-h3",
+          "input": "[1, 2, 3, 4, 5]",
+          "expectedOutput": "1",
+          "description": "Five elements"
+        }
+      ]
+    },
+    {
+      "id": "r1-q5",
+      "round": 1,
+      "number": 5,
+      "title": "String Immutability Pitfall",
+      "description": "In Python, strings are immutable. The replace() method returns a new string rather than modifying the original in-place. Fix the function so the modified string is returned.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def censor_word(text, bad_word):\n    # Strings are immutable; replace does not mutate text in-place\n    text.replace(bad_word, '***')\n    return text\n\nprint(censor_word(\"hello world\", \"world\"))",
+      "solutionCode": "def censor_word(text, bad_word):\n    text = text.replace(bad_word, '***')\n    return text\n\nprint(censor_word(\"hello world\", \"world\"))",
+      "expectedBehavior": "Reassign the output of text.replace(...) to text before returning.",
+      "inputFormat": "Original text string and word to replace",
+      "outputFormat": "Modified text string",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q5-t1",
+          "input": "\"hello world\", \"world\"",
+          "expectedOutput": "hello ***",
+          "description": "Basic replacement"
+        },
+        {
+          "id": "r1-q5-t2",
+          "input": "\"apple banana apple\", \"apple\"",
+          "expectedOutput": "*** banana ***",
+          "description": "Multiple occurrences"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q5-h1",
+          "input": "\"bad code is bad\", \"bad\"",
+          "expectedOutput": "*** code is ***",
+          "description": "Edge word replace"
+        },
+        {
+          "id": "r1-q5-h2",
+          "input": "\"safe text\", \"danger\"",
+          "expectedOutput": "safe text",
+          "description": "Target word absent"
+        },
+        {
+          "id": "r1-q5-h3",
+          "input": "\"code rescue\", \"rescue\"",
+          "expectedOutput": "code ***",
+          "description": "Contest theme check"
+        }
+      ]
+    },
+    {
+      "id": "r1-q6",
+      "round": 1,
+      "number": 6,
+      "title": "Loop Accumulator Initialization",
+      "description": "The sum_list function initializes the accumulator inside the for loop, resetting it on every iteration. Move the accumulator to the correct position so all numbers are summed.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def sum_list(numbers):\n    for num in numbers:\n        total = 0\n        total += num\n    return total\n\nprint(sum_list([1, 2, 3, 4]))",
+      "solutionCode": "def sum_list(numbers):\n    total = 0\n    for num in numbers:\n        total += num\n    return total\n\nprint(sum_list([1, 2, 3, 4]))",
+      "expectedBehavior": "Initialize total = 0 outside and before the loop.",
+      "inputFormat": "List of numbers",
+      "outputFormat": "Sum of all numbers in list",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q6-t1",
+          "input": "[1, 2, 3, 4]",
+          "expectedOutput": "10",
+          "description": "1 + 2 + 3 + 4 = 10"
+        },
+        {
+          "id": "r1-q6-t2",
+          "input": "[5, 5, 5]",
+          "expectedOutput": "15",
+          "description": "5 * 3 = 15"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q6-h1",
+          "input": "[]",
+          "expectedOutput": "0",
+          "description": "Empty list sum"
+        },
+        {
+          "id": "r1-q6-h2",
+          "input": "[10, -5, 20]",
+          "expectedOutput": "25",
+          "description": "Negative and positive numbers"
+        },
+        {
+          "id": "r1-q6-h3",
+          "input": "[100, 200, 300, 400]",
+          "expectedOutput": "1000",
+          "description": "Large sum"
+        }
+      ]
+    },
+    {
+      "id": "r1-q7",
+      "round": 1,
+      "number": 7,
+      "title": "Dictionary Key Safe Lookup",
+      "description": "Looking up a non-existent key with square brackets raises a KeyError. Modify the function to safely retrieve the student score or return a default of 0.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Runtime Error",
+      "brokenCode": "def get_student_score(scores_dict, student_name):\n    # Crashes with KeyError if student_name is not in scores_dict\n    return scores_dict[student_name]\n\nscores = {\"Alice\": 95, \"Bob\": 82}\nprint(get_student_score(scores, \"Charlie\"))",
+      "solutionCode": "def get_student_score(scores_dict, student_name):\n    return scores_dict.get(student_name, 0)\n\nscores = {\"Alice\": 95, \"Bob\": 82}\nprint(get_student_score(scores, \"Charlie\"))",
+      "expectedBehavior": "Use scores_dict.get(student_name, 0) or check if student_name in scores_dict.",
+      "inputFormat": "Dictionary and student string name",
+      "outputFormat": "Integer score or 0",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q7-t1",
+          "input": "{\"Alice\": 95, \"Bob\": 82}, \"Charlie\"",
+          "expectedOutput": "0",
+          "description": "Missing key returns default 0"
+        },
+        {
+          "id": "r1-q7-t2",
+          "input": "{\"Alice\": 95, \"Bob\": 82}, \"Alice\"",
+          "expectedOutput": "95",
+          "description": "Existing key returns score"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q7-h1",
+          "input": "{}, \"David\"",
+          "expectedOutput": "0",
+          "description": "Empty dictionary lookup"
+        },
+        {
+          "id": "r1-q7-h2",
+          "input": "{\"Bob\": 82}, \"Bob\"",
+          "expectedOutput": "82",
+          "description": "Found in small dict"
+        },
+        {
+          "id": "r1-q7-h3",
+          "input": "{\"Sanjai\": 100}, \"Alex\"",
+          "expectedOutput": "0",
+          "description": "Contestant key lookup"
+        }
+      ]
+    },
+    {
+      "id": "r1-q8",
+      "round": 1,
+      "number": 8,
+      "title": "Chained If Override (Grade Classifier)",
+      "description": "The classify_grade function evaluates student marks. Because independent `if` statements are used rather than `elif`, later conditions overwrite earlier passing grades.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def classify_grade(score):\n    grade = 'F'\n    if score >= 90:\n        grade = 'A'\n    if score >= 75:\n        grade = 'B'\n    if score >= 50:\n        grade = 'C'\n    return grade\n\nprint(classify_grade(95))",
+      "solutionCode": "def classify_grade(score):\n    if score >= 90:\n        return 'A'\n    elif score >= 75:\n        return 'B'\n    elif score >= 50:\n        return 'C'\n    else:\n        return 'F'\n\nprint(classify_grade(95))",
+      "expectedBehavior": "Properly return A for >= 90, B for >= 75, C for >= 50, and F otherwise without overwriting.",
+      "inputFormat": "Integer score (0 to 100)",
+      "outputFormat": "Single letter grade string",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q8-t1",
+          "input": "95",
+          "expectedOutput": "A",
+          "description": "Score 95 must yield grade A"
+        },
+        {
+          "id": "r1-q8-t2",
+          "input": "80",
+          "expectedOutput": "B",
+          "description": "Score 80 must yield grade B"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q8-h1",
+          "input": "60",
+          "expectedOutput": "C",
+          "description": "Score 60 must yield grade C"
+        },
+        {
+          "id": "r1-q8-h2",
+          "input": "45",
+          "expectedOutput": "F",
+          "description": "Score 45 must yield grade F"
+        },
+        {
+          "id": "r1-q8-h3",
+          "input": "90",
+          "expectedOutput": "A",
+          "description": "Boundary score 90 must yield A"
+        }
+      ]
+    },
+    {
+      "id": "r1-q9",
+      "round": 1,
+      "number": 9,
+      "title": "Missing Recursion Base Case",
+      "description": "The factorial function is missing its terminating base condition. Without checking if n <= 1, it calls itself infinitely, triggering a RecursionError.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Runtime Error",
+      "brokenCode": "def factorial(n):\n    # Missing base case: causes infinite recursion\n    return n * factorial(n - 1)\n\nprint(factorial(4))",
+      "solutionCode": "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)\n\nprint(factorial(4))",
+      "expectedBehavior": "Return 1 when n <= 1 to properly terminate recursive calls.",
+      "inputFormat": "Non-negative integer n",
+      "outputFormat": "Calculated factorial integer",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q9-t1",
+          "input": "4",
+          "expectedOutput": "24",
+          "description": "4! = 4 * 3 * 2 * 1 = 24"
+        },
+        {
+          "id": "r1-q9-t2",
+          "input": "1",
+          "expectedOutput": "1",
+          "description": "Base case 1! = 1"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q9-h1",
+          "input": "0",
+          "expectedOutput": "1",
+          "description": "0! is 1"
+        },
+        {
+          "id": "r1-q9-h2",
+          "input": "5",
+          "expectedOutput": "120",
+          "description": "5! = 120"
+        },
+        {
+          "id": "r1-q9-h3",
+          "input": "6",
+          "expectedOutput": "720",
+          "description": "6! = 720"
+        }
+      ]
+    },
+    {
+      "id": "r1-q10",
+      "round": 1,
+      "number": 10,
+      "title": "Discount Calculator Type Bug",
+      "description": "The calculate_final_price function receives the discount as a string from an input form, causing a TypeError when attempting arithmetic with floats and strings.",
+      "difficulty": "Basic",
+      "language": "python",
+      "bugType": "Type Error",
+      "brokenCode": "def calculate_final_price(price, discount_percent):\n    # discount_percent can be passed as string e.g. \"20\"\n    # Convert discount_percent to numeric before math\n    discount_amount = price * (discount_percent / 100)\n    return round(price - discount_amount, 2)\n\nprint(calculate_final_price(100.0, \"20\"))",
+      "solutionCode": "def calculate_final_price(price, discount_percent):\n    discount_percent = float(discount_percent)\n    discount_amount = price * (discount_percent / 100)\n    return round(price - discount_amount, 2)\n\nprint(calculate_final_price(100.0, \"20\"))",
+      "expectedBehavior": "Convert discount_percent to float before performing division.",
+      "inputFormat": "Float price and string/number discount percentage",
+      "outputFormat": "Discounted final price rounded to 2 decimal places",
+      "points": 1,
+      "visibleTests": [
+        {
+          "id": "r1-q10-t1",
+          "input": "100.0, \"20\"",
+          "expectedOutput": "80.0",
+          "description": "100 with \"20\"% discount = 80.0"
+        },
+        {
+          "id": "r1-q10-t2",
+          "input": "50.0, 10",
+          "expectedOutput": "45.0",
+          "description": "Numeric discount 50 with 10% = 45.0"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r1-q10-h1",
+          "input": "200.0, \"50\"",
+          "expectedOutput": "100.0",
+          "description": "Half price discount"
+        },
+        {
+          "id": "r1-q10-h2",
+          "input": "79.99, \"0\"",
+          "expectedOutput": "79.99",
+          "description": "Zero discount"
+        },
+        {
+          "id": "r1-q10-h3",
+          "input": "150.0, \"15.5\"",
+          "expectedOutput": "126.75",
+          "description": "Decimal string discount"
+        }
+      ]
+    }
+  ],
+  "r2": [
+    {
+      "id": "r2-q1",
+      "round": 2,
+      "number": 1,
+      "title": "Find the Missing Element Sum",
+      "description": "The function should compute the total sum of all elements in the input list. However, due to an off-by-one loop indexing bug, it omits the final item, returning an incomplete total.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Off-by-one Error",
+      "brokenCode": "def total_inventory_cost(numbers):\n    total = 0\n    # Bug: len(numbers) - 1 misses the last element in range()\n    for i in range(len(numbers) - 1):\n        total += numbers[i]\n    return total\n\nprint(total_inventory_cost([10, 20, 30, 40]))",
+      "solutionCode": "def total_inventory_cost(numbers):\n    total = 0\n    for i in range(len(numbers)):\n        total += numbers[i]\n    return total\n\nprint(total_inventory_cost([10, 20, 30, 40]))",
+      "expectedBehavior": "Loop through range(len(numbers)) or iterate directly with `for num in numbers:` to include every item.",
+      "inputFormat": "List of numbers",
+      "outputFormat": "Total integer or float sum",
+      "constraints": [
+        "List can contain 1 to 1000 items"
+      ],
+      "hints": "range(stop) excludes the stop value. If you pass len(numbers) - 1, the index len(numbers) - 1 is never visited.",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q1-t1",
+          "input": "[10, 20, 30, 40]",
+          "expectedOutput": "100",
+          "description": "Sum of [10, 20, 30, 40] must equal 100"
+        },
+        {
+          "id": "r2-q1-t2",
+          "input": "[5, 15]",
+          "expectedOutput": "20",
+          "description": "Two element sum: 5 + 15 = 20"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q1-h1",
+          "input": "[100]",
+          "expectedOutput": "100",
+          "description": "Single element list must not return 0"
+        },
+        {
+          "id": "r2-q1-h2",
+          "input": "[1, 2, 3, 4, 5, 6, 7]",
+          "expectedOutput": "28",
+          "description": "Sequence 1 to 7"
+        },
+        {
+          "id": "r2-q1-h3",
+          "input": "[-10, 20, -30, 40]",
+          "expectedOutput": "20",
+          "description": "Negative and positive numbers"
+        },
+        {
+          "id": "r2-q1-h4",
+          "input": "[0, 0, 0, 50]",
+          "expectedOutput": "50",
+          "description": "Last element carry"
+        }
+      ]
+    },
+    {
+      "id": "r2-q2",
+      "round": 2,
+      "number": 2,
+      "title": "Robust Palindrome Evaluator",
+      "description": "A student wrote a palindrome checker that fails on real sentences with mixed letter casing and spaces. The function should ignore spaces and casing differences.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Edge Case",
+      "brokenCode": "def is_palindrome_phrase(text):\n    # Bug: Does not sanitize spaces or standardize letter casing\n    return text == text[::-1]\n\nprint(is_palindrome_phrase(\"Race Car\"))",
+      "solutionCode": "def is_palindrome_phrase(text):\n    cleaned = ''.join(ch.lower() for ch in text if ch.isalnum())\n    return cleaned == cleaned[::-1]\n\nprint(is_palindrome_phrase(\"Race Car\"))",
+      "expectedBehavior": "Strip non-alphanumeric characters or convert all letters to lowercase before comparing.",
+      "inputFormat": "String text",
+      "outputFormat": "Boolean (True or False)",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q2-t1",
+          "input": "\"Race Car\"",
+          "expectedOutput": "True",
+          "description": "\"Race Car\" is a palindrome when ignoring casing & spaces"
+        },
+        {
+          "id": "r2-q2-t2",
+          "input": "\"hello\"",
+          "expectedOutput": "False",
+          "description": "\"hello\" is not a palindrome"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q2-h1",
+          "input": "\"A man a plan a canal Panama\"",
+          "expectedOutput": "True",
+          "description": "Classic palindrome phrase"
+        },
+        {
+          "id": "r2-q2-h2",
+          "input": "\"No lemon, no melon\"",
+          "expectedOutput": "True",
+          "description": "Punctuation and spacing"
+        },
+        {
+          "id": "r2-q2-h3",
+          "input": "\"12321\"",
+          "expectedOutput": "True",
+          "description": "Numeric palindrome"
+        },
+        {
+          "id": "r2-q2-h4",
+          "input": "\"debugging\"",
+          "expectedOutput": "False",
+          "description": "Negative test case"
+        }
+      ]
+    },
+    {
+      "id": "r2-q3",
+      "round": 2,
+      "number": 3,
+      "title": "Matrix Diagonal Sum Collision",
+      "description": "Given an N x N square matrix, calculate the sum of elements on the primary diagonal and secondary diagonal. On odd-sized matrices (e.g. 3x3), the center element is erroneously added twice.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def diagonal_sum(matrix):\n    n = len(matrix)\n    total = 0\n    # Bug: Center element matrix[mid][mid] is counted twice when n is odd\n    for i in range(n):\n        total += matrix[i][i]\n        total += matrix[i][n - 1 - i]\n    return total\n\nmat = [\n    [1, 2, 3],\n    [4, 5, 6],\n    [7, 8, 9]\n]\nprint(diagonal_sum(mat))",
+      "solutionCode": "def diagonal_sum(matrix):\n    n = len(matrix)\n    total = 0\n    for i in range(n):\n        total += matrix[i][i]\n        total += matrix[i][n - 1 - i]\n    if n % 2 == 1:\n        mid = n // 2\n        total -= matrix[mid][mid]\n    return total\n\nmat = [\n    [1, 2, 3],\n    [4, 5, 6],\n    [7, 8, 9]\n]\nprint(diagonal_sum(mat))",
+      "expectedBehavior": "Deduct the center element matrix[n//2][n//2] once if n % 2 == 1 to prevent double counting.",
+      "inputFormat": "2D square matrix of integers",
+      "outputFormat": "Integer total diagonal sum",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q3-t1",
+          "input": "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+          "expectedOutput": "25",
+          "description": "3x3 matrix: (1+5+9) + (3+7) = 25 (center 5 not doubled)"
+        },
+        {
+          "id": "r2-q3-t2",
+          "input": "[[1, 1], [1, 1]]",
+          "expectedOutput": "4",
+          "description": "2x2 even matrix: all four corners counted = 4"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q3-h1",
+          "input": "[[5]]",
+          "expectedOutput": "5",
+          "description": "1x1 matrix only 5"
+        },
+        {
+          "id": "r2-q3-h2",
+          "input": "[[1, 0, 1], [0, 2, 0], [1, 0, 1]]",
+          "expectedOutput": "6",
+          "description": "Center element 2"
+        },
+        {
+          "id": "r2-q3-h3",
+          "input": "[[2, 1, 1, 2], [1, 3, 3, 1], [1, 3, 3, 1], [2, 1, 1, 2]]",
+          "expectedOutput": "20",
+          "description": "4x4 even matrix"
+        }
+      ]
+    },
+    {
+      "id": "r2-q4",
+      "round": 2,
+      "number": 4,
+      "title": "Binary Search Infinite Loop Trap",
+      "description": "This binary search algorithm looks for a target value in a sorted list. When an element is greater than mid, it updates `left = mid` instead of `left = mid + 1`, causing an infinite loop when the interval narrows to 2 items.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def binary_search(arr, target):\n    left = 0\n    right = len(arr) - 1\n    \n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            # Bug: left = mid creates an infinite loop when left + 1 == right\n            left = mid\n        else:\n            right = mid - 1\n            \n    return -1\n\nprint(binary_search([2, 5, 8, 12, 16, 23, 38], 16))",
+      "solutionCode": "def binary_search(arr, target):\n    left = 0\n    right = len(arr) - 1\n    \n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n            \n    return -1\n\nprint(binary_search([2, 5, 8, 12, 16, 23, 38], 16))",
+      "expectedBehavior": "Advance the left search pointer to `mid + 1` so the search interval strictly decreases.",
+      "inputFormat": "Sorted list and target value",
+      "outputFormat": "Index integer or -1 if not found",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q4-t1",
+          "input": "[2, 5, 8, 12, 16, 23, 38], 16",
+          "expectedOutput": "4",
+          "description": "Target 16 is at index 4"
+        },
+        {
+          "id": "r2-q4-t2",
+          "input": "[1, 3, 5], 10",
+          "expectedOutput": "-1",
+          "description": "Missing element returns -1"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q4-h1",
+          "input": "[10, 20], 20",
+          "expectedOutput": "1",
+          "description": "Two element upper bound search"
+        },
+        {
+          "id": "r2-q4-h2",
+          "input": "[10, 20], 10",
+          "expectedOutput": "0",
+          "description": "Two element lower bound search"
+        },
+        {
+          "id": "r2-q4-h3",
+          "input": "[-5, -2, 0, 4, 9], -2",
+          "expectedOutput": "1",
+          "description": "Negative values in list"
+        }
+      ]
+    },
+    {
+      "id": "r2-q5",
+      "round": 2,
+      "number": 5,
+      "title": "Mutable Default Argument Bug",
+      "description": "In Python, default parameter expressions are evaluated only once when the function is defined. Using `items=[]` as a default parameter means successive calls mutate and share the exact same list instance!",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def register_attendee(student_name, attendee_list=[]):\n    # Dangerous: mutable default list persists across independent invocations!\n    attendee_list.append(student_name)\n    return attendee_list\n\n# Test calls that expose the shared state bug:\nlist1 = register_attendee(\"Alice\")\nlist2 = register_attendee(\"Bob\")\nprint(list2) # Erroneously outputs ['Alice', 'Bob'] instead of ['Bob']",
+      "solutionCode": "def register_attendee(student_name, attendee_list=None):\n    if attendee_list is None:\n        attendee_list = []\n    attendee_list.append(student_name)\n    return attendee_list\n\nlist1 = register_attendee(\"Alice\")\nlist2 = register_attendee(\"Bob\")\nprint(list2)",
+      "expectedBehavior": "Use `attendee_list=None` as the default, and initialize a new empty list `attendee_list = []` inside the function body.",
+      "inputFormat": "Student name string and optional list",
+      "outputFormat": "Independent list containing the attendee",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q5-t1",
+          "input": "\"Alice\"",
+          "expectedOutput": "['Alice']",
+          "description": "First independent call"
+        },
+        {
+          "id": "r2-q5-t2",
+          "input": "\"Bob\", [\"Admin\"]",
+          "expectedOutput": "['Admin', 'Bob']",
+          "description": "Explicit list argument provided"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q5-h1",
+          "input": "\"Charlie\"",
+          "expectedOutput": "['Charlie']",
+          "description": "Consecutive default call must be isolated"
+        },
+        {
+          "id": "r2-q5-h2",
+          "input": "\"David\"",
+          "expectedOutput": "['David']",
+          "description": "Another isolated attendee"
+        },
+        {
+          "id": "r2-q5-h3",
+          "input": "\"Eve\", [\"Judge1\", \"Judge2\"]",
+          "expectedOutput": "['Judge1', 'Judge2', 'Eve']",
+          "description": "Appended to existing"
+        }
+      ]
+    },
+    {
+      "id": "r2-q6",
+      "round": 2,
+      "number": 6,
+      "title": "Group Items by Category (Dictionary Accumulator Bug)",
+      "description": "The group_by_category function takes a list of (category, item) pairs and should return a dictionary grouping items under each category. However, the current code overwrites the category with a single-item list on each occurrence instead of appending.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def group_by_category(items):\n    result = {}\n    for cat, item in items:\n        # Bug: Overwrites previous list instead of appending\n        result[cat] = [item]\n    return result\n\nprint(group_by_category([(\"fruit\", \"apple\"), (\"veg\", \"carrot\"), (\"fruit\", \"banana\")]))",
+      "solutionCode": "def group_by_category(items):\n    result = {}\n    for cat, item in items:\n        if cat not in result:\n            result[cat] = []\n        result[cat].append(item)\n    return result\n\nprint(group_by_category([(\"fruit\", \"apple\"), (\"veg\", \"carrot\"), (\"fruit\", \"banana\")]))",
+      "expectedBehavior": "Initialize an empty list for unseen categories and append items to build lists per category.",
+      "inputFormat": "List of (category, item) tuples",
+      "outputFormat": "Dictionary mapping categories to lists of items",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q6-t1",
+          "input": "[(\"fruit\", \"apple\"), (\"veg\", \"carrot\"), (\"fruit\", \"banana\")]",
+          "expectedOutput": "{'fruit': ['apple', 'banana'], 'veg': ['carrot']}",
+          "description": "Grouping with shared key"
+        },
+        {
+          "id": "r2-q6-t2",
+          "input": "[(\"a\", 1), (\"b\", 2)]",
+          "expectedOutput": "{'a': [1], 'b': [2]}",
+          "description": "Distinct keys"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q6-h1",
+          "input": "[]",
+          "expectedOutput": "{}",
+          "description": "Empty input list"
+        },
+        {
+          "id": "r2-q6-h2",
+          "input": "[(\"x\", \"one\"), (\"x\", \"two\"), (\"x\", \"three\")]",
+          "expectedOutput": "{'x': ['one', 'two', 'three']}",
+          "description": "All items same key"
+        },
+        {
+          "id": "r2-q6-h3",
+          "input": "[(\"k\", 10), (\"v\", 20), (\"k\", 30), (\"v\", 40)]",
+          "expectedOutput": "{'k': [10, 30], 'v': [20, 40]}",
+          "description": "Interleaved categories"
+        }
+      ]
+    },
+    {
+      "id": "r2-q7",
+      "round": 2,
+      "number": 7,
+      "title": "Flatten Nested Lists (Recursion Type Trap)",
+      "description": "The flatten_list function is supposed to flatten an arbitrarily nested list of integers into a single flat list. However, it only checks one level deep, failing when sublists contain further nested lists.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Recursion Depth",
+      "brokenCode": "def flatten_list(nested):\n    flat = []\n    for item in nested:\n        # Bug: Only flattens top-level lists, misses deeper nesting\n        if isinstance(item, list):\n            flat.extend(item)\n        else:\n            flat.append(item)\n    return flat\n\nprint(flatten_list([1, [2, [3, 4]], 5]))",
+      "solutionCode": "def flatten_list(nested):\n    flat = []\n    for item in nested:\n        if isinstance(item, list):\n            flat.extend(flatten_list(item))\n        else:\n            flat.append(item)\n    return flat\n\nprint(flatten_list([1, [2, [3, 4]], 5]))",
+      "expectedBehavior": "Recursively invoke flatten_list when an item is a list to handle arbitrary nesting depths.",
+      "inputFormat": "Arbitrarily nested list of integers",
+      "outputFormat": "1D flat list of integers",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q7-t1",
+          "input": "[1, [2, [3, 4]], 5]",
+          "expectedOutput": "[1, 2, 3, 4, 5]",
+          "description": "Multi-level nested list"
+        },
+        {
+          "id": "r2-q7-t2",
+          "input": "[[1, 2], [3, 4]]",
+          "expectedOutput": "[1, 2, 3, 4]",
+          "description": "Two 1-level sublists"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q7-h1",
+          "input": "[]",
+          "expectedOutput": "[]",
+          "description": "Empty list"
+        },
+        {
+          "id": "r2-q7-h2",
+          "input": "[1, 2, 3]",
+          "expectedOutput": "[1, 2, 3]",
+          "description": "Already flat list"
+        },
+        {
+          "id": "r2-q7-h3",
+          "input": "[[[[[42]]]]]",
+          "expectedOutput": "[42]",
+          "description": "Deep single element"
+        },
+        {
+          "id": "r2-q7-h4",
+          "input": "[0, [1, [2, [3, [4]]]]]",
+          "expectedOutput": "[0, 1, 2, 3, 4]",
+          "description": "Cascaded nesting"
+        }
+      ]
+    },
+    {
+      "id": "r2-q8",
+      "round": 2,
+      "number": 8,
+      "title": "Case-Insensitive Anagram Validator",
+      "description": "The is_anagram function checks whether two strings contain the exact same characters in different orders. The current version is case-sensitive and does not ignore spaces, erroneously reporting valid phrase anagrams as False.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Sanitization & Edge Case",
+      "brokenCode": "def is_anagram(s1, s2):\n    # Bug: Case-sensitive and does not strip spaces\n    return sorted(s1) == sorted(s2)\n\nprint(is_anagram(\"Listen\", \"Silent\"))",
+      "solutionCode": "def is_anagram(s1, s2):\n    c1 = sorted(ch.lower() for ch in s1 if not ch.isspace())\n    c2 = sorted(ch.lower() for ch in s2 if not ch.isspace())\n    return c1 == c2\n\nprint(is_anagram(\"Listen\", \"Silent\"))",
+      "expectedBehavior": "Convert characters to lowercase and ignore whitespace before comparing character frequencies.",
+      "inputFormat": "Two string phrases s1 and s2",
+      "outputFormat": "Boolean (True or False)",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q8-t1",
+          "input": "\"Listen\", \"Silent\"",
+          "expectedOutput": "True",
+          "description": "Case-insensitive word anagram"
+        },
+        {
+          "id": "r2-q8-t2",
+          "input": "\"hello\", \"world\"",
+          "expectedOutput": "False",
+          "description": "Non-anagrams"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q8-h1",
+          "input": "\"Debit Card\", \"Bad Credit\"",
+          "expectedOutput": "True",
+          "description": "Multi-word phrase with spaces"
+        },
+        {
+          "id": "r2-q8-h2",
+          "input": "\"abc\", \"abcd\"",
+          "expectedOutput": "False",
+          "description": "Different character lengths"
+        },
+        {
+          "id": "r2-q8-h3",
+          "input": "\"\", \"\"",
+          "expectedOutput": "True",
+          "description": "Empty strings"
+        },
+        {
+          "id": "r2-q8-h4",
+          "input": "\"Eleven plus two\", \"Twelve plus one\"",
+          "expectedOutput": "True",
+          "description": "Long famous phrase anagram"
+        }
+      ]
+    },
+    {
+      "id": "r2-q9",
+      "round": 2,
+      "number": 9,
+      "title": "Prime Factorization While-Loop Trap",
+      "description": "The get_prime_factors function extracts all prime factors of an integer n. Due to unconditional divisor incrementing inside the division branch, it misses repeated prime factors (such as 2 * 2 * 3 for 12).",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def get_prime_factors(n):\n    factors = []\n    d = 2\n    while d * d <= n:\n        if n % d == 0:\n            factors.append(d)\n            n //= d\n            # Bug: Always increments d even when d can divide n again!\n            d += 1\n        else:\n            d += 1\n    if n > 1:\n        factors.append(n)\n    return factors\n\nprint(get_prime_factors(12))",
+      "solutionCode": "def get_prime_factors(n):\n    factors = []\n    d = 2\n    while d * d <= n:\n        if n % d == 0:\n            factors.append(d)\n            n //= d\n        else:\n            d += 1\n    if n > 1:\n        factors.append(n)\n    return factors\n\nprint(get_prime_factors(12))",
+      "expectedBehavior": "Only increment d when d does not divide n, allowing repeated prime factors to be collected.",
+      "inputFormat": "Positive integer n >= 2",
+      "outputFormat": "List of prime factors in ascending order",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q9-t1",
+          "input": "12",
+          "expectedOutput": "[2, 2, 3]",
+          "description": "Factors of 12: 2 * 2 * 3"
+        },
+        {
+          "id": "r2-q9-t2",
+          "input": "17",
+          "expectedOutput": "[17]",
+          "description": "Prime number 17"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q9-h1",
+          "input": "8",
+          "expectedOutput": "[2, 2, 2]",
+          "description": "Cubic power: 2 * 2 * 2"
+        },
+        {
+          "id": "r2-q9-h2",
+          "input": "100",
+          "expectedOutput": "[2, 2, 5, 5]",
+          "description": "Factors of 100: 2 * 2 * 5 * 5"
+        },
+        {
+          "id": "r2-q9-h3",
+          "input": "2",
+          "expectedOutput": "[2]",
+          "description": "Smallest prime 2"
+        },
+        {
+          "id": "r2-q9-h4",
+          "input": "84",
+          "expectedOutput": "[2, 2, 3, 7]",
+          "description": "Composite 84"
+        }
+      ]
+    },
+    {
+      "id": "r2-q10",
+      "round": 2,
+      "number": 10,
+      "title": "Two-Sum Self-Matching Index Bug",
+      "description": "The two_sum function finds two distinct indices in a list whose values add up to a target sum. Because the lookup map is populated before checking, an element can erroneously pair with itself if target - num == num.",
+      "difficulty": "Intermediate",
+      "language": "python",
+      "bugType": "Logical Error",
+      "brokenCode": "def two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        seen[num] = i\n        \n    for i, num in enumerate(nums):\n        diff = target - num\n        # Bug: diff in seen can match the exact same index i!\n        if diff in seen:\n            return [i, seen[diff]]\n    return []\n\nprint(two_sum([3, 2, 4], 6))",
+      "solutionCode": "def two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in seen:\n            return [seen[diff], i]\n        seen[num] = i\n    return []\n\nprint(two_sum([3, 2, 4], 6))",
+      "expectedBehavior": "Populate seen as you iterate to prevent an element from matching with its own index.",
+      "inputFormat": "List of numbers and integer target",
+      "outputFormat": "List of two indices [i, j]",
+      "points": 2,
+      "visibleTests": [
+        {
+          "id": "r2-q10-t1",
+          "input": "[3, 2, 4], 6",
+          "expectedOutput": "[1, 2]",
+          "description": "2 + 4 = 6 at indices [1, 2]"
+        },
+        {
+          "id": "r2-q10-t2",
+          "input": "[2, 7, 11, 15], 9",
+          "expectedOutput": "[0, 1]",
+          "description": "2 + 7 = 9 at indices [0, 1]"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "id": "r2-q10-h1",
+          "input": "[3, 3], 6",
+          "expectedOutput": "[0, 1]",
+          "description": "Duplicate values summing to target"
+        },
+        {
+          "id": "r2-q10-h2",
+          "input": "[1, 5, 8, 3], 11",
+          "expectedOutput": "[2, 3]",
+          "description": "8 + 3 = 11 at indices [2, 3]"
+        },
+        {
+          "id": "r2-q10-h3",
+          "input": "[10, 20, 30], 100",
+          "expectedOutput": "[]",
+          "description": "No matching pair returns empty list"
+        }
+      ]
+    }
+  ],
+  "r3": {
+    "id": "r3-q1",
+    "round": 3,
+    "number": 1,
+    "title": "Student Expense & Scholarship Analyzer System",
+    "description": "You are assigned to rescue a critical college module: the **Student Expense & Scholarship Eligibility Analyzer**.\n\nThe system processes student expense logs represented as tuples of `(category, amount)`, calculates summary analytics, checks budget threshold compliance, and computes a scholarship need index.\n\nHowever, the previous developer left behind multiple critical bugs:\n- **Syntax Error**: Malformed function declaration / dictionary structure.\n- **Runtime Error**: Uncaught `ZeroDivisionError` when an empty list or zero-expense dataset is evaluated.\n- **Logical Error**: Inverted condition when checking scholarship threshold eligibility.\n- **Edge-Case Bug**: Negative expense entries erroneously distort the total and count instead of being filtered out.\n- **Output Formatting Bug**: Category summaries are required to be sorted alphabetically by category name, but are currently returned unsorted.\n\n### Your Mission: Rescue the Code!\nThoroughly inspect the system, locate all defects, repair them, verify with the test runner, and submit the complete working solution before time expires.",
+    "difficulty": "Advanced",
+    "language": "python",
+    "bugType": "Multiple Issues",
+    "brokenCode": "def analyze_expenses(records, budget_limit):\n    # Bug 1 (Edge-case): Negative amounts should be ignored/filtered\n    # Bug 2 (Syntax): Missing colon in if statement below\n    # Bug 3 (Runtime): ZeroDivisionError when records are empty\n    # Bug 4 (Logic): Inverted budget check (< instead of <=)\n    # Bug 5 (Output): Categories must be sorted alphabetically\n    \n    valid_expenses = []\n    for item in records\n        cat = item[0]\n        amt = item[1]\n        if amt > 0: # Missing colon or handling\n            valid_expenses.append((cat, amt))\n            \n    total = sum(amt for cat, amt in valid_expenses)\n    count = len(valid_expenses)\n    \n    # CRASH: Raises ZeroDivisionError when valid_expenses is empty\n    average = total / count\n    \n    max_expense = 0\n    if valid_expenses:\n        max_expense = max(amt for cat, amt in valid_expenses)\n        \n    categories = {}\n    for cat, amt in valid_expenses:\n        categories[cat] = categories.get(cat, 0) + amt\n        \n    # Bug: Categories should be a list of tuples sorted alphabetically by name\n    sorted_categories = list(categories.items()) # Unsorted!\n    \n    # Bug: Should be True if total <= budget_limit, currently total > budget_limit\n    within_budget = total > budget_limit\n    \n    return {\n        \"total\": round(total, 2),\n        \"average\": round(average, 2),\n        \"max\": round(max_expense, 2),\n        \"categories\": sorted_categories,\n        \"within_budget\": within_budget\n    }\n\n# Test sample\nsample_records = [(\"Books\", 120), (\"Food\", 45), (\"Travel\", 35), (\"Food\", 50)]\nprint(analyze_expenses(sample_records, 300))",
+    "solutionCode": "def analyze_expenses(records, budget_limit):\n    valid_expenses = []\n    for item in records:\n        cat = item[0]\n        amt = item[1]\n        if amt > 0:\n            valid_expenses.append((cat, amt))\n            \n    total = sum(amt for cat, amt in valid_expenses)\n    count = len(valid_expenses)\n    \n    # Safely handle empty records\n    average = (total / count) if count > 0 else 0.0\n    \n    max_expense = 0.0\n    if valid_expenses:\n        max_expense = max(amt for cat, amt in valid_expenses)\n        \n    categories = {}\n    for cat, amt in valid_expenses:\n        categories[cat] = categories.get(cat, 0) + amt\n        \n    # Sort categories alphabetically by category name\n    sorted_categories = sorted(categories.items(), key=lambda x: x[0])\n    \n    # Within budget if total is less than or equal to budget limit\n    within_budget = total <= budget_limit\n    \n    return {\n        \"total\": round(total, 2),\n        \"average\": round(average, 2),\n        \"max\": round(max_expense, 2),\n        \"categories\": sorted_categories,\n        \"within_budget\": within_budget\n    }\n\nsample_records = [(\"Books\", 120), (\"Food\", 45), (\"Travel\", 35), (\"Food\", 50)]\nprint(analyze_expenses(sample_records, 300))",
+    "expectedBehavior": "Filter negative values, safely handle empty logs with 0.0 average, sort categories alphabetically, and correctly evaluate within_budget (total <= budget_limit).",
+    "inputFormat": "records: List of tuples (category_str, amount_num), budget_limit: float",
+    "outputFormat": "Dictionary with keys: total, average, max, categories (sorted list of (name, total)), within_budget (bool)",
+    "constraints": [
+      "0 <= len(records) <= 1000",
+      "Amounts can be integers or floats",
+      "Negative or zero amounts must be excluded from calculations",
+      "If no valid expenses exist, average and max must return 0.0"
+    ],
+    "hints": "Watch out for division by zero on empty inputs, check the colon on the loop header, sort categories by category[0], and verify the comparison operator for within_budget.",
+    "points": 5,
+    "visibleTests": [
+      {
+        "id": "r3-t1",
+        "input": "[(\"Books\", 120), (\"Food\", 45), (\"Travel\", 35), (\"Food\", 50)], 300",
+        "expectedOutput": "{'total': 250, 'average': 62.5, 'max': 120, 'categories': [('Books', 120), ('Food', 95), ('Travel', 35)], 'within_budget': True}",
+        "description": "Standard multi-item log within budget"
+      },
+      {
+        "id": "r3-t2",
+        "input": "[(\"Tuition\", 800), (\"Food\", 300)], 1000",
+        "expectedOutput": "{'total': 1100, 'average': 550.0, 'max': 800, 'categories': [('Food', 300), ('Tuition', 800)], 'within_budget': False}",
+        "description": "Expenses exceed budget limit"
+      }
+    ],
+    "hiddenTests": [
+      {
+        "id": "r3-h1",
+        "input": "[], 500",
+        "expectedOutput": "{'total': 0, 'average': 0.0, 'max': 0.0, 'categories': [], 'within_budget': True}",
+        "description": "Empty records: zero division guard check"
+      },
+      {
+        "id": "r3-h2",
+        "input": "[(\"Refund\", -50), (\"Food\", 100)], 200",
+        "expectedOutput": "{'total': 100, 'average': 100.0, 'max': 100, 'categories': [('Food', 100)], 'within_budget': True}",
+        "description": "Negative expense filter check"
+      },
+      {
+        "id": "r3-h3",
+        "input": "[(\"Travel\", 50), (\"Books\", 50), (\"Art\", 50)], 150",
+        "expectedOutput": "{'total': 150, 'average': 50.0, 'max': 50, 'categories': [('Art', 50), ('Books', 50), ('Travel', 50)], 'within_budget': True}",
+        "description": "Alphabetical category ordering check: Art, Books, Travel"
+      },
+      {
+        "id": "r3-h4",
+        "input": "[(\"Laptop\", 1200)], 1200",
+        "expectedOutput": "{'total': 1200, 'average': 1200.0, 'max': 1200, 'categories': [('Laptop', 1200)], 'within_budget': True}",
+        "description": "Exact budget boundary (total == budget_limit is within budget)"
+      },
+      {
+        "id": "r3-h5",
+        "input": "[(\"Coffee\", 0), (\"Snack\", -10), (\"Lunch\", 15)], 20",
+        "expectedOutput": "{'total': 15, 'average': 15.0, 'max': 15, 'categories': [('Lunch', 15)], 'within_budget': True}",
+        "description": "Zero and negative amounts excluded from count and average"
+      },
+      {
+        "id": "r3-h6",
+        "input": "[(\"Zebra Supplies\", 40), (\"Apple Store\", 60), (\"Stationery\", 20)], 100",
+        "expectedOutput": "{'total': 120, 'average': 40.0, 'max': 60, 'categories': [('Apple Store', 60), ('Stationery', 20), ('Zebra Supplies', 40)], 'within_budget': False}",
+        "description": "Exceeded budget with multi-tier alphabetical categories"
+      }
+    ]
+  }
+}

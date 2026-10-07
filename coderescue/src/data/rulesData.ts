@@ -48,9 +48,9 @@ export const competitionRules: RuleSection[] = [
     title: '5. Time Limits & Submission Policy',
     icon: 'Clock',
     points: [
-      'Round 1 (Bug Hunt): 20 Minutes (10 questions, 100 points)',
-      'Round 2 (Logic Breaker): 25 Minutes (5 questions, 100 points)',
-      'Round 3 (Code Rescue): 40 Minutes (1 comprehensive system, 100 points)',
+      'Round 1 (Bug Hunt): 15 Minutes (10 questions, 10 marks — 1 mark each)',
+      'Round 2 (Logic Breaker): 20 Minutes (5 questions, 20 marks — 4 marks each)',
+      'Round 3 (Code Rescue): 25 Minutes (1 question, 5 marks — 5 marks)',
       'When the timer reaches 00:00, editing is disabled and current solutions are auto-finalized.',
       'No extra time is granted for late submissions.'
     ]
@@ -59,7 +59,7 @@ export const competitionRules: RuleSection[] = [
     title: '6. Scoring & Tie-Breaker Criteria',
     icon: 'Trophy',
     points: [
-      'Maximum attainable score across all 3 rounds: 300 points.',
+      'Maximum attainable score across all 3 rounds: 35 marks.',
       'In case of tied total scores, earlier final submission timestamp and cumulative execution time will serve as definitive tie-breakers.',
       'The decision of event coordinators and technical judges is final and binding.'
     ]

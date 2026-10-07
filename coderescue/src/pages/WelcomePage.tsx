@@ -50,10 +50,10 @@ export const WelcomePage: React.FC = () => {
                 We don't troubleshoot printers. We don't write "Hello World". When mission-critical production infrastructure crashes at 03:00 AM, ordinary coders panic — Code Rescue triage engineers step up, decipher tracebacks, fix runtime defects, and rescue systems against the countdown clock.
               </p>
               <div className="flex flex-wrap items-center gap-2.5 pt-1 font-mono text-xs sm:text-sm">
-                <span className="win95-badge cyber-pill-green px-3 py-1 font-bold">R1: Bug Hunt (20m)</span>
-                <span className="win95-badge cyber-pill-amber px-3 py-1 font-bold">R2: Logic Breaker (25m)</span>
-                <span className="win95-badge cyber-pill-red px-3 py-1 font-bold">R3: Code Rescue (40m)</span>
-                <span className="win95-badge cyber-pill-cyan font-bold px-3 py-1">Max Score: 300 Pts</span>
+                <span className="win95-badge cyber-pill-green px-3 py-1 font-bold">R1: Bug Hunt (15m)</span>
+                <span className="win95-badge cyber-pill-amber px-3 py-1 font-bold">R2: Logic Breaker (20m)</span>
+                <span className="win95-badge cyber-pill-red px-3 py-1 font-bold">R3: Code Rescue (25m)</span>
+                <span className="win95-badge cyber-pill-cyan font-bold px-3 py-1">Max Score: 35 Pts</span>
               </div>
             </div>
           </fieldset>
@@ -75,9 +75,9 @@ export const WelcomePage: React.FC = () => {
                   </p>
                 </div>
                 <div className="space-y-1 font-mono text-xs sm:text-sm pt-2.5 border-t border-gray-200 text-gray-800 bg-[#f8f8f8] p-2.5 rounded-sm">
-                  <div><b>Orders:</b> 10 Work Orders</div>
-                  <div><b>Clock:</b> 20 Minutes</div>
-                  <div><b>Max Points:</b> 100 Pts</div>
+                  <div><b>Orders:</b> 10 Work Orders (1 Pt each)</div>
+                  <div><b>Clock:</b> 15 Minutes</div>
+                  <div><b>Max Points:</b> 10 Pts</div>
                 </div>
               </div>
 
@@ -92,9 +92,9 @@ export const WelcomePage: React.FC = () => {
                   </p>
                 </div>
                 <div className="space-y-1 font-mono text-xs sm:text-sm pt-2.5 border-t border-gray-200 text-gray-800 bg-[#f8f8f8] p-2.5 rounded-sm">
-                  <div><b>Orders:</b> 5 Work Orders</div>
-                  <div><b>Clock:</b> 25 Minutes</div>
-                  <div><b>Max Points:</b> 100 Pts</div>
+                  <div><b>Orders:</b> 10 Work Orders (2 Pts each)</div>
+                  <div><b>Clock:</b> 20 Minutes</div>
+                  <div><b>Max Points:</b> 20 Pts</div>
                 </div>
               </div>
 
@@ -109,9 +109,9 @@ export const WelcomePage: React.FC = () => {
                   </p>
                 </div>
                 <div className="space-y-1 font-mono text-xs sm:text-sm pt-2.5 border-t border-gray-200 text-gray-800 bg-[#f8f8f8] p-2.5 rounded-sm">
-                  <div><b>Architecture:</b> 1 Legacy System</div>
-                  <div><b>Clock:</b> 40 Minutes</div>
-                  <div><b>Max Points:</b> 100 Pts</div>
+                  <div><b>Architecture:</b> 1 Challenge (5 Pts)</div>
+                  <div><b>Clock:</b> 25 Minutes</div>
+                  <div><b>Max Points:</b> 5 Pts</div>
                 </div>
               </div>
             </div>

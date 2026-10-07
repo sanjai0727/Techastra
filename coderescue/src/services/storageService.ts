@@ -3,14 +3,14 @@ import { CompetitionState, QualificationConfig } from '../types/competition';
 const STORAGE_KEY = 'code_rescue_contest_state_v1';
 
 export const DEFAULT_QUALIFICATION_CONFIG: QualificationConfig = {
-  round1MinScore: 50, // 50 / 100 to qualify
-  round2MinScore: 50  // 50 / 100 to qualify
+  round1MinScore: 5,  // 5 / 10 marks to qualify (50% cutoff)
+  round2MinScore: 10  // 10 / 20 marks to qualify (50% cutoff)
 };
 
 export const INITIAL_TIMERS = {
-  round1Remaining: 20 * 60, // 20 minutes (1200s)
-  round2Remaining: 25 * 60, // 25 minutes (1500s)
-  round3Remaining: 40 * 60, // 40 minutes (2400s)
+  round1Remaining: 15 * 60, // 15 minutes (900s)
+  round2Remaining: 20 * 60, // 20 minutes (1200s)
+  round3Remaining: 25 * 60, // 25 minutes (1500s)
   round1Active: false,
   round2Active: false,
   round3Active: false
@@ -32,8 +32,14 @@ export const getInitialState = (): CompetitionState => {
       const parsed = JSON.parse(saved);
       // Validate essentials
       if (parsed && parsed.currentView) {
+        // Sanitize legacy cutoffs if older 100-point scale is still saved
+        const safeQual = {
+          round1MinScore: (parsed.qualificationConfig?.round1MinScore > 10) ? 5 : (parsed.qualificationConfig?.round1MinScore ?? 5),
+          round2MinScore: (parsed.qualificationConfig?.round2MinScore > 20) ? 10 : (parsed.qualificationConfig?.round2MinScore ?? 10)
+        };
         return {
           ...parsed,
+          qualificationConfig: safeQual,
           securityState: {
             ...DEFAULT_SECURITY_STATE,
             ...(parsed.securityState || {})

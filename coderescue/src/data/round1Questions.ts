@@ -5,362 +5,420 @@ export const round1Questions: Question[] = [
     id: 'r1-q1',
     round: 1,
     number: 1,
-    title: 'Fix the Function Header & Return',
-    description: 'The following function is supposed to calculate and return the sum of two integers. However, it contains a syntax error in the definition line and does not return the computed value correctly.',
+    title: 'Student Marks Average',
+    description: 'Calculate the arithmetic average of marks in a student mark list, returned as a numeric float rounded to 2 decimal places. The function must include every mark in the list.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Syntax Error',
-    brokenCode: `def calculate_sum(a, b)
-    result = a + b
-    # Fix the missing return and function header syntax
+    bugType: 'Multiple Issues',
+    brokenCode: `def calculate_average(marks):
+    total = 0
+    # Bug 1: Loop excludes the final element in the list
+    for i in range(len(marks) - 1):
+        total += marks[i]
+    # Bug 2: Floor division discards floating decimal accuracy
+    return total // len(marks)
 
-print(calculate_sum(10, 20))`,
-    solutionCode: `def calculate_sum(a, b):
-    result = a + b
-    return result
+marks = [78, 85, 92, 88]
+print(calculate_average(marks))`,
+    solutionCode: `def calculate_average(marks):
+    if not marks:
+        return 0.0
+    total = 0
+    for i in range(len(marks)):
+        total += marks[i]
+    return round(total / len(marks), 2)
 
-print(calculate_sum(10, 20))`,
-    expectedBehavior: 'Function definition must include a colon, and explicitly return the calculated sum.',
-    inputFormat: 'Two integers a and b',
-    outputFormat: 'Integer sum',
-    constraints: ['Both numbers are valid integers'],
-    hints: 'Check line 1 for Python syntax requirements and ensure a return statement is present.',
-    points: 10,
+marks = [78, 85, 92, 88]
+print(calculate_average(marks))`,
+    expectedBehavior: 'Include every item in the marks list and compute the true float average rounded to 2 decimal places.',
+    inputFormat: 'marks: List of integers',
+    outputFormat: 'Float numeric value rounded to 2 decimal places',
+    constraints: ['marks is a non-empty list of integers', 'All marks must be included'],
+    hints: 'Check the range boundary in line 4 (len(marks) vs len(marks)-1) and replace floor division // with float division /.',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q1-t1', input: '10, 20', expectedOutput: '30', description: 'Basic addition: 10 + 20' },
-      { id: 'r1-q1-t2', input: '0, 5', expectedOutput: '5', description: 'Zero identity: 0 + 5' },
+      { id: 'r1-q1-t1', input: '[78, 85, 92, 88]', expectedOutput: '85.75', description: 'Sample student marks' },
+      { id: 'r1-q1-t2', input: '[100, 90]', expectedOutput: '95.0', description: 'Two marks average' }
     ],
     hiddenTests: [
-      { id: 'r1-q1-h1', input: '-5, 15', expectedOutput: '10', description: 'Negative and positive addition' },
-      { id: 'r1-q1-h2', input: '100, 250', expectedOutput: '350', description: 'Larger numbers' },
-      { id: 'r1-q1-h3', input: '-40, -60', expectedOutput: '-100', description: 'Two negative numbers' }
+      { id: 'r1-q1-h1', input: '[45, 55, 65, 75]', expectedOutput: '60.0', description: 'Four integer marks' },
+      { id: 'r1-q1-h2', input: '[10]', expectedOutput: '10.0', description: 'Single element list' },
+      { id: 'r1-q1-h3', input: '[70, 80, 90]', expectedOutput: '80.0', description: 'Three marks average' }
     ]
   },
   {
     id: 'r1-q2',
     round: 1,
     number: 2,
-    title: 'Variable Scope & Typo',
-    description: 'The calculate_area function should multiply width by height. The author made a typo referencing an undeclared variable name, causing a NameError at runtime.',
+    title: 'Palindrome String Checker',
+    description: 'Determine whether a given string reads identically forwards and backwards, ignoring uppercase/lowercase differences.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Runtime Error',
-    brokenCode: `def calculate_area(width, height):
-    tot_area = width * heigth
-    return tot_area
+    bugType: 'Multiple Issues',
+    brokenCode: `def is_palindrome(text):
+    # Bug 1: Missing case normalization (fails for capitalized words)
+    reversed_text = text[::-1]
+    # Bug 2: Inverted boolean return
+    if text == reversed_text:
+        return False
+    return True
 
-print(calculate_area(5, 8))`,
-    solutionCode: `def calculate_area(width, height):
-    tot_area = width * height
-    return tot_area
+print(is_palindrome("Racecar"))`,
+    solutionCode: `def is_palindrome(text):
+    cleaned = text.lower()
+    return cleaned == cleaned[::-1]
 
-print(calculate_area(5, 8))`,
-    expectedBehavior: 'Correctly reference the height parameter without spelling mistakes.',
-    inputFormat: 'Two numeric dimensions',
-    outputFormat: 'Calculated area',
-    constraints: ['width > 0, height > 0'],
-    hints: 'Inspect the variable spelling on line 2 carefully.',
-    points: 10,
+print(is_palindrome("Racecar"))`,
+    expectedBehavior: 'Return True if the text is a case-insensitive palindrome, False otherwise.',
+    inputFormat: 'text: String',
+    outputFormat: 'Boolean (True or False)',
+    constraints: ['Alphanumeric string characters', 'Must ignore uppercase vs lowercase'],
+    hints: 'Call .lower() on the text and return True when text == reversed_text.',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q2-t1', input: '5, 8', expectedOutput: '40', description: '5 * 8' },
-      { id: 'r1-q2-t2', input: '10, 10', expectedOutput: '100', description: 'Square dimensions 10 * 10' }
+      { id: 'r1-q2-t1', input: '"Racecar"', expectedOutput: 'True', description: 'Capitalized palindrome word' },
+      { id: 'r1-q2-t2', input: '"Python"', expectedOutput: 'False', description: 'Non-palindrome word' }
     ],
     hiddenTests: [
-      { id: 'r1-q2-h1', input: '12, 4', expectedOutput: '48', description: 'Rectangular dimensions' },
-      { id: 'r1-q2-h2', input: '7, 3', expectedOutput: '21', description: 'Prime dimensions' },
-      { id: 'r1-q2-h3', input: '25, 4', expectedOutput: '100', description: 'Boundary case' }
+      { id: 'r1-q2-h1', input: '"Madam"', expectedOutput: 'True', description: 'Mixed-case palindrome' },
+      { id: 'r1-q2-h2', input: '"12321"', expectedOutput: 'True', description: 'Numeric palindrome string' },
+      { id: 'r1-q2-h3', input: '"techastra"', expectedOutput: 'False', description: 'Standard word' }
     ]
   },
   {
     id: 'r1-q3',
     round: 1,
     number: 3,
-    title: 'Even Number Condition',
-    description: 'This function should check if an integer is even and return True, or False if odd. The programmer wrote the wrong modulo comparison.',
+    title: 'Discount & Final Price Calculator',
+    description: 'Calculate the final payable price of an item after applying a percentage discount.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Logical Error',
-    brokenCode: `def is_even(num):
-    # Bug: currently returns True for odd numbers
-    if num % 2 == 1:
-        return True
-    else:
-        return False
+    bugType: 'Multiple Issues',
+    brokenCode: `def calculate_final_price(price, discount_percent):
+    # Bug 1: Divides by 10 instead of 100
+    discount = price * (discount_percent / 10)
+    # Bug 2: Surcharges discount instead of subtracting
+    final_price = price + discount
+    return round(final_price, 2)
 
-print(is_even(4))`,
-    solutionCode: `def is_even(num):
-    if num % 2 == 0:
-        return True
-    else:
-        return False
+print(calculate_final_price(1200.0, 15.0))`,
+    solutionCode: `def calculate_final_price(price, discount_percent):
+    discount = price * (discount_percent / 100.0)
+    final_price = price - discount
+    return round(final_price, 2)
 
-print(is_even(4))`,
-    expectedBehavior: 'Return True when num % 2 == 0, False otherwise.',
-    inputFormat: 'Integer num',
-    outputFormat: 'Boolean (True or False)',
-    points: 10,
+print(calculate_final_price(1200.0, 15.0))`,
+    expectedBehavior: 'Correctly calculate percentage discount (rate / 100) and deduct it from the initial price.',
+    inputFormat: 'price: float, discount_percent: float',
+    outputFormat: 'Float final price rounded to 2 decimal places',
+    constraints: ['price >= 0', '0 <= discount_percent <= 100'],
+    hints: 'Percentage is out of 100 (not 10), and discount must be subtracted from price.',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q3-t1', input: '4', expectedOutput: 'True', description: 'Even number: 4' },
-      { id: 'r1-q3-t2', input: '7', expectedOutput: 'False', description: 'Odd number: 7' }
+      { id: 'r1-q3-t1', input: '1200.0, 15.0', expectedOutput: '1020.0', description: '15% discount on 1200' },
+      { id: 'r1-q3-t2', input: '500.0, 10.0', expectedOutput: '450.0', description: '10% discount on 500' }
     ],
     hiddenTests: [
-      { id: 'r1-q3-h1', input: '0', expectedOutput: 'True', description: 'Zero is even' },
-      { id: 'r1-q3-h2', input: '-2', expectedOutput: 'True', description: 'Negative even number' },
-      { id: 'r1-q3-h3', input: '99', expectedOutput: 'False', description: 'Large odd number' }
+      { id: 'r1-q3-h1', input: '250.0, 0.0', expectedOutput: '250.0', description: '0% discount' },
+      { id: 'r1-q3-h2', input: '100.0, 50.0', expectedOutput: '50.0', description: '50% half off' },
+      { id: 'r1-q3-h3', input: '199.99, 10.0', expectedOutput: '179.99', description: 'Decimal price' }
     ]
   },
   {
     id: 'r1-q4',
     round: 1,
     number: 4,
-    title: 'List Index Out of Range',
-    description: 'The print_first_n function attempts to print the first N elements of a list, but the range limit exceeds the available indices, causing an IndexError.',
+    title: 'Find Maximum in Integer List',
+    description: 'Find and return the highest integer value in a list of numbers, including lists where all numbers are negative.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Runtime Error',
-    brokenCode: `def print_first_element(items):
-    # Error: Accessing index len(items) raises IndexError
-    first = items[len(items)]
-    return first
+    bugType: 'Multiple Issues',
+    brokenCode: `def find_maximum(numbers):
+    # Bug 1: Initializing to 0 incorrectly fails for negative numbers
+    maximum = 0
+    for num in numbers:
+        # Bug 2: Comparison operator < finds minimum instead of maximum
+        if num < maximum:
+            maximum = num
+    return maximum
 
-print(print_first_element([10, 20, 30]))`,
-    solutionCode: `def print_first_element(items):
-    first = items[0]
-    return first
+print(find_maximum([-12, -5, -20, -3]))`,
+    solutionCode: `def find_maximum(numbers):
+    maximum = numbers[0]
+    for num in numbers:
+        if num > maximum:
+            maximum = num
+    return maximum
 
-print(print_first_element([10, 20, 30]))`,
-    expectedBehavior: 'Return the first element (index 0) of the list.',
-    inputFormat: 'Non-empty list of integers',
-    outputFormat: 'First integer element',
-    points: 10,
+print(find_maximum([-12, -5, -20, -3]))`,
+    expectedBehavior: 'Correctly identify the maximum number, including when all values are negative.',
+    inputFormat: 'numbers: List of integers (non-empty)',
+    outputFormat: 'Integer maximum value',
+    constraints: ['len(numbers) >= 1', 'Handles negative numbers properly'],
+    hints: 'Initialize maximum to numbers[0] instead of 0, and use the > comparison operator.',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q4-t1', input: '[10, 20, 30]', expectedOutput: '10', description: 'First element of [10, 20, 30]' },
-      { id: 'r1-q4-t2', input: '[99]', expectedOutput: '99', description: 'Single element list' }
+      { id: 'r1-q4-t1', input: '[-12, -5, -20, -3]', expectedOutput: '-3', description: 'Negative list maximum' },
+      { id: 'r1-q4-t2', input: '[10, 45, 23]', expectedOutput: '45', description: 'Positive list maximum' }
     ],
     hiddenTests: [
-      { id: 'r1-q4-h1', input: '[42, 13, 7]', expectedOutput: '42', description: 'Multiple elements' },
-      { id: 'r1-q4-h2', input: '[-5, 0, 5]', expectedOutput: '-5', description: 'Negative start element' },
-      { id: 'r1-q4-h3', input: '[1, 2, 3, 4, 5]', expectedOutput: '1', description: 'Five elements' }
+      { id: 'r1-q4-h1', input: '[-100]', expectedOutput: '-100', description: 'Single element list' },
+      { id: 'r1-q4-h2', input: '[5, 5, 5]', expectedOutput: '5', description: 'Identical numbers' },
+      { id: 'r1-q4-h3', input: '[-1, 0, 1]', expectedOutput: '1', description: 'Mixed sign list' }
     ]
   },
   {
     id: 'r1-q5',
     round: 1,
     number: 5,
-    title: 'String Immutability Pitfall',
-    description: 'In Python, strings are immutable. The replace() method returns a new string rather than modifying the original in-place. Fix the function so the modified string is returned.',
+    title: 'Count Even Numbers',
+    description: 'Count how many even integers are present in a given list of numbers.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Logical Error',
-    brokenCode: `def censor_word(text, bad_word):
-    # Strings are immutable; replace does not mutate text in-place
-    text.replace(bad_word, '***')
-    return text
+    bugType: 'Multiple Issues',
+    brokenCode: `def count_evens(numbers):
+    for n in numbers:
+        # Bug 1: Counter reset inside the loop on each iteration
+        count = 0
+        # Bug 2: Modulo checks odd numbers (== 1) instead of even (== 0)
+        if n % 2 == 1:
+            count += 1
+    return count
 
-print(censor_word("hello world", "world"))`,
-    solutionCode: `def censor_word(text, bad_word):
-    text = text.replace(bad_word, '***')
-    return text
+print(count_evens([1, 2, 3, 4, 6, 7]))`,
+    solutionCode: `def count_evens(numbers):
+    count = 0
+    for n in numbers:
+        if n % 2 == 0:
+            count += 1
+    return count
 
-print(censor_word("hello world", "world"))`,
-    expectedBehavior: 'Reassign the output of text.replace(...) to text before returning.',
-    inputFormat: 'Original text string and word to replace',
-    outputFormat: 'Modified text string',
-    points: 10,
+print(count_evens([1, 2, 3, 4, 6, 7]))`,
+    expectedBehavior: 'Initialize counter before the loop and check n % 2 == 0 to count even integers.',
+    inputFormat: 'numbers: List of integers',
+    outputFormat: 'Integer tally of even numbers',
+    constraints: ['0 <= len(numbers) <= 1000'],
+    hints: 'Move count = 0 outside the for loop and change n % 2 == 1 to n % 2 == 0.',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q5-t1', input: '"hello world", "world"', expectedOutput: 'hello ***', description: 'Basic replacement' },
-      { id: 'r1-q5-t2', input: '"apple banana apple", "apple"', expectedOutput: '*** banana ***', description: 'Multiple occurrences' }
+      { id: 'r1-q5-t1', input: '[1, 2, 3, 4, 6, 7]', expectedOutput: '3', description: 'Mixed even and odd integers' },
+      { id: 'r1-q5-t2', input: '[2, 4, 6]', expectedOutput: '3', description: 'All even numbers' }
     ],
     hiddenTests: [
-      { id: 'r1-q5-h1', input: '"bad code is bad", "bad"', expectedOutput: '*** code is ***', description: 'Edge word replace' },
-      { id: 'r1-q5-h2', input: '"safe text", "danger"', expectedOutput: 'safe text', description: 'Target word absent' },
-      { id: 'r1-q5-h3', input: '"code rescue", "rescue"', expectedOutput: 'code ***', description: 'Contest theme check' }
+      { id: 'r1-q5-h1', input: '[1, 3, 5]', expectedOutput: '0', description: 'All odd numbers' },
+      { id: 'r1-q5-h2', input: '[]', expectedOutput: '0', description: 'Empty list' },
+      { id: 'r1-q5-h3', input: '[0, 8, -2]', expectedOutput: '3', description: 'Zero and negative evens' }
     ]
   },
   {
     id: 'r1-q6',
     round: 1,
     number: 6,
-    title: 'Loop Accumulator Initialization',
-    description: 'The sum_list function initializes the accumulator inside the for loop, resetting it on every iteration. Move the accumulator to the correct position so all numbers are summed.',
+    title: 'Celsius to Fahrenheit Converter',
+    description: 'Convert a temperature value from Celsius to Fahrenheit using the standard formula: (C * 9/5) + 32.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Logical Error',
-    brokenCode: `def sum_list(numbers):
-    for num in numbers:
-        total = 0
-        total += num
-    return total
+    bugType: 'Multiple Issues',
+    brokenCode: `def celsius_to_fahrenheit(celsius):
+    # Bug 1: Inverted ratio 5 / 9 instead of 9 / 5
+    # Bug 2: Subtracts 32 instead of adding 32
+    fahrenheit = (celsius * (5 / 9)) - 32
+    return round(fahrenheit, 2)
 
-print(sum_list([1, 2, 3, 4]))`,
-    solutionCode: `def sum_list(numbers):
-    total = 0
-    for num in numbers:
-        total += num
-    return total
+print(celsius_to_fahrenheit(25.0))`,
+    solutionCode: `def celsius_to_fahrenheit(celsius):
+    fahrenheit = (celsius * (9.0 / 5.0)) + 32
+    return round(fahrenheit, 2)
 
-print(sum_list([1, 2, 3, 4]))`,
-    expectedBehavior: 'Initialize total = 0 outside and before the loop.',
-    inputFormat: 'List of numbers',
-    outputFormat: 'Sum of all numbers in list',
-    points: 10,
+print(celsius_to_fahrenheit(25.0))`,
+    expectedBehavior: 'Correctly apply (celsius * 9 / 5) + 32 and return the float value.',
+    inputFormat: 'celsius: Numeric float temperature',
+    outputFormat: 'Float Fahrenheit temperature rounded to 2 decimal places',
+    constraints: ['Valid numeric Celsius temperature'],
+    hints: 'Multiply by 9.0 / 5.0 (not 5/9) and add 32 (not subtract).',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q6-t1', input: '[1, 2, 3, 4]', expectedOutput: '10', description: '1 + 2 + 3 + 4 = 10' },
-      { id: 'r1-q6-t2', input: '[5, 5, 5]', expectedOutput: '15', description: '5 * 3 = 15' }
+      { id: 'r1-q6-t1', input: '25.0', expectedOutput: '77.0', description: 'Room temperature 25C' },
+      { id: 'r1-q6-t2', input: '0.0', expectedOutput: '32.0', description: 'Freezing point 0C' }
     ],
     hiddenTests: [
-      { id: 'r1-q6-h1', input: '[]', expectedOutput: '0', description: 'Empty list sum' },
-      { id: 'r1-q6-h2', input: '[10, -5, 20]', expectedOutput: '25', description: 'Negative and positive numbers' },
-      { id: 'r1-q6-h3', input: '[100, 200, 300, 400]', expectedOutput: '1000', description: 'Large sum' }
+      { id: 'r1-q6-h1', input: '100.0', expectedOutput: '212.0', description: 'Boiling point 100C' },
+      { id: 'r1-q6-h2', input: '-40.0', expectedOutput: '-40.0', description: 'Equal scale point -40' },
+      { id: 'r1-q6-h3', input: '37.0', expectedOutput: '98.6', description: 'Body temperature 37C' }
     ]
   },
   {
     id: 'r1-q7',
     round: 1,
     number: 7,
-    title: 'Dictionary Key Safe Lookup',
-    description: 'Looking up a non-existent key with square brackets raises a KeyError. Modify the function to safely retrieve the student score or return a default of 0.',
+    title: 'Word Frequency Counter',
+    description: 'Count how many times each unique word occurs in a list of words, normalized to lowercase.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Runtime Error',
-    brokenCode: `def get_student_score(scores_dict, student_name):
-    # Crashes with KeyError if student_name is not in scores_dict
-    return scores_dict[student_name]
+    bugType: 'Multiple Issues',
+    brokenCode: `def count_words(words):
+    freq = {}
+    for word in words:
+        # Bug 1: Missing .lower() causes uppercase words to be stored separately
+        if word in freq:
+            # Bug 2: Overwrites count to 1 instead of incrementing += 1
+            freq[word] = 1
+        else:
+            freq[word] = 1
+    return freq
 
-scores = {"Alice": 95, "Bob": 82}
-print(get_student_score(scores, "Charlie"))`,
-    solutionCode: `def get_student_score(scores_dict, student_name):
-    return scores_dict.get(student_name, 0)
+print(count_words(["apple", "Banana", "APPLE", "banana", "apple"]))`,
+    solutionCode: `def count_words(words):
+    freq = {}
+    for word in words:
+        w = word.lower()
+        freq[w] = freq.get(w, 0) + 1
+    return freq
 
-scores = {"Alice": 95, "Bob": 82}
-print(get_student_score(scores, "Charlie"))`,
-    expectedBehavior: 'Use scores_dict.get(student_name, 0) or check if student_name in scores_dict.',
-    inputFormat: 'Dictionary and student string name',
-    outputFormat: 'Integer score or 0',
-    points: 10,
+print(count_words(["apple", "Banana", "APPLE", "banana", "apple"]))`,
+    expectedBehavior: 'Return a dictionary with lowercase word keys and their corresponding occurrence counts.',
+    inputFormat: 'words: List of string words',
+    outputFormat: 'Dictionary of {word: count}',
+    constraints: ['Case-insensitive word comparison'],
+    hints: 'Convert word to lowercase with word.lower() and increment count with freq[w] += 1 or freq.get(w, 0) + 1.',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q7-t1', input: '{"Alice": 95, "Bob": 82}, "Charlie"', expectedOutput: '0', description: 'Missing key returns default 0' },
-      { id: 'r1-q7-t2', input: '{"Alice": 95, "Bob": 82}, "Alice"', expectedOutput: '95', description: 'Existing key returns score' }
+      { id: 'r1-q7-t1', input: '["apple", "Banana", "APPLE", "banana", "apple"]', expectedOutput: "{'apple': 3, 'banana': 2}", description: 'Mixed casing frequency' },
+      { id: 'r1-q7-t2', input: '["cat", "dog", "cat"]', expectedOutput: "{'cat': 2, 'dog': 1}", description: 'Basic animal list' }
     ],
     hiddenTests: [
-      { id: 'r1-q7-h1', input: '{}, "David"', expectedOutput: '0', description: 'Empty dictionary lookup' },
-      { id: 'r1-q7-h2', input: '{"Bob": 82}, "Bob"', expectedOutput: '82', description: 'Found in small dict' },
-      { id: 'r1-q7-h3', input: '{"Sanjai": 100}, "Alex"', expectedOutput: '0', description: 'Contestant key lookup' }
+      { id: 'r1-q7-h1', input: '["a", "b", "A"]', expectedOutput: "{'a': 2, 'b': 1}", description: 'Single letter words' },
+      { id: 'r1-q7-h2', input: '[]', expectedOutput: '{}', description: 'Empty words list' },
+      { id: 'r1-q7-h3', input: '["tech", "TECH", "Tech"]', expectedOutput: "{'tech': 3}", description: 'Identical word different casing' }
     ]
   },
   {
     id: 'r1-q8',
     round: 1,
     number: 8,
-    title: 'Chained If Override (Grade Classifier)',
-    description: 'The classify_grade function evaluates student marks. Because independent `if` statements are used rather than `elif`, later conditions overwrite earlier passing grades.',
+    title: 'Factorial Calculator',
+    description: 'Calculate the factorial of a non-negative integer n (0! = 1, 5! = 120).',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Logical Error',
-    brokenCode: `def classify_grade(score):
-    grade = 'F'
-    if score >= 90:
-        grade = 'A'
-    if score >= 75:
-        grade = 'B'
-    if score >= 50:
-        grade = 'C'
-    return grade
+    bugType: 'Multiple Issues',
+    brokenCode: `def factorial(n):
+    # Bug 1: Base case 0 returns 0 instead of 1
+    if n == 0:
+        return 0
+    fact = 1
+    # Bug 2: Range stops at n instead of n+1 (excluding n)
+    for i in range(1, n):
+        fact *= i
+    return fact
 
-print(classify_grade(95))`,
-    solutionCode: `def classify_grade(score):
-    if score >= 90:
-        return 'A'
-    elif score >= 75:
-        return 'B'
-    elif score >= 50:
-        return 'C'
-    else:
-        return 'F'
+print(factorial(5))`,
+    solutionCode: `def factorial(n):
+    if n == 0 or n == 1:
+        return 1
+    fact = 1
+    for i in range(1, n + 1):
+        fact *= i
+    return fact
 
-print(classify_grade(95))`,
-    expectedBehavior: 'Properly return A for >= 90, B for >= 75, C for >= 50, and F otherwise without overwriting.',
-    inputFormat: 'Integer score (0 to 100)',
-    outputFormat: 'Single letter grade string',
-    points: 10,
+print(factorial(5))`,
+    expectedBehavior: 'Return 1 for 0! and 1!, and calculate the complete product up to n inclusive.',
+    inputFormat: 'n: Non-negative integer',
+    outputFormat: 'Integer factorial product',
+    constraints: ['0 <= n <= 20'],
+    hints: '0! is mathematically 1 (not 0), and range must go up to n + 1.',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q8-t1', input: '95', expectedOutput: 'A', description: 'Score 95 must yield grade A' },
-      { id: 'r1-q8-t2', input: '80', expectedOutput: 'B', description: 'Score 80 must yield grade B' }
+      { id: 'r1-q8-t1', input: '5', expectedOutput: '120', description: 'Factorial of 5' },
+      { id: 'r1-q8-t2', input: '0', expectedOutput: '1', description: 'Base case zero factorial' }
     ],
     hiddenTests: [
-      { id: 'r1-q8-h1', input: '60', expectedOutput: 'C', description: 'Score 60 must yield grade C' },
-      { id: 'r1-q8-h2', input: '45', expectedOutput: 'F', description: 'Score 45 must yield grade F' },
-      { id: 'r1-q8-h3', input: '90', expectedOutput: 'A', description: 'Boundary score 90 must yield A' }
+      { id: 'r1-q8-h1', input: '1', expectedOutput: '1', description: 'Factorial of 1' },
+      { id: 'r1-q8-h2', input: '4', expectedOutput: '24', description: 'Factorial of 4' },
+      { id: 'r1-q8-h3', input: '6', expectedOutput: '720', description: 'Factorial of 6' }
     ]
   },
   {
     id: 'r1-q9',
     round: 1,
     number: 9,
-    title: 'Missing Recursion Base Case',
-    description: 'The factorial function is missing its terminating base condition. Without checking if n <= 1, it calls itself infinitely, triggering a RecursionError.',
+    title: 'Reverse Sublist by Index Range',
+    description: 'Reverse a section of a list between indices start and end (inclusive) and return the resulting list.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Runtime Error',
-    brokenCode: `def factorial(n):
-    # Missing base case: causes infinite recursion
-    return n * factorial(n - 1)
+    bugType: 'Multiple Issues',
+    brokenCode: `def reverse_sublist(lst, start, end):
+    # Bug 1: Slice excludes end index (should be end + 1)
+    sub = lst[start:end]
+    # Bug 2: Slicing step [::1] preserves direction instead of reversing [::-1]
+    sub_rev = sub[::1]
+    return lst[:start] + sub_rev + lst[end + 1:]
 
-print(factorial(4))`,
-    solutionCode: `def factorial(n):
-    if n <= 1:
-        return 1
-    return n * factorial(n - 1)
+print(reverse_sublist([1, 2, 3, 4, 5, 6], 1, 4))`,
+    solutionCode: `def reverse_sublist(lst, start, end):
+    sub = lst[start:end + 1]
+    sub_rev = sub[::-1]
+    return lst[:start] + sub_rev + lst[end + 1:]
 
-print(factorial(4))`,
-    expectedBehavior: 'Return 1 when n <= 1 to properly terminate recursive calls.',
-    inputFormat: 'Non-negative integer n',
-    outputFormat: 'Calculated factorial integer',
-    points: 10,
+print(reverse_sublist([1, 2, 3, 4, 5, 6], 1, 4))`,
+    expectedBehavior: 'Extract the slice from start to end + 1, reverse it with [::-1], and stitch it back.',
+    inputFormat: 'lst: List, start: int, end: int',
+    outputFormat: 'New list with sublist reversed',
+    constraints: ['0 <= start <= end < len(lst)'],
+    hints: 'Make the slice inclusive with lst[start:end + 1] and reverse with [::-1].',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q9-t1', input: '4', expectedOutput: '24', description: '4! = 4 * 3 * 2 * 1 = 24' },
-      { id: 'r1-q9-t2', input: '1', expectedOutput: '1', description: 'Base case 1! = 1' }
+      { id: 'r1-q9-t1', input: '[1, 2, 3, 4, 5, 6], 1, 4', expectedOutput: '[1, 5, 4, 3, 2, 6]', description: 'Sublist reverse from index 1 to 4' },
+      { id: 'r1-q9-t2', input: '[10, 20, 30], 0, 2', expectedOutput: '[30, 20, 10]', description: 'Full list reverse via indices' }
     ],
     hiddenTests: [
-      { id: 'r1-q9-h1', input: '0', expectedOutput: '1', description: '0! is 1' },
-      { id: 'r1-q9-h2', input: '5', expectedOutput: '120', description: '5! = 120' },
-      { id: 'r1-q9-h3', input: '6', expectedOutput: '720', description: '6! = 720' }
+      { id: 'r1-q9-h1', input: '[1, 2, 3], 1, 1', expectedOutput: '[1, 2, 3]', description: 'Single element sublist' },
+      { id: 'r1-q9-h2', input: '[4, 5, 6, 7, 8], 2, 4', expectedOutput: '[4, 5, 8, 7, 6]', description: 'Sublist reverse 2 to 4' },
+      { id: 'r1-q9-h3', input: '["a", "b", "c", "d"], 0, 1', expectedOutput: '["b", "a", "c", "d"]', description: 'String elements sublist' }
     ]
   },
   {
     id: 'r1-q10',
     round: 1,
     number: 10,
-    title: 'Discount Calculator Type Bug',
-    description: 'The calculate_final_price function receives the discount as a string from an input form, causing a TypeError when attempting arithmetic with floats and strings.',
+    title: 'Vowel Counter',
+    description: 'Count the total number of vowels (A, E, I, O, U, case-insensitive) in a given string.',
     difficulty: 'Basic',
     language: 'python',
-    bugType: 'Type Error',
-    brokenCode: `def calculate_final_price(price, discount_percent):
-    # discount_percent can be passed as string e.g. "20"
-    # Convert discount_percent to numeric before math
-    discount_amount = price * (discount_percent / 100)
-    return round(price - discount_amount, 2)
+    bugType: 'Multiple Issues',
+    brokenCode: `def count_vowels(text):
+    # Bug 1: Target vowels missing uppercase letters
+    vowels = "aeiou"
+    for ch in text:
+        # Bug 2: Counter initialized inside the loop (resets every iteration)
+        count = 0
+        if ch in vowels:
+            count += 1
+    return count
 
-print(calculate_final_price(100.0, "20"))`,
-    solutionCode: `def calculate_final_price(price, discount_percent):
-    discount_percent = float(discount_percent)
-    discount_amount = price * (discount_percent / 100)
-    return round(price - discount_amount, 2)
+print(count_vowels("Education"))`,
+    solutionCode: `def count_vowels(text):
+    count = 0
+    vowels = "aeiouAEIOU"
+    for ch in text:
+        if ch in vowels:
+            count += 1
+    return count
 
-print(calculate_final_price(100.0, "20"))`,
-    expectedBehavior: 'Convert discount_percent to float before performing division.',
-    inputFormat: 'Float price and string/number discount percentage',
-    outputFormat: 'Discounted final price rounded to 2 decimal places',
-    points: 10,
+print(count_vowels("Education"))`,
+    expectedBehavior: 'Count all vowels whether uppercase or lowercase without resetting the accumulator.',
+    inputFormat: 'text: String',
+    outputFormat: 'Integer total vowel count',
+    constraints: ['Valid string input'],
+    hints: 'Initialize count = 0 before the loop and include uppercase vowels "aeiouAEIOU".',
+    points: 1,
     visibleTests: [
-      { id: 'r1-q10-t1', input: '100.0, "20"', expectedOutput: '80.0', description: '100 with "20"% discount = 80.0' },
-      { id: 'r1-q10-t2', input: '50.0, 10', expectedOutput: '45.0', description: 'Numeric discount 50 with 10% = 45.0' }
+      { id: 'r1-q10-t1', input: '"Education"', expectedOutput: '5', description: 'Word with both uppercase and lowercase vowels' },
+      { id: 'r1-q10-t2', input: '"rhythm"', expectedOutput: '0', description: 'Word with no vowels' }
     ],
     hiddenTests: [
-      { id: 'r1-q10-h1', input: '200.0, "50"', expectedOutput: '100.0', description: 'Half price discount' },
-      { id: 'r1-q10-h2', input: '79.99, "0"', expectedOutput: '79.99', description: 'Zero discount' },
-      { id: 'r1-q10-h3', input: '150.0, "15.5"', expectedOutput: '126.75', description: 'Decimal string discount' }
+      { id: 'r1-q10-h1', input: '"AEIOU"', expectedOutput: '5', description: 'All uppercase vowels' },
+      { id: 'r1-q10-h2', input: '"Python Programming"', expectedOutput: '4', description: 'Sentence string' },
+      { id: 'r1-q10-h3', input: '""', expectedOutput: '0', description: 'Empty string' }
     ]
   }
 ];

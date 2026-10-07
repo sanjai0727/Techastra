@@ -179,13 +179,13 @@ export const LeaderboardPage: React.FC = () => {
                         </td>
                         <td className="text-gray-800">{item.college}</td>
                         <td style={{ textAlign: 'center' }} className="font-mono">
-                          {canRevealScores ? `${item.round1Score}/100` : '--/100'}
+                          {canRevealScores ? `${item.round1Score}/10` : '--/10'}
                         </td>
                         <td style={{ textAlign: 'center' }} className="font-mono">
-                          {canRevealScores ? `${item.round2Score}/100` : '--/100'}
+                          {canRevealScores ? `${item.round2Score}/20` : '--/20'}
                         </td>
                         <td style={{ textAlign: 'center' }} className="font-mono">
-                          {canRevealScores ? `${item.round3Score}/100` : '--/100'}
+                          {canRevealScores ? `${item.round3Score}/5` : '--/5'}
                         </td>
                         <td style={{ textAlign: 'center' }} className="font-mono font-bold text-blue-900">
                           {canRevealScores ? `${item.totalScore} Pts` : '-- Pts'}

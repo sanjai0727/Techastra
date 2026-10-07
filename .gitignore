@@ -23,4 +23,10 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 data/*.sqlite
-Techastra-CodeRescue/
+Techastra-CodeRescue/
+
+# Temporary and office lockfiles
+~$*
+docs/~$*
+*.tmp
+__pycache__/

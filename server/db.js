@@ -201,51 +201,51 @@ function initSchema() {
     ensureAdmin('admin', process.env.ADMIN_PASSKEY || 'techastra2026', 'Chief Event Coordinator');
     ensureAdmin('coderescue@techastra.drmgrdu.ac.in', 'TechDay26', 'Code Rescue Event Coordinator');
 
-    // Seed Rounds configuration if not exists
+    // Seed or synchronize Rounds configuration
+    const competitionRounds = [
+        {
+            round_id: 'R1',
+            name: 'Round 1',
+            title: 'Bug Hunt',
+            is_active: 1,
+            cutoff: 5,
+            max_score: 10,
+            time_limit_minutes: 15,
+            total_questions: 10,
+            description: 'Syntax & lexical triage: Missing colons, bracket mismatches, tab vs space indentation faults, and misspelled identifiers.',
+        },
+        {
+            round_id: 'R2',
+            name: 'Round 2',
+            title: 'Logic Breaker',
+            is_active: 0,
+            cutoff: 10,
+            max_score: 20,
+            time_limit_minutes: 20,
+            total_questions: 10,
+            description: 'Insidious logical hazards: Off-by-one loops, zero-division hazards, mutable default argument traps, and boundary cases.',
+        },
+        {
+            round_id: 'R3',
+            name: 'Round 3',
+            title: 'Code Rescue',
+            is_active: 0,
+            cutoff: 0,
+            max_score: 5,
+            time_limit_minutes: 25,
+            total_questions: 1,
+            description: 'System disaster recovery: Complex interconnected legacy codebase triage with cascaded failures across ingestion, computation, and output.',
+        },
+    ];
+
     const countRounds = db.prepare('SELECT COUNT(*) as count FROM rounds').get();
     if (countRounds.count === 0) {
-        const seedRounds = [
-            {
-                round_id: 'R1',
-                name: 'Round 1',
-                title: 'Syntax & Exception Triage',
-                is_active: 1,
-                cutoff: 50,
-                max_score: 100,
-                time_limit_minutes: 45,
-                total_questions: 8,
-                description: 'Fast-paced syntax error identification, type mismatch repair, and exception handling triage under pressure.',
-            },
-            {
-                round_id: 'R2',
-                name: 'Round 2',
-                title: 'Logic & Edge Case Debugging',
-                is_active: 0,
-                cutoff: 50,
-                max_score: 100,
-                time_limit_minutes: 45,
-                total_questions: 6,
-                description: 'Resolving subtle off-by-one errors, recursion limits, boundary condition anomalies, and race conditions.',
-            },
-            {
-                round_id: 'R3',
-                name: 'Round 3',
-                title: 'High Stakes Algorithm Repair',
-                is_active: 0,
-                cutoff: 0,
-                max_score: 100,
-                time_limit_minutes: 30,
-                total_questions: 4,
-                description: 'Complex algorithmic corruption repair: graph algorithms, dynamic programming optimizations, and memory leak mitigation.',
-            },
-        ];
-
         const insertRound = db.prepare(`
             INSERT INTO rounds (round_id, name, title, is_active, cutoff, max_score, time_limit_minutes, total_questions, description)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
-        for (const r of seedRounds) {
+        for (const r of competitionRounds) {
             insertRound.run(
                 r.round_id,
                 r.name,
@@ -259,6 +259,24 @@ function initSchema() {
             );
         }
         console.log('[DB] Initialized competition rounds schema.');
+    } else {
+        const updateRound = db.prepare(`
+            UPDATE rounds
+            SET cutoff = ?, max_score = ?, time_limit_minutes = ?, total_questions = ?, title = ?, description = ?
+            WHERE round_id = ?
+        `);
+        for (const r of competitionRounds) {
+            updateRound.run(
+                r.cutoff,
+                r.max_score,
+                r.time_limit_minutes,
+                r.total_questions,
+                r.title,
+                r.description,
+                r.round_id
+            );
+        }
+        console.log('[DB] Synchronized competition rounds with updated marks, cutoffs, and durations.');
     }
 }
 

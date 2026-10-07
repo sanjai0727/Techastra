@@ -1,15 +1,18 @@
 import React, { useEffect } from 'react';
 import { useCompetition } from '../context/CompetitionContext';
+import { round1Questions } from '../data/round1Questions';
+import { round2Questions } from '../data/round2Questions';
+import { round3Question } from '../data/round3Questions';
 import confetti from 'canvas-confetti';
 
 export const FinalResultPage: React.FC = () => {
   const { state, setView } = useCompetition();
 
-  const r1Score = Object.values(state.bestScores).slice(0, 10).reduce((a, b) => a + b, 0);
-  const r2Score = Object.values(state.bestScores).slice(10, 15).reduce((a, b) => a + b, 0);
-  const r3Score = Object.values(state.bestScores).slice(15, 16).reduce((a, b) => a + b, 0);
+  const r1Score = round1Questions.reduce((sum, q) => sum + (state.bestScores[q.id] || 0), 0);
+  const r2Score = round2Questions.reduce((sum, q) => sum + (state.bestScores[q.id] || 0), 0);
+  const r3Score = state.bestScores[round3Question.id] || 0;
   const totalScore = r1Score + r2Score + r3Score;
-  const maxTotalScore = 300;
+  const maxTotalScore = 35;
 
   useEffect(() => {
     try {
@@ -91,7 +94,7 @@ export const FinalResultPage: React.FC = () => {
               </legend>
               <div className="win95-sunken p-2 bg-white">
                 <span className="text-sm font-bold font-mono text-black block">RECORDED</span>
-                <span className="text-[10px] text-gray-600 font-mono">-- / 100 Pts</span>
+                <span className="text-[10px] text-gray-600 font-mono">-- / 10 Pts</span>
               </div>
             </fieldset>
 
@@ -101,7 +104,7 @@ export const FinalResultPage: React.FC = () => {
               </legend>
               <div className="win95-sunken p-2 bg-white">
                 <span className="text-sm font-bold font-mono text-black block">RECORDED</span>
-                <span className="text-[10px] text-gray-600 font-mono">-- / 100 Pts</span>
+                <span className="text-[10px] text-gray-600 font-mono">-- / 20 Pts</span>
               </div>
             </fieldset>
 
@@ -111,7 +114,7 @@ export const FinalResultPage: React.FC = () => {
               </legend>
               <div className="win95-sunken p-2 bg-white">
                 <span className="text-sm font-bold font-mono text-black block">RECORDED</span>
-                <span className="text-[10px] text-gray-600 font-mono">-- / 100 Pts</span>
+                <span className="text-[10px] text-gray-600 font-mono">-- / 5 Pts</span>
               </div>
             </fieldset>
           </div>

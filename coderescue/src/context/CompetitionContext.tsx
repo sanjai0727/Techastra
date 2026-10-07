@@ -39,6 +39,9 @@ interface CompetitionContextType {
   triggerClipboardWarning: (message: string) => void;
   clearClipboardWarning: () => void;
   disqualifyContestant: (reason: string) => void;
+  readmitContestant: (proctorPin: string) => { success: boolean; message: string };
+  restartCurrentRound: (proctorPin: string) => { success: boolean; message: string };
+  restartCompetitionWithParticipant: (proctorPin?: string) => { success: boolean; message: string };
 }
 
 const CompetitionContext = createContext<CompetitionContextType | null>(null);
@@ -72,26 +75,26 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
   const finalizeRound = useCallback((round: 1 | 2 | 3) => {
     setState(prev => {
       let questions: Question[] = [];
-      let totalAllowed = 1200;
+      let totalAllowed = 15 * 60;
       let remainingKey: 'round1Remaining' | 'round2Remaining' | 'round3Remaining' = 'round1Remaining';
       let activeKey: 'round1Active' | 'round2Active' | 'round3Active' = 'round1Active';
       let nextView: ActiveView = 'round1_result';
 
       if (round === 1) {
         questions = round1Questions;
-        totalAllowed = 20 * 60;
+        totalAllowed = 15 * 60;
         remainingKey = 'round1Remaining';
         activeKey = 'round1Active';
         nextView = 'round1_result';
       } else if (round === 2) {
         questions = round2Questions;
-        totalAllowed = 25 * 60;
+        totalAllowed = 20 * 60;
         remainingKey = 'round2Remaining';
         activeKey = 'round2Active';
         nextView = 'round2_result';
       } else {
         questions = [round3Question];
-        totalAllowed = 40 * 60;
+        totalAllowed = 25 * 60;
         remainingKey = 'round3Remaining';
         activeKey = 'round3Active';
         nextView = 'final_result';
@@ -225,7 +228,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     setState(prev => {
       const activeKey = round === 1 ? 'round1Active' : (round === 2 ? 'round2Active' : 'round3Active');
       const remainingKey = round === 1 ? 'round1Remaining' : (round === 2 ? 'round2Remaining' : 'round3Remaining');
-      const defaultDuration = round === 1 ? 20 * 60 : (round === 2 ? 25 * 60 : 40 * 60);
+      const defaultDuration = round === 1 ? 15 * 60 : (round === 2 ? 20 * 60 : 25 * 60);
       const firstQId = round === 1 ? 'r1-q1' : (round === 2 ? 'r2-q1' : 'r3-q1');
       const view: ActiveView = round === 1 ? 'round1_workspace' : (round === 2 ? 'round2_workspace' : 'round3_workspace');
 
@@ -515,6 +518,181 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     }));
   }, []);
 
+  const readmitContestant = useCallback((pin: string): { success: boolean; message: string } => {
+    const validPins = ['TECHASTRA26', 'RESCUE26', 'MGR2026', 'ADMIN2026', '9487'];
+    const normalized = pin.trim().toUpperCase();
+    if (!validPins.includes(normalized)) {
+      return { success: false, message: 'Invalid Proctor Authorization PIN. Please check with an event coordinator.' };
+    }
+
+    try {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
+      }
+    } catch (e) {}
+
+    setState(prev => {
+      const activeRound = prev.currentRound || 1;
+      const targetView: ActiveView = activeRound === 1
+        ? 'round1_workspace'
+        : (activeRound === 2 ? 'round2_workspace' : 'round3_workspace');
+
+      const timerKey = activeRound === 1
+        ? 'round1Active'
+        : (activeRound === 2 ? 'round2Active' : 'round3Active');
+
+      const remainingKey = activeRound === 1
+        ? 'round1Remaining'
+        : (activeRound === 2 ? 'round2Remaining' : 'round3Remaining');
+
+      // Guarantee at least 180s if candidate was down to last minute when glitch occurred
+      const currentRemaining = prev.timers[remainingKey];
+      const safeRemaining = currentRemaining <= 60 ? 180 : currentRemaining;
+
+      return {
+        ...prev,
+        currentView: targetView,
+        timers: {
+          ...prev.timers,
+          [timerKey]: true,
+          [remainingKey]: safeRemaining
+        },
+        securityState: {
+          ...prev.securityState,
+          isDisqualified: false,
+          disqualificationReason: undefined,
+          showTabSwitchWarning: false,
+          tabSwitchCount: 0,
+          graceExpiresAt: null,
+          violationLogs: [
+            ...(prev.securityState?.violationLogs || []),
+            {
+              type: 'TAB_SWITCH',
+              message: `[PROCTOR_OVERRIDE] Workstation unlocked and re-admitted to Round ${activeRound} by Proctor (${normalized}).`,
+              timestamp: Date.now()
+            }
+          ]
+        }
+      };
+    });
+
+    return { success: true, message: 'Workstation unlocked! Returning contestant to active workspace.' };
+  }, []);
+
+  const restartCurrentRound = useCallback((pin: string): { success: boolean; message: string } => {
+    const validPins = ['TECHASTRA26', 'RESCUE26', 'MGR2026', 'ADMIN2026', '9487'];
+    const normalized = pin.trim().toUpperCase();
+    if (!validPins.includes(normalized)) {
+      return { success: false, message: 'Invalid Proctor Authorization PIN. Please check with an event coordinator.' };
+    }
+
+    try {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
+      }
+    } catch (e) {}
+
+    setState(prev => {
+      const activeRound = prev.currentRound || 1;
+      const defaultDuration = activeRound === 1 ? 15 * 60 : (activeRound === 2 ? 20 * 60 : 25 * 60);
+      const targetView: ActiveView = activeRound === 1
+        ? 'round1_workspace'
+        : (activeRound === 2 ? 'round2_workspace' : 'round3_workspace');
+      const firstQId = activeRound === 1 ? 'r1-q1' : (activeRound === 2 ? 'r2-q1' : 'r3-q1');
+      const timerActiveKey = activeRound === 1 ? 'round1Active' : (activeRound === 2 ? 'round2Active' : 'round3Active');
+      const timerRemainingKey = activeRound === 1 ? 'round1Remaining' : (activeRound === 2 ? 'round2Remaining' : 'round3Remaining');
+
+      // Reset code buffers for current round questions
+      const questionsToReset = activeRound === 1
+        ? round1Questions
+        : (activeRound === 2 ? round2Questions : [round3Question]);
+
+      const newCodeBuffers = { ...prev.codeBuffers };
+      const newBestScores = { ...prev.bestScores };
+      questionsToReset.forEach(q => {
+        newCodeBuffers[q.id] = q.initialCode;
+        delete newBestScores[q.id];
+      });
+
+      const roundScoreKey = activeRound === 1 ? 'round1' : (activeRound === 2 ? 'round2' : 'round3');
+      const newScores = {
+        ...prev.scores,
+        [roundScoreKey]: 0
+      };
+
+      return {
+        ...prev,
+        currentView: targetView,
+        activeQuestionId: firstQId,
+        codeBuffers: newCodeBuffers,
+        bestScores: newBestScores,
+        scores: newScores,
+        timers: {
+          ...prev.timers,
+          [timerActiveKey]: true,
+          [timerRemainingKey]: defaultDuration
+        },
+        securityState: {
+          ...prev.securityState,
+          isDisqualified: false,
+          disqualificationReason: undefined,
+          showTabSwitchWarning: false,
+          tabSwitchCount: 0,
+          graceExpiresAt: null,
+          violationLogs: [
+            ...(prev.securityState?.violationLogs || []),
+            {
+              type: 'TAB_SWITCH',
+              message: `[PROCTOR_OVERRIDE] Round ${activeRound} restarted fresh by Proctor (${normalized}). Full duration granted (${defaultDuration / 60}m).`,
+              timestamp: Date.now()
+            }
+          ]
+        }
+      };
+    });
+
+    return { success: true, message: 'Round successfully restarted! Full time granted.' };
+  }, []);
+
+  const restartCompetitionWithParticipant = useCallback((pin?: string): { success: boolean; message: string } => {
+    if (pin) {
+      const validPins = ['TECHASTRA26', 'RESCUE26', 'MGR2026', 'ADMIN2026', '9487'];
+      const normalized = pin.trim().toUpperCase();
+      if (!validPins.includes(normalized)) {
+        return { success: false, message: 'Invalid Proctor Authorization PIN.' };
+      }
+    }
+
+    try {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'CODE_RESCUE_EXIT_FULLSCREEN' }, '*');
+      }
+    } catch (e) {}
+
+    setState(prev => ({
+      ...getInitialState(),
+      participant: prev.participant,
+      currentView: 'rules'
+    }));
+
+    return { success: true, message: 'Competition reset for participant. Navigating to briefing rules.' };
+  }, []);
+
   return (
     <CompetitionContext.Provider
       value={{
@@ -538,7 +716,10 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         dismissTabSwitchWarning,
         triggerClipboardWarning,
         clearClipboardWarning,
-        disqualifyContestant
+        disqualifyContestant,
+        readmitContestant,
+        restartCurrentRound,
+        restartCompetitionWithParticipant
       }}
     >
       {children}

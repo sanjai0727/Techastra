@@ -4,167 +4,175 @@ export const round3Question: Question = {
   id: 'r3-q1',
   round: 3,
   number: 1,
-  title: 'Student Expense & Scholarship Analyzer System',
-  description: `You are assigned to rescue a critical college module: the **Student Expense & Scholarship Eligibility Analyzer**.
+  title: 'Smart Restaurant Billing & Order Dispatch System',
+  description: `You are tasked with rescuing the core dispatch engine for an omnichannel restaurant POS system: the **Smart Restaurant Billing & Order Dispatch System**.
 
-The system processes student expense logs represented as tuples of \`(category, amount)\`, calculates summary analytics, checks budget threshold compliance, and computes a scholarship need index.
+The system receives a customer order consisting of menu items, validates item pricing against the menu catalog, calculates loyalty tier and coupon discounts, determines state GST (5%) and distance-based delivery fees, and produces a finalized order invoice.
 
-However, the previous developer left behind multiple critical bugs:
-- **Syntax Error**: Malformed function declaration / dictionary structure.
-- **Runtime Error**: Uncaught \`ZeroDivisionError\` when an empty list or zero-expense dataset is evaluated.
-- **Logical Error**: Inverted condition when checking scholarship threshold eligibility.
-- **Edge-Case Bug**: Negative expense entries erroneously distort the total and count instead of being filtered out.
-- **Output Formatting Bug**: Category summaries are required to be sorted alphabetically by category name, but are currently returned unsorted.
+The legacy code has been streamlined into two pipeline functions, but contains **exactly 10 critical bugs**:
+- **Bug 1 (Lookup)**: Unchecked dictionary lookup raises fatal \`KeyError\` on unrecognized menu items.
+- **Bug 2 (Arithmetic)**: Line item totals computed using addition (\`price + qty\`) instead of multiplication.
+- **Bug 3 (Case Sensitivity)**: Membership tier compares raw lowercase \`tier == "gold"\`, failing on uppercase \`"GOLD"\`.
+- **Bug 4 (Rate Typo)**: Silver membership discount contains a decimal typo (\`0.50\` = 50% instead of \`0.05\` = 5%).
+- **Bug 5 (Pricing Sign)**: Discount amount is added to the subtotal instead of subtracted.
+- **Bug 6 (Type Floor)**: GST evaluated using integer floor division \`(5 // 100)\`, yielding zero tax.
+- **Bug 7 (Delivery Slabs)**: Overage distance ignores the base fee of ₹30 for the initial 3 km.
+- **Bug 8 (Total Sign)**: Logistics delivery fee is subtracted from the invoice instead of added.
+- **Bug 9 (Inverted Logic)**: Order confirmation status flags \`"REJECTED"\` when the payable amount is positive.
+- **Bug 10 (Payload Key)**: Output invoice dictionary omits the mandatory identification field \`"order_id"\`.
 
-### Your Mission: Rescue the Code!
-Thoroughly inspect the system, locate all defects, repair them, verify with the test runner, and submit the complete working solution before time expires.`,
+### Mission: Rescue the Code!
+Locate all 10 bugs in the 38 lines of code, repair the system, verify all test suites, and submit before the 25-minute countdown finishes!`,
   difficulty: 'Advanced',
   language: 'python',
   bugType: 'Multiple Issues',
-  brokenCode: `def analyze_expenses(records, budget_limit):
-    # Bug 1 (Edge-case): Negative amounts should be ignored/filtered
-    # Bug 2 (Syntax): Missing colon in if statement below
-    # Bug 3 (Runtime): ZeroDivisionError when records are empty
-    # Bug 4 (Logic): Inverted budget check (< instead of <=)
-    # Bug 5 (Output): Categories must be sorted alphabetically
+  brokenCode: `# FUNCTION 1: ITEM TOTALS & PROMO PRICING (Bugs 1 to 5)
+def calculate_discounted_bill(order_items, menu_catalog, tier, coupon):
+    subtotal = 0.0
+    errors = []
+    for item in order_items:
+        name, qty = item.get("name"), item.get("qty", 0)
+        # BUG 1: unhandled KeyError on unknown menu item (missing 'in' check)
+        price = menu_catalog[name]
+        if qty <= 0:
+            errors.append(f"Invalid qty for {name}")
+            continue
+        # BUG 2: adds price + qty instead of multiplying
+        subtotal += price + qty
+
+    # BUG 3: strict lowercase comparison fails on uppercase 'GOLD'
+    # BUG 4: silver rate typo 0.50 (50%) instead of 0.05
+    rate = 0.20 if tier == "platinum" else (0.15 if tier == "gold" else (0.50 if tier.lower() == "silver" else 0.0))
+    discount = subtotal * rate
+    if coupon == "FEAST50" and subtotal >= 300:
+        discount += 50.0
+    discount = min(discount, subtotal * 0.50)
     
-    valid_expenses = []
-    for item in records
-        cat = item[0]
-        amt = item[1]
-        if amt > 0: # Missing colon or handling
-            valid_expenses.append((cat, amt))
-            
-    total = sum(amt for cat, amt in valid_expenses)
-    count = len(valid_expenses)
-    
-    # CRASH: Raises ZeroDivisionError when valid_expenses is empty
-    average = total / count
-    
-    max_expense = 0
-    if valid_expenses:
-        max_expense = max(amt for cat, amt in valid_expenses)
-        
-    categories = {}
-    for cat, amt in valid_expenses:
-        categories[cat] = categories.get(cat, 0) + amt
-        
-    # Bug: Categories should be a list of tuples sorted alphabetically by name
-    sorted_categories = list(categories.items()) # Unsorted!
-    
-    # Bug: Should be True if total <= budget_limit, currently total > budget_limit
-    within_budget = total > budget_limit
-    
+    # BUG 5: adds discount to subtotal instead of subtracting
+    discounted_amount = subtotal + discount
+    return {"subtotal": round(subtotal, 2), "discount": round(discount, 2), 
+            "discounted_amount": round(discounted_amount, 2), "errors": errors}
+
+# FUNCTION 2: INVOICE LOGISTICS & GRAND TOTAL (Bugs 6 to 10)
+def generate_order_invoice(order_id, order_items, menu_catalog, tier, coupon, distance_km):
+    bill = calculate_discounted_bill(order_items, menu_catalog, tier, coupon)
+    net = bill["discounted_amount"]
+    if bill["subtotal"] == 0:
+        return {"order_id": order_id, "status": "REJECTED"}
+
+    # BUG 6: integer division (5 // 100) results in 0.0 GST
+    gst = round(net * (5 // 100), 2)
+    # BUG 7: overage ignores base slab of Rs 30 for first 3 km
+    delivery = 0.0 if distance_km <= 0 else (30.0 if distance_km <= 3.0 else distance_km * 10.0)
+
+    # BUG 8: subtracts delivery fee from total instead of adding
+    grand_total = net + gst - delivery
+    # BUG 9: inverted status: sets REJECTED when grand_total > 0
+    status = "REJECTED" if grand_total > 0 else "CONFIRMED"
+
+    # BUG 10: missing 'order_id' key in invoice payload
     return {
-        "total": round(total, 2),
-        "average": round(average, 2),
-        "max": round(max_expense, 2),
-        "categories": sorted_categories,
-        "within_budget": within_budget
+        "subtotal": bill["subtotal"],
+        "discount": bill["discount"],
+        "gst": gst,
+        "delivery_fee": round(delivery, 2),
+        "grand_total": round(grand_total, 2),
+        "status": status
     }
 
-# Test sample
-sample_records = [("Books", 120), ("Food", 45), ("Travel", 35), ("Food", 50)]
-print(analyze_expenses(sample_records, 300))`,
-  solutionCode: `def analyze_expenses(records, budget_limit):
-    valid_expenses = []
-    for item in records:
-        cat = item[0]
-        amt = item[1]
-        if amt > 0:
-            valid_expenses.append((cat, amt))
-            
-    total = sum(amt for cat, amt in valid_expenses)
-    count = len(valid_expenses)
-    
-    # Safely handle empty records
-    average = (total / count) if count > 0 else 0.0
-    
-    max_expense = 0.0
-    if valid_expenses:
-        max_expense = max(amt for cat, amt in valid_expenses)
-        
-    categories = {}
-    for cat, amt in valid_expenses:
-        categories[cat] = categories.get(cat, 0) + amt
-        
-    # Sort categories alphabetically by category name
-    sorted_categories = sorted(categories.items(), key=lambda x: x[0])
-    
-    # Within budget if total is less than or equal to budget limit
-    within_budget = total <= budget_limit
-    
+menu = {"Burger": 150.0, "Pizza": 250.0}
+items = [{"name": "Burger", "qty": 2}, {"name": "Pizza", "qty": 1}]
+print(generate_order_invoice("ORD-1001", items, menu, "GOLD", "FEAST50", 5.5))`,
+  solutionCode: `def calculate_discounted_bill(order_items, menu_catalog, tier, coupon):
+    subtotal = 0.0
+    errors = []
+    for item in order_items:
+        name, qty = item.get("name"), item.get("qty", 0)
+        if name not in menu_catalog:
+            errors.append(f"Item not found: {name}")
+            continue
+        if qty <= 0:
+            errors.append(f"Invalid qty for {name}")
+            continue
+        subtotal += menu_catalog[name] * qty
+
+    t = tier.upper() if tier else "BRONZE"
+    rate = 0.20 if t == "PLATINUM" else (0.15 if t == "GOLD" else (0.05 if t == "SILVER" else 0.0))
+    discount = subtotal * rate
+    if coupon == "FEAST50" and subtotal >= 300:
+        discount += 50.0
+    discount = min(discount, subtotal * 0.50)
+    discounted_amount = subtotal - discount
+    return {"subtotal": round(subtotal, 2), "discount": round(discount, 2), 
+            "discounted_amount": round(discounted_amount, 2), "errors": errors}
+
+def generate_order_invoice(order_id, order_items, menu_catalog, tier, coupon, distance_km):
+    bill = calculate_discounted_bill(order_items, menu_catalog, tier, coupon)
+    if bill["subtotal"] == 0:
+        return {"order_id": order_id, "status": "REJECTED"}
+
+    net = bill["discounted_amount"]
+    gst = round(net * 0.05, 2)
+    delivery = 0.0 if distance_km <= 0 else (30.0 if distance_km <= 3.0 else 30.0 + (distance_km - 3.0) * 10.0)
+
+    grand_total = net + gst + delivery
+    status = "CONFIRMED" if grand_total > 0 else "REJECTED"
+
     return {
-        "total": round(total, 2),
-        "average": round(average, 2),
-        "max": round(max_expense, 2),
-        "categories": sorted_categories,
-        "within_budget": within_budget
+        "order_id": order_id,
+        "subtotal": bill["subtotal"],
+        "discount": bill["discount"],
+        "gst": gst,
+        "delivery_fee": round(delivery, 2),
+        "grand_total": round(grand_total, 2),
+        "status": status
     }
 
-sample_records = [("Books", 120), ("Food", 45), ("Travel", 35), ("Food", 50)]
-print(analyze_expenses(sample_records, 300))`,
-  expectedBehavior: 'Filter negative values, safely handle empty logs with 0.0 average, sort categories alphabetically, and correctly evaluate within_budget (total <= budget_limit).',
-  inputFormat: 'records: List of tuples (category_str, amount_num), budget_limit: float',
-  outputFormat: 'Dictionary with keys: total, average, max, categories (sorted list of (name, total)), within_budget (bool)',
+menu = {"Burger": 150.0, "Pizza": 250.0}
+items = [{"name": "Burger", "qty": 2}, {"name": "Pizza", "qty": 1}]
+print(generate_order_invoice("ORD-1001", items, menu, "GOLD", "FEAST50", 5.5))`,
+  expectedBehavior: 'Correctly check unknown items, multiply price * qty, normalize tier uppercase, fix silver 0.05, subtract discount, compute 5% GST, base 30+10*(dist-3) delivery, add delivery to total, set CONFIRMED when total > 0, and include order_id.',
+  inputFormat: 'order_id: str, order_items: list[dict], menu_catalog: dict, tier: str, coupon: str, distance_km: float',
+  outputFormat: 'Dictionary: {"order_id": str, "subtotal": float, "discount": float, "gst": float, "delivery_fee": float, "grand_total": float, "status": str}',
   constraints: [
-    '0 <= len(records) <= 1000',
-    'Amounts can be integers or floats',
-    'Negative or zero amounts must be excluded from calculations',
-    'If no valid expenses exist, average and max must return 0.0'
+    'order_items contains items with name and qty',
+    'menu_catalog maps valid names to float prices',
+    'distance_km >= 0'
   ],
-  hints: 'Watch out for division by zero on empty inputs, check the colon on the loop header, sort categories by category[0], and verify the comparison operator for within_budget.',
-  points: 100,
+  hints: 'Check menu_catalog membership before lookup, multiply price * qty, tier.upper(), silver rate 0.05, subtotal - discount, net * 0.05, 30 + (dist - 3) * 10, add delivery, status CONFIRMED, and return order_id.',
+  points: 5,
   visibleTests: [
     {
       id: 'r3-t1',
-      input: '[("Books", 120), ("Food", 45), ("Travel", 35), ("Food", 50)], 300',
-      expectedOutput: "{'total': 250, 'average': 62.5, 'max': 120, 'categories': [('Books', 120), ('Food', 95), ('Travel', 35)], 'within_budget': True}",
-      description: 'Standard multi-item log within budget'
+      input: '"ORD-1001", [{"name": "Burger", "qty": 2}, {"name": "Pizza", "qty": 1}], {"Burger": 150.0, "Pizza": 250.0}, "GOLD", "FEAST50", 5.5',
+      expectedOutput: "{'order_id': 'ORD-1001', 'subtotal': 550.0, 'discount': 132.5, 'gst': 20.88, 'delivery_fee': 55.0, 'grand_total': 493.38, 'status': 'CONFIRMED'}",
+      description: 'Standard multi-item gold tier delivery order'
     },
     {
       id: 'r3-t2',
-      input: '[("Tuition", 800), ("Food", 300)], 1000',
-      expectedOutput: "{'total': 1100, 'average': 550.0, 'max': 800, 'categories': [('Food', 300), ('Tuition', 800)], 'within_budget': False}",
-      description: 'Expenses exceed budget limit'
+      input: '"ORD-1002", [{"name": "Burger", "qty": 1}], {"Burger": 150.0}, "SILVER", "NONE", 2.0',
+      expectedOutput: "{'order_id': 'ORD-1002', 'subtotal': 150.0, 'discount': 7.5, 'gst': 7.12, 'delivery_fee': 30.0, 'grand_total': 179.62, 'status': 'CONFIRMED'}",
+      description: 'Silver tier short distance delivery'
     }
   ],
   hiddenTests: [
     {
       id: 'r3-h1',
-      input: '[], 500',
-      expectedOutput: "{'total': 0, 'average': 0.0, 'max': 0.0, 'categories': [], 'within_budget': True}",
-      description: 'Empty records: zero division guard check'
+      input: '"ORD-1003", [{"name": "MysteryItem", "qty": 1}], {"Burger": 150.0}, "BRONZE", "NONE", 0.0',
+      expectedOutput: "{'order_id': 'ORD-1003', 'status': 'REJECTED'}",
+      description: 'Unlisted menu item unhandled KeyError check'
     },
     {
       id: 'r3-h2',
-      input: '[("Refund", -50), ("Food", 100)], 200',
-      expectedOutput: "{'total': 100, 'average': 100.0, 'max': 100, 'categories': [('Food', 100)], 'within_budget': True}",
-      description: 'Negative expense filter check'
+      input: '"ORD-1004", [{"name": "Pizza", "qty": 2}], {"Pizza": 250.0}, "PLATINUM", "FEAST50", 0.0',
+      expectedOutput: "{'order_id': 'ORD-1004', 'subtotal': 500.0, 'discount': 150.0, 'gst': 17.5, 'delivery_fee': 0.0, 'grand_total': 367.5, 'status': 'CONFIRMED'}",
+      description: 'Pickup order (0km) platinum discount'
     },
     {
       id: 'r3-h3',
-      input: '[("Travel", 50), ("Books", 50), ("Art", 50)], 150',
-      expectedOutput: "{'total': 150, 'average': 50.0, 'max': 50, 'categories': [('Art', 50), ('Books', 50), ('Travel', 50)], 'within_budget': True}",
-      description: 'Alphabetical category ordering check: Art, Books, Travel'
-    },
-    {
-      id: 'r3-h4',
-      input: '[("Laptop", 1200)], 1200',
-      expectedOutput: "{'total': 1200, 'average': 1200.0, 'max': 1200, 'categories': [('Laptop', 1200)], 'within_budget': True}",
-      description: 'Exact budget boundary (total == budget_limit is within budget)'
-    },
-    {
-      id: 'r3-h5',
-      input: '[("Coffee", 0), ("Snack", -10), ("Lunch", 15)], 20',
-      expectedOutput: "{'total': 15, 'average': 15.0, 'max': 15, 'categories': [('Lunch', 15)], 'within_budget': True}",
-      description: 'Zero and negative amounts excluded from count and average'
-    },
-    {
-      id: 'r3-h6',
-      input: '[("Zebra Supplies", 40), ("Apple Store", 60), ("Stationery", 20)], 100',
-      expectedOutput: "{'total': 120, 'average': 40.0, 'max': 60, 'categories': [('Apple Store', 60), ('Stationery', 20), ('Zebra Supplies', 40)], 'within_budget': False}",
-      description: 'Exceeded budget with multi-tier alphabetical categories'
+      input: '"ORD-1005", [{"name": "Juice", "qty": 0}], {"Juice": 50.0}, "BRONZE", "NONE", 1.0',
+      expectedOutput: "{'order_id': 'ORD-1005', 'status': 'REJECTED'}",
+      description: 'Zero quantity order rejected'
     }
   ]
 };

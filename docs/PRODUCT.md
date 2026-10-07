@@ -29,12 +29,12 @@ Unlike traditional algorithmic platforms (LeetCode, HackerRank, Codeforces) wher
   1. Welcome & Briefing (Brand identity, round structure, difficulty ladder)
   2. Participant Registration (Full Name, College, Department, Year, Participant ID)
   3. Official Rules & Anti-AI Agreement (Enforcing manual debugging; ChatGPT, Claude, Gemini, Copilot prohibited)
-  4. Round 1 — BUG HUNT (Basic syntax, variables, conditions; 10 questions, 20 minutes, 100 points)
-  5. Round 1 Result & Qualification Gate (Configurable cutoff, default 50%)
-  6. Round 2 — LOGIC BREAKER (Intermediate logic, loop boundaries, runtime crashes; 5 questions, 25 minutes, 100 points)
-  7. Round 2 Result & Qualification Gate (Configurable cutoff, default 50%)
-  8. Round 3 — CODE RESCUE (Advanced broken application with multi-layered bugs; 40 minutes, 100 points)
-  9. Final Result & Winner Evaluation (300 points cumulative score, accuracy, tie-breaker analytics)
+  4. Round 1 — BUG HUNT (Basic syntax, variables, conditions; 10 questions, 15 minutes, 10 marks — 1 mark each)
+  5. Round 1 Result & Qualification Gate (Configurable cutoff, default 50% = 5 marks)
+  6. Round 2 — LOGIC BREAKER (Intermediate logic, loop boundaries, runtime crashes; 10 questions, 20 minutes, 20 marks — 2 marks each)
+  7. Round 2 Result & Qualification Gate (Configurable cutoff, default 50% = 10 marks)
+  8. Round 3 — CODE RESCUE (Advanced broken application with multi-layered bugs; 1 question, 25 minutes, 5 marks)
+  9. Final Result & Winner Evaluation (35 marks cumulative score, accuracy, tie-breaker analytics)
   10. Leaderboard (Dynamic standings with demo contestants and live participant ranking)
 - **Environment**: High-contrast, dark-mode technical competition workstation (laptop/desktop primary, responsive for tablet monitoring).
 

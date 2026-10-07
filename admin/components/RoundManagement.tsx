@@ -10,7 +10,7 @@ import { RoundService } from '../services/roundService';
 export const RoundManagement: React.FC = () => {
     const [rounds, setRounds] = useState<RoundStatus[]>(RoundService.getRounds());
     const [editingRoundId, setEditingRoundId] = useState<RoundId | null>(null);
-    const [cutoffInput, setCutoffInput] = useState<number>(50);
+    const [cutoffInput, setCutoffInput] = useState<number>(5);
     const [statusMessage, setStatusMessage] = useState('');
     const [customSeconds, setCustomSeconds] = useState<number>(300);
     const [targetRoundForTimer, setTargetRoundForTimer] = useState<string>('ALL');
@@ -196,11 +196,11 @@ export const RoundManagement: React.FC = () => {
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <span>Standard Duration:</span>
-                                    <b>{round.durationMinutes || (round.roundId === 'R1' ? 20 : round.roundId === 'R2' ? 25 : 40)} mins</b>
+                                    <b>{round.timeLimitMinutes || (round.roundId === 'R1' ? 15 : round.roundId === 'R2' ? 20 : 25)} mins</b>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <span>Work Orders:</span>
-                                    <b>{round.roundId === 'R1' ? '10 Orders' : round.roundId === 'R2' ? '5 Orders' : '1 System Order'}</b>
+                                    <b>{round.roundId === 'R1' ? '10 Orders (1 pt each)' : round.roundId === 'R2' ? '10 Orders (2 pts each)' : '1 System Order (5 pts)'}</b>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', color: '#0d652d' }}>
                                     <span>Qualified Contestants:</span>

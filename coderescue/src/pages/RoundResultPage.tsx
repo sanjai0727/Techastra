@@ -24,7 +24,7 @@ export const RoundResultPage: React.FC<RoundResultProps> = ({ round }) => {
 
   const solvedCount = questionIds.filter(qId => (state.bestScores[qId] || 0) === questions.find(q => q.id === qId)?.points).length;
 
-  const roundDuration = round === 1 ? 20 * 60 : 25 * 60;
+  const roundDuration = round === 1 ? 15 * 60 : 20 * 60;
   const remaining = round === 1 ? state.timers.round1Remaining : state.timers.round2Remaining;
   const elapsedSeconds = Math.max(0, roundDuration - remaining);
   const elapsedMinutes = Math.floor(elapsedSeconds / 60);

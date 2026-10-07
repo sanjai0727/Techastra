@@ -138,7 +138,7 @@ export const RulesPage: React.FC = () => {
             <div>
               <span className="font-bold text-sm sm:text-base text-[#403000]">Next Stage: Round 1 — Bug Hunt</span>
               <div className="text-xs sm:text-sm text-gray-800 font-mono mt-0.5">
-                10 Work Orders • 20 Minutes • Qualification Cutoff: 50 Points
+                10 Work Orders (1 Pt each) • 15 Minutes • Qualification Cutoff: 5 Points (50%)
               </div>
             </div>
             <span className="win95-badge cyber-pill-amber font-mono font-bold text-xs sm:text-sm px-3 py-1">

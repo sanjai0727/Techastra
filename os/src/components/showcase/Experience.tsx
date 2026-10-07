@@ -15,12 +15,12 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
                         <h1>Round 1: BUG HUNT</h1>
-                        <h4>20 Minutes • 10 Questions</h4>
+                        <h4>15 Minutes • 10 Questions</h4>
                     </div>
                     <div style={styles.headerRow}>
-                        <h3>Basic Syntax & Grammar Diagnostics</h3>
+                        <h3>Basic Syntax &amp; Grammar Diagnostics</h3>
                         <b>
-                            <p>Max Score: 100 Points (10 pts/question)</p>
+                            <p>Max Score: 10 Marks (1 mark/question)</p>
                         </b>
                     </div>
                 </div>
@@ -50,7 +50,7 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                     <li>
                         <p>
                             <b>Qualification Gate:</b> Only contestants achieving the qualification
-                            threshold (standard: 50% cutoff) advance to Round 2.
+                            threshold (standard: 50% cutoff, 5 marks) advance to Round 2.
                         </p>
                     </li>
                 </ul>
@@ -60,12 +60,12 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
                         <h1>Round 2: LOGIC BREAKER</h1>
-                        <h4>25 Minutes • 5 Questions</h4>
+                        <h4>20 Minutes • 10 Questions</h4>
                     </div>
                     <div style={styles.headerRow}>
-                        <h3>Intermediate Logic & Runtime Triage</h3>
+                        <h3>Intermediate Logic &amp; Runtime Triage</h3>
                         <b>
-                            <p>Max Score: 100 Points (20 pts/question)</p>
+                            <p>Max Score: 20 Marks (2 marks/question)</p>
                         </b>
                     </div>
                 </div>
@@ -93,7 +93,7 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                     </li>
                     <li>
                         <p>
-                            <b>Qualification Gate:</b> Top performers qualify for the high-stakes
+                            <b>Qualification Gate:</b> Top performers achieving the cutoff (10 marks) qualify for the high-stakes
                             Grand Finale: Round 3.
                         </p>
                     </li>
@@ -104,12 +104,12 @@ const Experience: React.FC<ExperienceProps> = (props) => {
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
                         <h1>Round 3: CODE RESCUE</h1>
-                        <h4>40 Minutes • 1 Major Broken System</h4>
+                        <h4>25 Minutes • 1 Major Broken System</h4>
                     </div>
                     <div style={styles.headerRow}>
                         <h3>Advanced Legacy Application Disaster Recovery</h3>
                         <b>
-                            <p>Max Score: 100 Points</p>
+                            <p>Max Score: 5 Marks (5 marks/question)</p>
                         </b>
                     </div>
                 </div>

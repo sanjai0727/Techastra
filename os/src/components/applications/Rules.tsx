@@ -51,15 +51,15 @@ const RulesApp: React.FC<RulesAppProps> = (props) => {
                 </fieldset>
 
                 <fieldset style={styles.fieldset}>
-                    <legend style={styles.legend}>DIRECTIVE 02: Tournament Structure & Qualification Gates</legend>
-                    <p>• <b>Round 1 — Bug Hunt:</b> 20 Minutes • 10 Faults • 100 Points (Rapid syntax, typo, and runtime panic remediation).</p>
-                    <p>• <b>Round 2 — Logic Breaker:</b> 25 Minutes • 5 Traps • 100 Points (Deep logical hazard resolution: mutable state, infinite loops, boundary faults).</p>
-                    <p>• <b>Round 3 — Code Rescue:</b> 40 Minutes • 1 Legacy System • 100 Points (Multi-module legacy system resuscitation under production clock pressure).</p>
-                    <p>• <b>Qualification Gate:</b> Only engineers meeting strict score & speed cutoffs survive to the next operational round.</p>
+                    <legend style={styles.legend}>DIRECTIVE 02: Tournament Structure &amp; Qualification Gates</legend>
+                    <p>• <b>Round 1 — Bug Hunt:</b> 15 Minutes • 10 Faults • 10 Marks (1 Mark each) (Rapid syntax, typo, and runtime panic remediation).</p>
+                    <p>• <b>Round 2 — Logic Breaker:</b> 20 Minutes • 10 Traps • 20 Marks (2 Marks each) (Deep logical hazard resolution: mutable state, infinite loops, boundary faults).</p>
+                    <p>• <b>Round 3 — Code Rescue:</b> 25 Minutes • 1 System • 5 Marks (5 Marks) (Multi-module legacy system resuscitation under production clock pressure).</p>
+                    <p>• <b>Qualification Gate:</b> Only engineers meeting strict score &amp; speed cutoffs survive to the next operational round.</p>
                 </fieldset>
 
                 <fieldset style={styles.fieldset}>
-                    <legend style={styles.legend}>SANCTION 03 (CRITICAL): Zero-Tolerance Anti-AI & Malpractice Mandate</legend>
+                    <legend style={styles.legend}>SANCTION 03 (CRITICAL): Zero-Tolerance Anti-AI &amp; Malpractice Mandate</legend>
                     <div style={styles.dangerBox}>
                         <b>STRICTLY PROHIBITED:</b> Utilization of ChatGPT, Claude, Google Gemini, GitHub Copilot, Cursor AI, or any generative neural model / browser plugin.
                     </div>
@@ -68,10 +68,10 @@ const RulesApp: React.FC<RulesAppProps> = (props) => {
                 </fieldset>
 
                 <fieldset style={styles.fieldset}>
-                    <legend style={styles.legend}>DIRECTIVE 04: Scoring Engine & Latency Arbitration</legend>
-                    <p>• <b>Max Total Score:</b> 300 Points across all three completed incident rounds.</p>
-                    <p>• <b>Tie-Breakers:</b> In the event of matching scores, priority is determined by <b>earliest submission epoch</b> followed by <b>lowest runtime latency & execution memory</b>.</p>
-                    <p>• <b>Arbitration:</b> Decisions rendered by Chief Coordinators & Faculty Arbitrators are absolute, definitive, and final.</p>
+                    <legend style={styles.legend}>DIRECTIVE 04: Scoring Engine &amp; Latency Arbitration</legend>
+                    <p>• <b>Max Total Score:</b> 35 Points across all three completed incident rounds.</p>
+                    <p>• <b>Tie-Breakers:</b> In the event of matching scores, priority is determined by <b>earliest submission epoch</b> followed by <b>lowest runtime latency &amp; execution memory</b>.</p>
+                    <p>• <b>Arbitration:</b> Decisions rendered by Chief Coordinators &amp; Faculty Arbitrators are absolute, definitive, and final.</p>
                 </fieldset>
 
                 <fieldset style={styles.fieldset}>
