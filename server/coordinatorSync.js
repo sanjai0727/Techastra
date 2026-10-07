@@ -58,20 +58,11 @@ async function authenticateCoordinator() {
   }
 }
 
-// Master official symposium roster registered for Code Rescue
+// Master official symposium roster registered for Code Rescue on Techastra Portal
 const OFFICIAL_MASTER_ROSTER = [
   {
-    registrationCode: 'SYM2026-0038',
-    registrationId: 'SYM2026-0038',
-    name: 'Karthik Raman',
-    college: 'St. Josephs College of Engineering',
-    department: 'Information Technology',
-    year: '3rd Year',
-    venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
-  },
-  {
+    registrationId: 'cmuvgho31002j2thtthaza1ql',
     registrationCode: 'SYM2026-0037',
-    registrationId: 'SYM2026-0037',
     name: 'Muniyappan V',
     college: 'Simats university',
     department: 'Computer Science & Engineering',
@@ -79,8 +70,8 @@ const OFFICIAL_MASTER_ROSTER = [
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuvirohz000jc56c9q0zgd9x',
     registrationCode: 'SYM2026-0040',
-    registrationId: 'SYM2026-0040',
     name: 'Divagar R N',
     college: 'VelTech MultiTech Dr Rangarajan Dr Sakuntala Engineering College',
     department: 'Computer Science & Engineering',
@@ -88,26 +79,26 @@ const OFFICIAL_MASTER_ROSTER = [
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxnz7db000vsxqr9ko3vsfx',
     registrationCode: 'SYM2026-0091',
-    registrationId: 'SYM2026-0091',
     name: 'Madhu mitha B',
-    college: 'Dr. M.G.R. Educational and Research Institute',
+    college: 'Vel tech multi tech Dr Rangarajan Dr Sakhunthala Engineering college',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxpgbfn001vsxqr7uh7e5g9',
     registrationCode: 'SYM2026-0100',
-    registrationId: 'SYM2026-0100',
     name: 'Gurunathan M',
-    college: 'Dr. M.G.R. Educational and Research Institute',
+    college: 'New prince shri bavani college engineering and technology',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxr6bv80032sxqrjqrq8950',
     registrationCode: 'SYM2026-0110',
-    registrationId: 'SYM2026-0110',
     name: 'Gunal K',
     college: 'New prince shri bavani college engineering and technology',
     department: 'Computer Science & Engineering',
@@ -115,46 +106,46 @@ const OFFICIAL_MASTER_ROSTER = [
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxsk3ro003msxqr9knwt90o',
     registrationCode: 'SYM2026-0114',
-    registrationId: 'SYM2026-0114',
     name: 'Goutham.v',
-    college: 'Dr. M.G.R. Educational and Research Institute',
+    college: 'New Prince Shri Bhavani College Engineering and Technology',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxt8hlp003usxqr3vuqi9gd',
     registrationCode: 'SYM2026-0116',
-    registrationId: 'SYM2026-0116',
     name: 'Abdul Kalam asath M',
-    college: 'Dr. M.G.R. Educational and Research Institute',
+    college: 'New prince shri bhavani college of engineering and technology',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxtjtba003ysxqrhw4535a7',
     registrationCode: 'SYM2026-0117',
-    registrationId: 'SYM2026-0117',
     name: 'Dinesh kumar',
-    college: 'Dr. M.G.R. Educational and Research Institute',
+    college: 'New prince shri bhavani college of engineering and technology',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxtprc30047sxqr73rnbuvq',
     registrationCode: 'SYM2026-0119',
-    registrationId: 'SYM2026-0119',
     name: 'J balaji',
-    college: 'Dr. M.G.R. Educational and Research Institute',
+    college: 'New prince shri bhavani engineering and technology',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
   },
   {
+    registrationId: 'cmuxu2ydv004bsxqr1jdq685n',
     registrationCode: 'SYM2026-0120',
-    registrationId: 'SYM2026-0120',
     name: 'Arunachalam K L',
-    college: 'Dr. M.G.R. Educational and Research Institute',
+    college: 'New prince shri Bhavani college of engineering and technology',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'

@@ -1765,7 +1765,7 @@ function executeDatabaseReset(options = {}) {
         mode,
         message: mode === 'clean_slate'
             ? 'Database completely wiped to clean slate. Contestants will enter database upon login or sign-up.'
-            : `Full database reset complete! Seeded ${seededCount} official verified contestants (including SYM2026-0038 Karthik Raman).`,
+            : `Full database reset complete! Seeded ${seededCount} official verified contestants from the Techastra Portal.`,
         seededCount
     };
 }

@@ -269,7 +269,7 @@ export const DatabaseResetPanel: React.FC<DatabaseResetPanelProps> = ({ user, on
                         </div>
                         <p style={{ fontSize: 12, color: '#444', lineHeight: 1.5, margin: '0 0 12px 0' }}>
                             Purges all submissions, strikes, sessions, announcements, and screens.
-                            Automatically seeds the official pre-registered contestant roster (including <b>SYM2026-0038 Karthik Raman</b>, <b>SYM2026-0037 Muniyappan V</b>, and Dr. M.G.R. Portal participants) with 0 strikes and 0 points in Round 1.
+                            Automatically seeds the official pre-registered contestant roster from the official Techastra Portal (<b>10 Verified Contestants</b>: SYM2026-0037, SYM2026-0040, SYM2026-0091, SYM2026-0100, SYM2026-0110, SYM2026-0114, SYM2026-0116, SYM2026-0117, SYM2026-0119, SYM2026-0120) with 0 strikes and 0 points in Round 1.
                         </p>
                     </div>
                     <button
@@ -277,7 +277,7 @@ export const DatabaseResetPanel: React.FC<DatabaseResetPanelProps> = ({ user, on
                         disabled={isExecuting}
                         onClick={() => openConfirmModal(
                             'Execute Factory Reset with Official Roster',
-                            'This will purge all active submissions, security strikes, session tokens, and workstation feeds. It will re-seed all official pre-registered symposium contestants (including SYM2026-0038) in clean Round 1 state.',
+                            'This will purge all active submissions, security strikes, session tokens, and workstation feeds. It will re-seed all 10 official pre-registered contestants from the Techastra portal in clean Round 1 state.',
                             'full',
                             'high',
                             true
@@ -370,7 +370,7 @@ export const DatabaseResetPanel: React.FC<DatabaseResetPanelProps> = ({ user, on
                             👥 4. Seed / Restore Official Contestant Roster
                         </div>
                         <p style={{ fontSize: 12, color: '#444', lineHeight: 1.5, margin: '0 0 12px 0' }}>
-                            Restores the official symposium contestant roster (including <b>SYM2026-0038 Karthik Raman</b>, <b>SYM2026-0037 Muniyappan V</b>, and Dr. M.G.R. Portal candidates) into the database without deleting existing submissions or resetting other tables.
+                            Restores the official symposium contestant roster directly from the Techastra Portal (<b>10 Verified Contestants</b>) into the database without deleting existing submissions or resetting other tables.
                         </p>
                     </div>
                     <button
@@ -400,49 +400,46 @@ export const DatabaseResetPanel: React.FC<DatabaseResetPanelProps> = ({ user, on
                     fontSize: 11
                 }}>
                     <div style={{ padding: 6, backgroundColor: '#f0fff0', border: '1px solid #a0c0a0' }}>
-                        <b style={{ color: '#000080' }}>SYM2026-0038</b> &bull; <b>Karthik Raman</b>
-                        <div style={{ color: '#555' }}>St. Josephs College of Engineering</div>
+                        <b style={{ color: '#000080' }}>SYM2026-0037</b> &bull; <b>Muniyappan V</b>
+                        <div style={{ color: '#555' }}>Simats university</div>
+                        <div style={{ color: '#0d652d', fontSize: 10 }}>Venue: IBM Lab &bull; Day 1</div>
+                    </div>
+                    <div style={{ padding: 6, backgroundColor: '#f0fff0', border: '1px solid #a0c0a0' }}>
+                        <b style={{ color: '#000080' }}>SYM2026-0040</b> &bull; <b>Divagar R N</b>
+                        <div style={{ color: '#555' }}>VelTech MultiTech Dr Rangarajan Dr Sakuntala</div>
                         <div style={{ color: '#0d652d', fontSize: 10 }}>Venue: IBM Lab &bull; Day 1</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
-                        <b style={{ color: '#000080' }}>SYM2026-0037</b> &bull; Muniyappan V
-                        <div style={{ color: '#555' }}>Simats university</div>
-                    </div>
-                    <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
-                        <b style={{ color: '#000080' }}>SYM2026-0040</b> &bull; Divagar R N
-                        <div style={{ color: '#555' }}>VelTech MultiTech Dr Rangarajan Dr Sakuntala</div>
-                    </div>
-                    <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0091</b> &bull; Madhu mitha B
-                        <div style={{ color: '#555' }}>Dr. M.G.R. Educational and Research Institute</div>
+                        <div style={{ color: '#555' }}>Vel tech multi tech Dr Rangarajan Dr Sakhunthala</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0100</b> &bull; Gurunathan M
-                        <div style={{ color: '#555' }}>Dr. M.G.R. Educational and Research Institute</div>
+                        <div style={{ color: '#555' }}>New prince shri bavani college engineering</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0110</b> &bull; Gunal K
-                        <div style={{ color: '#555' }}>New prince shri bavani college</div>
+                        <div style={{ color: '#555' }}>New prince shri bavani college engineering</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0114</b> &bull; Goutham.v
-                        <div style={{ color: '#555' }}>Dr. M.G.R. Educational and Research Institute</div>
+                        <div style={{ color: '#555' }}>New Prince Shri Bhavani College Engineering</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0116</b> &bull; Abdul Kalam asath M
-                        <div style={{ color: '#555' }}>Dr. M.G.R. Educational and Research Institute</div>
+                        <div style={{ color: '#555' }}>New prince shri bhavani college of engineering</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0117</b> &bull; Dinesh kumar
-                        <div style={{ color: '#555' }}>Dr. M.G.R. Educational and Research Institute</div>
+                        <div style={{ color: '#555' }}>New prince shri bhavani college of engineering</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0119</b> &bull; J balaji
-                        <div style={{ color: '#555' }}>Dr. M.G.R. Educational and Research Institute</div>
+                        <div style={{ color: '#555' }}>New prince shri bhavani engineering</div>
                     </div>
                     <div style={{ padding: 6, backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>
                         <b style={{ color: '#000080' }}>SYM2026-0120</b> &bull; Arunachalam K L
-                        <div style={{ color: '#555' }}>Dr. M.G.R. Educational and Research Institute</div>
+                        <div style={{ color: '#555' }}>New prince shri Bhavani college of engineering</div>
                     </div>
                 </div>
             </div>
