@@ -155,6 +155,7 @@ export const LiveParticipantMonitor: React.FC<LiveParticipantMonitorProps> = ({
                             <option value="QUALIFIED">QUALIFIED</option>
                             <option value="ELIMINATED">ELIMINATED</option>
                             <option value="FLAGGED">FLAGGED</option>
+                            <option value="DISQUALIFIED">DISQUALIFIED</option>
                         </select>
                     </div>
                 </div>

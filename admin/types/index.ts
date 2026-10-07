@@ -2,7 +2,7 @@
 // TECHASTRA 2026 — CODE RESCUE ADMIN PORTAL TYPES
 // ============================================================================
 
-export type ParticipantStatus = 'ACTIVE' | 'COMPLETED' | 'QUALIFIED' | 'ELIMINATED' | 'FLAGGED';
+export type ParticipantStatus = 'ACTIVE' | 'COMPLETED' | 'QUALIFIED' | 'ELIMINATED' | 'FLAGGED' | 'DISQUALIFIED';
 
 export type RoundId = 'R1' | 'R2' | 'R3';
 

@@ -355,6 +355,15 @@
     animation: flashFlag 2s infinite;
 }
 
+.status-badge-DISQUALIFIED {
+    background-color: #7f1d1d;
+    color: #ffffff;
+    border-color: #991b1b;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    animation: flashFlag 1.5s infinite;
+}
+
 .status-badge-WARNING {
     background-color: #fef7e0;
     color: #b06000;

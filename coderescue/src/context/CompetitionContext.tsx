@@ -15,6 +15,7 @@ import { round1Questions } from '../data/round1Questions';
 import { round2Questions } from '../data/round2Questions';
 import { round3Question } from '../data/round3Questions';
 import { runCodeSimulation } from '../services/executionEngine';
+import { telemetryService } from '../services/telemetryService';
 import confetti from 'canvas-confetti';
 
 interface CompetitionContextType {
@@ -194,6 +195,75 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     return () => clearInterval(interval);
   }, [finalizeRound]);
 
+  // Real-Time Telemetry Heartbeat Effect to Admin & Backend Server
+  useEffect(() => {
+    if (!state.participant) return;
+
+    const roundNum = state.currentRound;
+    const remainingSeconds = roundNum === 1
+      ? state.timers.round1Remaining
+      : (roundNum === 2 ? state.timers.round2Remaining : state.timers.round3Remaining);
+
+    const r1 = round1Questions.reduce((sum, q) => sum + (state.bestScores[q.id] || 0), 0);
+    const r2 = round2Questions.reduce((sum, q) => sum + (state.bestScores[q.id] || 0), 0);
+    const r3 = state.bestScores[round3Question.id] || 0;
+    const curRoundScore = roundNum === 1 ? r1 : (roundNum === 2 ? r2 : r3);
+    const total = r1 + r2 + r3;
+
+    let status: 'ACTIVE' | 'WARNING' | 'FLAGGED' | 'DISQUALIFIED' = 'ACTIVE';
+    if (state.securityState?.isDisqualified) {
+      status = 'DISQUALIFIED';
+    } else if ((state.securityState?.tabSwitchCount || 0) >= 2) {
+      status = 'FLAGGED';
+    } else if ((state.securityState?.tabSwitchCount || 0) === 1) {
+      status = 'WARNING';
+    }
+
+    const curQuestion = [...round1Questions, ...round2Questions, round3Question].find(q => q.id === state.activeQuestionId);
+    const qTitle = curQuestion ? `Q${curQuestion.number}: ${curQuestion.title}` : state.activeQuestionId;
+
+    const sendHeartbeatNow = () => {
+      telemetryService.sendTelemetryHeartbeat({
+        participantId: state.participant!.participantId,
+        fullName: state.participant!.fullName,
+        college: state.participant!.college,
+        department: state.participant!.department,
+        year: state.participant!.year,
+        currentRound: `R${roundNum}`,
+        currentQuestion: qTitle,
+        roundTimeRemaining: remainingSeconds,
+        score: curRoundScore,
+        round1Score: r1,
+        round2Score: r2,
+        round3Score: r3,
+        totalScore: total,
+        status,
+        strikes: state.securityState?.tabSwitchCount || 0,
+        lastActivity: state.securityState?.isDisqualified
+          ? `DISQUALIFIED: ${state.securityState?.disqualificationReason || 'Integrity Violation'}`
+          : `Active in Round ${roundNum} (${qTitle})`,
+      });
+    };
+
+    // Send immediately on state update
+    sendHeartbeatNow();
+
+    // Repeat every 3 seconds
+    const interval = setInterval(sendHeartbeatNow, 3000);
+    return () => clearInterval(interval);
+  }, [
+    state.participant,
+    state.currentRound,
+    state.activeQuestionId,
+    state.timers.round1Remaining,
+    state.timers.round2Remaining,
+    state.timers.round3Remaining,
+    state.securityState?.isDisqualified,
+    state.securityState?.tabSwitchCount,
+    state.securityState?.disqualificationReason,
+    state.bestScores
+  ]);
+
   const setView = (view: ActiveView) => {
     const isWorkspace = view.includes('workspace');
     try {
@@ -255,6 +325,24 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         [questionId]: code
       }
     }));
+
+    if (state.participant) {
+      const allQ = [...round1Questions, ...round2Questions, round3Question];
+      const q = allQ.find(item => item.id === questionId);
+      const remainingSeconds = state.currentRound === 1
+        ? state.timers.round1Remaining
+        : (state.currentRound === 2 ? state.timers.round2Remaining : state.timers.round3Remaining);
+
+      telemetryService.sendLiveScreen({
+        participantId: state.participant.participantId,
+        participantName: state.participant.fullName,
+        roundId: `R${state.currentRound}`,
+        questionId: q ? `Q${q.number}` : questionId,
+        questionTitle: q?.title || questionId,
+        code,
+        timeRemaining: remainingSeconds,
+      });
+    }
   };
 
   const resetQuestionCode = (questionId: string) => {
@@ -270,6 +358,22 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         [questionId]: original
       }
     }));
+
+    if (state.participant) {
+      const remainingSeconds = state.currentRound === 1
+        ? state.timers.round1Remaining
+        : (state.currentRound === 2 ? state.timers.round2Remaining : state.timers.round3Remaining);
+
+      telemetryService.sendLiveScreen({
+        participantId: state.participant.participantId,
+        participantName: state.participant.fullName,
+        roundId: `R${state.currentRound}`,
+        questionId: q ? `Q${q.number}` : questionId,
+        questionTitle: q?.title || questionId,
+        code: original,
+        timeRemaining: remainingSeconds,
+      });
+    }
   };
 
   const runVisibleTests = async (question: Question, code: string): Promise<ExecutionResult> => {
@@ -309,6 +413,24 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
       };
     });
+
+    if (state.participant) {
+      telemetryService.sendSubmission({
+        participantId: state.participant.participantId,
+        participantName: state.participant.fullName,
+        roundId: `R${question.round}`,
+        questionId: `Q${question.number}`,
+        questionTitle: question.title,
+        language: 'python',
+        code,
+        testResults: result.testResults,
+        passedCount: result.visiblePassed + result.hiddenPassed,
+        totalTests: result.visibleTotal + result.hiddenTotal,
+        result: isAccepted ? 'PASSED' : 'FAILED',
+        score: scoreEarned,
+        executionTimeMs: result.executionTimeMs,
+      });
+    }
 
     if (isAccepted) {
       try {
@@ -380,6 +502,29 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
           message: `AUTO-DISQUALIFIED: Repeated misuse of fullscreen grace period (Infraction #${nextCount}). Session terminated.`,
           timestamp: Date.now()
         };
+
+        if (prev.participant) {
+          telemetryService.sendProctoringEvent({
+            participantId: prev.participant.participantId,
+            participantName: prev.participant.fullName,
+            eventType: 'TAB_SWITCH',
+            details: logEntry.message,
+            strikeCount: nextCount,
+            status: 'DISQUALIFIED'
+          });
+          telemetryService.sendTelemetryHeartbeat({
+            participantId: prev.participant.participantId,
+            fullName: prev.participant.fullName,
+            college: prev.participant.college,
+            department: prev.participant.department,
+            year: prev.participant.year,
+            currentRound: `R${prev.currentRound}`,
+            status: 'DISQUALIFIED',
+            strikes: nextCount,
+            lastActivity: logEntry.message
+          });
+        }
+
         return {
           ...prev,
           currentView: 'disqualified',
@@ -410,6 +555,17 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         message: `Fullscreen lost / window focus lost (Infraction #${nextCount}/2). 30-second grace timer started.`,
         timestamp: Date.now()
       };
+
+      if (prev.participant) {
+        telemetryService.sendProctoringEvent({
+          participantId: prev.participant.participantId,
+          participantName: prev.participant.fullName,
+          eventType: 'TAB_SWITCH',
+          details: logEntry.message,
+          strikeCount: nextCount,
+          status: nextCount >= 2 ? 'FLAGGED' : 'WARNING'
+        });
+      }
 
       return {
         ...prev,
@@ -451,21 +607,33 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, []);
 
   const triggerClipboardWarning = useCallback((message: string) => {
-    setState(prev => ({
-      ...prev,
-      securityState: {
-        ...prev.securityState,
-        clipboardWarning: message,
-        violationLogs: [
-          ...(prev.securityState?.violationLogs || []),
-          {
-            type: 'CLIPBOARD',
-            message,
-            timestamp: Date.now()
-          }
-        ]
+    setState(prev => {
+      if (prev.participant) {
+        telemetryService.sendProctoringEvent({
+          participantId: prev.participant.participantId,
+          participantName: prev.participant.fullName,
+          eventType: 'CLIPBOARD',
+          details: message,
+          strikeCount: prev.securityState?.tabSwitchCount || 0,
+          status: (prev.securityState?.tabSwitchCount || 0) >= 2 ? 'FLAGGED' : 'WARNING'
+        });
       }
-    }));
+      return {
+        ...prev,
+        securityState: {
+          ...prev.securityState,
+          clipboardWarning: message,
+          violationLogs: [
+            ...(prev.securityState?.violationLogs || []),
+            {
+              type: 'CLIPBOARD',
+              message,
+              timestamp: Date.now()
+            }
+          ]
+        }
+      };
+    });
   }, []);
 
   const clearClipboardWarning = useCallback(() => {
@@ -489,30 +657,57 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         window.parent.postMessage({ type: 'CODE_RESCUE_EXIT_FULLSCREEN' }, '*');
       }
     } catch (e) {}
-    setState(prev => ({
-      ...prev,
-      currentView: 'disqualified',
-      timers: {
-        ...prev.timers,
-        round1Active: false,
-        round2Active: false,
-        round3Active: false
-      },
-      securityState: {
-        ...prev.securityState,
-        isDisqualified: true,
-        disqualificationReason: reason,
-        showTabSwitchWarning: false,
-        violationLogs: [
-          ...(prev.securityState?.violationLogs || []),
-          {
-            type: 'TAB_SWITCH',
-            message: `DISQUALIFIED: ${reason}`,
-            timestamp: Date.now()
-          }
-        ]
+
+    setState(prev => {
+      const strikeCount = Math.max(3, (prev.securityState?.tabSwitchCount || 0) + 1);
+      if (prev.participant) {
+        telemetryService.sendProctoringEvent({
+          participantId: prev.participant.participantId,
+          participantName: prev.participant.fullName,
+          eventType: 'DISQUALIFIED',
+          details: `DISQUALIFIED: ${reason}`,
+          strikeCount,
+          status: 'DISQUALIFIED'
+        });
+        telemetryService.sendTelemetryHeartbeat({
+          participantId: prev.participant.participantId,
+          fullName: prev.participant.fullName,
+          college: prev.participant.college,
+          department: prev.participant.department,
+          year: prev.participant.year,
+          currentRound: `R${prev.currentRound}`,
+          status: 'DISQUALIFIED',
+          strikes: strikeCount,
+          lastActivity: `DISQUALIFIED: ${reason}`
+        });
       }
-    }));
+
+      return {
+        ...prev,
+        currentView: 'disqualified',
+        timers: {
+          ...prev.timers,
+          round1Active: false,
+          round2Active: false,
+          round3Active: false
+        },
+        securityState: {
+          ...prev.securityState,
+          isDisqualified: true,
+          disqualificationReason: reason,
+          showTabSwitchWarning: false,
+          tabSwitchCount: strikeCount,
+          violationLogs: [
+            ...(prev.securityState?.violationLogs || []),
+            {
+              type: 'TAB_SWITCH',
+              message: `DISQUALIFIED: ${reason}`,
+              timestamp: Date.now()
+            }
+          ]
+        }
+      };
+    });
   }, []);
 
   return (

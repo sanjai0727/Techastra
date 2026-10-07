@@ -15,7 +15,7 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({ participants }) =>
     const completed = participants.filter(p => p.status === 'COMPLETED').length;
     const qualified = participants.filter(p => p.status === 'QUALIFIED').length;
     const eliminated = participants.filter(p => p.status === 'ELIMINATED').length;
-    const flagged = participants.filter(p => p.status === 'FLAGGED' || p.strikes >= 2).length;
+    const flagged = participants.filter(p => p.status === 'FLAGGED' || p.status === 'DISQUALIFIED' || p.strikes >= 2).length;
 
     return (
         <div className="admin-stats-grid">
@@ -40,7 +40,7 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({ participants }) =>
                 <span className="admin-stat-val" style={{ color: '#666666' }}>{eliminated}</span>
             </div>
             <div className="admin-stat-card">
-                <span className="admin-stat-label">FLAGGED</span>
+                <span className="admin-stat-label">FLAGGED / BLOCKED</span>
                 <span className="admin-stat-val" style={{ color: '#c5221f' }}>{flagged}</span>
             </div>
         </div>

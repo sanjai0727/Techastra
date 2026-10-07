@@ -124,7 +124,7 @@ export const ProctoringPanel: React.FC = () => {
                                 </td>
                                 <td>
                                     <span className={`status-badge status-badge-${evt.status}`}>
-                                        {evt.strikeCount === 0 ? 'CLEAN' : evt.strikeCount === 1 ? 'WARNING' : 'FLAGGED'}
+                                        {evt.status === 'DISQUALIFIED' ? 'DISQUALIFIED' : (evt.strikeCount === 0 ? 'CLEAN' : evt.strikeCount === 1 ? 'WARNING' : 'FLAGGED')}
                                     </span>
                                 </td>
                                 <td>

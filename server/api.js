@@ -54,6 +54,84 @@ function parseParticipantSlot(id) {
     return num >= 1 && num <= MAX_PARTICIPANTS ? num : null;
 }
 
+function getNextAvailableSlot() {
+    const existingSlots = new Set(
+        db.prepare('SELECT slot_number FROM participants').all().map((r) => r.slot_number)
+    );
+    for (let i = 1; i <= MAX_PARTICIPANTS; i++) {
+        if (!existingSlots.has(i)) {
+            return i;
+        }
+    }
+    return 1;
+}
+
+function ensureParticipant(id, meta = {}) {
+    if (!id || typeof id !== 'string') return null;
+    const cleanId = id.trim().toUpperCase();
+    let p = db.prepare('SELECT * FROM participants WHERE id = ?').get(cleanId);
+    if (p) return p;
+
+    let slot = null;
+    const numMatch = cleanId.match(/(\d+)$/);
+    if (numMatch) {
+        const potentialSlot = parseInt(numMatch[1], 10);
+        const existingSlot = db.prepare('SELECT id FROM participants WHERE slot_number = ?').get(potentialSlot);
+        if (!existingSlot) {
+            slot = potentialSlot;
+        }
+    }
+    if (!slot) {
+        slot = getNextAvailableSlot();
+    }
+
+    const nowMs = Date.now();
+    const nowIso = new Date().toISOString();
+    const pName = meta.participantName || meta.fullName || meta.name || `Contestant ${cleanId}`;
+    const pCollege = meta.college || 'Engineering College';
+    const pDept = meta.department || 'Computer Science & Engineering';
+    const pYear = meta.year || '3rd Year';
+    const pStatus = meta.status || 'ACTIVE';
+    const pStrikes = meta.strikes !== undefined ? Number(meta.strikes) : 0;
+    const pTime = meta.timeRemaining !== undefined ? Number(meta.timeRemaining) : 1200;
+
+    try {
+        db.prepare(`
+            INSERT INTO participants (
+                id, slot_number, full_name, college, department, year,
+                current_round, current_question, score, total_score,
+                round1_score, round2_score, round3_score, time_remaining,
+                status, strikes, last_event, last_seen, registered_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO NOTHING
+        `).run(
+            cleanId,
+            slot,
+            pName,
+            pCollege,
+            pDept,
+            pYear,
+            meta.currentRound || 'R1',
+            meta.currentQuestion || 'Q1',
+            meta.score || 0,
+            meta.totalScore || 0,
+            meta.round1Score || 0,
+            meta.round2Score || 0,
+            meta.round3Score || 0,
+            pTime,
+            pStatus,
+            pStrikes,
+            meta.lastEvent || meta.lastActivity || 'Connected to Arena',
+            nowMs,
+            nowIso
+        );
+    } catch (err) {
+        console.error('[ensureParticipant] Insert error:', err.message);
+    }
+
+    return db.prepare('SELECT * FROM participants WHERE id = ?').get(cleanId);
+}
+
 // Helper: Format participant records for client API
 function getAllParticipantsFormatted() {
     const rows = db.prepare(`
@@ -782,19 +860,29 @@ router.post('/telemetry/heartbeat', (req, res) => {
     if (!id) return res.json({ success: false, error: 'No participantId' });
 
     const now = Date.now();
-    const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+    let p = ensureParticipant(id, payload);
 
     if (p) {
-        const roundNum = payload.currentRound ? String(payload.currentRound).replace('R', '') : '1';
+        const roundNum = payload.currentRound ? String(payload.currentRound).replace('R', '') : (p.current_round ? String(p.current_round).replace('R', '') : '1');
         const roundId = `R${roundNum}`;
         const qNum = payload.currentQuestion || p.current_question || 'Q1';
-        const timeRemaining = payload.roundTimeRemaining !== undefined ? payload.roundTimeRemaining : p.time_remaining;
+        const timeRemaining = payload.roundTimeRemaining !== undefined ? Number(payload.roundTimeRemaining) : (payload.timeRemaining !== undefined ? Number(payload.timeRemaining) : p.time_remaining);
 
-        const r1 = payload.round1Score !== undefined ? payload.round1Score : p.round1_score;
-        const r2 = payload.round2Score !== undefined ? payload.round2Score : p.round2_score;
-        const r3 = payload.round3Score !== undefined ? payload.round3Score : p.round3_score;
-        const total = r1 + r2 + r3;
-        const curScore = roundId === 'R1' ? r1 : roundId === 'R2' ? r2 : r3;
+        const r1 = payload.round1Score !== undefined ? Number(payload.round1Score) : p.round1_score;
+        const r2 = payload.round2Score !== undefined ? Number(payload.round2Score) : p.round2_score;
+        const r3 = payload.round3Score !== undefined ? Number(payload.round3Score) : p.round3_score;
+        const total = payload.totalScore !== undefined ? Number(payload.totalScore) : (r1 + r2 + r3);
+        const curScore = payload.score !== undefined ? Number(payload.score) : (roundId === 'R1' ? r1 : roundId === 'R2' ? r2 : r3);
+
+        const strikes = payload.strikes !== undefined ? Number(payload.strikes) : p.strikes;
+        let status = payload.status || p.status;
+        if (strikes >= 3 || status === 'DISQUALIFIED') {
+            status = 'DISQUALIFIED';
+        } else if (strikes >= 2 && status !== 'DISQUALIFIED') {
+            status = 'FLAGGED';
+        }
+
+        const lastActivity = payload.lastActivity || payload.lastEvent || p.last_event || 'Active in Arena';
 
         db.prepare(`
             UPDATE participants
@@ -806,6 +894,8 @@ router.post('/telemetry/heartbeat', (req, res) => {
                 round2_score = ?,
                 round3_score = ?,
                 time_remaining = ?,
+                status = ?,
+                strikes = ?,
                 last_event = ?,
                 last_seen = ?
             WHERE id = ?
@@ -818,7 +908,9 @@ router.post('/telemetry/heartbeat', (req, res) => {
             r2,
             r3,
             timeRemaining,
-            payload.lastActivity || p.last_event || 'Active in Arena',
+            status,
+            strikes,
+            lastActivity,
             now,
             id
         );
@@ -831,8 +923,15 @@ router.post('/telemetry/heartbeat', (req, res) => {
             score: curScore,
             totalScore: total,
             timeRemaining,
-            lastEvent: payload.lastActivity || p.last_event,
+            status,
+            strikes,
+            lastEvent: lastActivity,
         });
+
+        // Broadcast roster updates when status or strikes change
+        if (status !== p.status || strikes !== p.strikes) {
+            broadcast('participants_updated', getAllParticipantsFormatted());
+        }
     }
 
     return res.json({ success: true });
@@ -856,7 +955,7 @@ router.post(['/telemetry/code-stream', '/telemetry/live-screen'], (req, res) => 
     const id = participantId ? participantId.trim().toUpperCase() : null;
     if (!id) return res.status(400).json({ success: false, error: 'participantId required' });
 
-    const p = db.prepare('SELECT full_name, time_remaining FROM participants WHERE id = ?').get(id);
+    let p = ensureParticipant(id, { participantName, roundId, questionId, timeRemaining });
     const name = p ? p.full_name : (participantName || id);
     const curTime = timeRemaining !== undefined ? Number(timeRemaining) : (p ? p.time_remaining : 2400);
     const nowMs = lastKeystrokeAt || Date.now();
@@ -935,7 +1034,7 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
 
     if (!screen) {
         // Return blank shell if not yet typing
-        const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+        const p = ensureParticipant(id);
         if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
         return res.json({
             success: true,
@@ -957,19 +1056,29 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
     }
 
     return res.json({ success: true, screen });
-});router.post(['/telemetry/event', '/proctoring/event'], (req, res) => {
+});
+
+router.post(['/telemetry/event', '/proctoring/event'], (req, res) => {
     const event = req.body || {};
     const id = event.participantId ? event.participantId.trim().toUpperCase() : null;
     if (!id) return res.status(400).json({ success: false, error: 'No participantId' });
 
-    const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
-    if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
-    const pName = p.full_name || event.participantName || id;
+    let p = ensureParticipant(id, event);
+    const pName = p ? p.full_name : (event.participantName || id);
 
     const eventId = `SEC-${Date.now().toString().slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    const newStrikes = (p.strikes || 0) + 1;
-    const status = newStrikes >= 2 ? 'FLAGGED' : 'WARNING';
+    const newStrikes = event.strikeCount !== undefined ? Number(event.strikeCount) : ((p ? p.strikes : 0) + 1);
+    
+    // Status resolution: if strike 3 or explicit DISQUALIFIED, mark as DISQUALIFIED
+    let status = 'WARNING';
+    if (newStrikes >= 3 || event.status === 'DISQUALIFIED' || event.eventType === 'DISQUALIFIED') {
+        status = 'DISQUALIFIED';
+    } else if (newStrikes >= 2 || event.status === 'FLAGGED') {
+        status = 'FLAGGED';
+    }
+
     const nowTime = new Date().toTimeString().split(' ')[0];
+    const details = event.details || event.description || 'Proctoring violation recorded';
 
     db.prepare(`
         INSERT INTO proctoring_events (
@@ -980,7 +1089,7 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
         id,
         pName,
         event.eventType || 'WINDOW_BLUR',
-        event.details || event.description || 'Proctoring violation recorded',
+        details,
         newStrikes,
         status,
         nowTime,
@@ -990,17 +1099,18 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
     db.prepare(`
         UPDATE participants
         SET strikes = ?,
-            status = CASE WHEN ? >= 3 THEN 'FLAGGED' ELSE status END,
-            last_event = ?
+            status = ?,
+            last_event = ?,
+            last_seen = ?
         WHERE id = ?
-    `).run(newStrikes, newStrikes, event.details || event.description || 'Integrity Strike Logged', id);
+    `).run(newStrikes, status, details, Date.now(), id);
 
     const createdEvent = {
         id: eventId,
         participantId: id,
         participantName: pName,
         eventType: event.eventType || 'WINDOW_BLUR',
-        description: event.details || event.description || 'Proctoring violation recorded',
+        description: details,
         strikeCount: newStrikes,
         strikes: newStrikes,
         status,
@@ -1011,7 +1121,7 @@ router.get('/telemetry/live-screen/:id', (req, res) => {
     broadcast('security_event', createdEvent);
     broadcast('participants_updated', getAllParticipantsFormatted());
 
-    return res.json({ success: true, eventId, strikes: newStrikes, strikeCount: newStrikes });
+    return res.json({ success: true, eventId, strikes: newStrikes, strikeCount: newStrikes, status });
 });
 
 router.get('/telemetry/participants', (req, res) => {
@@ -1129,9 +1239,9 @@ router.post('/submissions', (req, res) => {
     const id = participantId ? participantId.trim().toUpperCase() : null;
     if (!id) return res.status(400).json({ success: false, error: 'participantId required' });
 
-    const p = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+    let p = ensureParticipant(id, { participantName, roundId, questionId });
     if (!p) return res.status(404).json({ success: false, error: 'Participant not found' });
-    const pName = p ? p.full_name : participantName || id;
+    const pName = p ? p.full_name : (participantName || id);
     const subId = `SUB-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const nowIso = new Date().toISOString();
 
@@ -1325,7 +1435,7 @@ router.get('/admin/system-stats', requireAdminAuth, (req, res) => {
     const totalParticipants = db.prepare('SELECT COUNT(*) as c FROM participants').get().c;
     const activeParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'ACTIVE'").get().c;
     const qualifiedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'QUALIFIED'").get().c;
-    const flaggedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'FLAGGED' OR strikes >= 2").get().c;
+    const flaggedParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'FLAGGED' OR status = 'DISQUALIFIED' OR strikes >= 2").get().c;
     const totalSubmissions = db.prepare('SELECT COUNT(*) as c FROM submissions').get().c;
     const totalEvents = db.prepare('SELECT COUNT(*) as c FROM proctoring_events').get().c;
 
