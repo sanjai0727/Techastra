@@ -59,6 +59,10 @@ export class SubmissionService {
         return [...this.submissions];
     }
 
+    public static getAllSubmissions(): Submission[] {
+        return this.getSubmissions();
+    }
+
     public static getSubmissionById(id: string): Submission | undefined {
         return this.submissions.find((s) => s.id === id);
     }

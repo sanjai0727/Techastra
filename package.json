@@ -7,7 +7,7 @@
     "scripts": {
         "start": "node server/index.js",
         "build": "webpack --config ./bundler/webpack.admin.js && webpack --config ./bundler/webpack.prod.js",
-        "build:admin": "webpack --config ./bundler/webpack.admin.js",
+        "build:admin": "webpack --config ./bundler/webpack.admin.js && node scripts/deploy-admin.js",
         "build:coderescue": "npm --prefix coderescue run build && node scripts/deploy-coderescue.js",
         "build:os": "npm --prefix os run build && node scripts/deploy-os.js",
         "dev": "webpack --config ./bundler/webpack.admin.js && webpack serve --config ./bundler/webpack.dev.js",

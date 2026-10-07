@@ -18,6 +18,7 @@ import { RoundManagement } from './RoundManagement';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 import { ReportsPanel } from './ReportsPanel';
 import { LiveScreensMatrix } from './LiveScreensMatrix';
+import { ErrorBoundary } from './ErrorBoundary';
 
 type DashboardTab = 'participants' | 'screens' | 'proctoring' | 'submissions' | 'rounds' | 'announcements' | 'reports';
 
@@ -338,73 +339,75 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
             </div>
 
             {/* Active Tab View */}
-            {activeTab === 'participants' && (
-                <div>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        LIVE PARTICIPANT MONITOR &amp; WORKSTATION CONTROLS
-                    </h4>
-                    <LiveParticipantMonitor
-                        participants={participants}
-                        onSelectParticipant={(p) => setSelectedParticipant(p)}
-                    />
-                </div>
-            )}
+            <ErrorBoundary fallbackTitle={activeTab.toUpperCase()}>
+                {activeTab === 'participants' && (
+                    <div>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
+                            LIVE PARTICIPANT MONITOR &amp; WORKSTATION CONTROLS
+                        </h4>
+                        <LiveParticipantMonitor
+                            participants={participants}
+                            onSelectParticipant={(p) => setSelectedParticipant(p)}
+                        />
+                    </div>
+                )}
 
-            {activeTab === 'screens' && (
-                <div>
-                    <LiveScreensMatrix
-                        onSelectParticipant={(p) => {
-                            setSelectedParticipant(p);
-                            setActiveTab('participants');
-                        }}
-                    />
-                </div>
-            )}
+                {activeTab === 'screens' && (
+                    <div>
+                        <LiveScreensMatrix
+                            onSelectParticipant={(p) => {
+                                setSelectedParticipant(p);
+                                setActiveTab('participants');
+                            }}
+                        />
+                    </div>
+                )}
 
-            {activeTab === 'proctoring' && (
-                <div>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        PROCTORING &amp; WORKSTATION INTEGRITY AUDIT
-                    </h4>
-                    <ProctoringPanel />
-                </div>
-            )}
+                {activeTab === 'proctoring' && (
+                    <div>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
+                            PROCTORING &amp; WORKSTATION INTEGRITY AUDIT
+                        </h4>
+                        <ProctoringPanel />
+                    </div>
+                )}
 
-            {activeTab === 'submissions' && (
-                <div>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        PARTICIPANT CODE SUBMISSION INSPECTION
-                    </h4>
-                    <SubmissionsPanel initialSelected={inspectedSubmission} />
-                </div>
-            )}
+                {activeTab === 'submissions' && (
+                    <div>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
+                            PARTICIPANT CODE SUBMISSION INSPECTION
+                        </h4>
+                        <SubmissionsPanel initialSelected={inspectedSubmission} />
+                    </div>
+                )}
 
-            {activeTab === 'rounds' && (
-                <div>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        MASTER CLOCK &amp; TOURNAMENT ROUND CONTROLS
-                    </h4>
-                    <RoundManagement />
-                </div>
-            )}
+                {activeTab === 'rounds' && (
+                    <div>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
+                            MASTER CLOCK &amp; TOURNAMENT ROUND CONTROLS
+                        </h4>
+                        <RoundManagement />
+                    </div>
+                )}
 
-            {activeTab === 'announcements' && (
-                <div>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        SYSTEM ANNOUNCEMENTS &amp; ARENA WIRE BROADCAST
-                    </h4>
-                    <AnnouncementsPanel />
-                </div>
-            )}
+                {activeTab === 'announcements' && (
+                    <div>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
+                            SYSTEM ANNOUNCEMENTS &amp; ARENA WIRE BROADCAST
+                        </h4>
+                        <AnnouncementsPanel />
+                    </div>
+                )}
 
-            {activeTab === 'reports' && (
-                <div>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
-                        TOURNAMENT SCORECARD, DATA EXPORTS &amp; AUDIT REPORTS
-                    </h4>
-                    <ReportsPanel participants={participants} />
-                </div>
-            )}
+                {activeTab === 'reports' && (
+                    <div>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#000080' }}>
+                            TOURNAMENT SCORECARD, DATA EXPORTS &amp; AUDIT REPORTS
+                        </h4>
+                        <ReportsPanel participants={participants} />
+                    </div>
+                )}
+            </ErrorBoundary>
 
             {/* Participant Details Drawer */}
             {selectedParticipant && (

@@ -9,6 +9,7 @@ import { AdminAuthService } from '../services/adminAuthService';
 import { AdminUser } from '../types';
 import { AdminLogin } from '../components/AdminLogin';
 import { AdminDashboard } from '../components/AdminDashboard';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../styles.css';
 
 export interface AdminPortalProps {
@@ -32,13 +33,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ forcedView }) => {
         setUser(null);
     };
 
-    // If forced to login view or not authenticated, render Login
-    if (!user || forcedView === 'login') {
-        return <AdminLogin onSuccess={handleLoginSuccess} />;
-    }
-
-    // Authenticated: Render Command Center Dashboard
-    return <AdminDashboard user={user} onLogout={handleLogout} />;
+    return (
+        <ErrorBoundary fallbackTitle="ADMIN CONSOLE CORE">
+            {!user || forcedView === 'login' ? (
+                <AdminLogin onSuccess={handleLoginSuccess} />
+            ) : (
+                <AdminDashboard user={user} onLogout={handleLogout} />
+            )}
+        </ErrorBoundary>
+    );
 };
 
 export default AdminPortal;
