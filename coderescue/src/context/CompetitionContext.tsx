@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import {
   CompetitionState,
   Participant,
@@ -28,6 +28,7 @@ interface CompetitionContextType {
   resetQuestionCode: (questionId: string) => void;
   runVisibleTests: (question: Question, code: string) => Promise<ExecutionResult>;
   submitSolution: (question: Question, code: string) => Promise<ExecutionResult>;
+  autoSubmitCurrentRound: (roundNum?: 1 | 2 | 3) => Promise<void>;
   finalizeRound: (round: 1 | 2 | 3) => void;
   proceedToNextRound: () => void;
   resetCompetition: () => void;
@@ -47,6 +48,7 @@ const CompetitionContext = createContext<CompetitionContextType | null>(null);
 
 export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<CompetitionState>(getInitialState);
+  const autoSubmitRef = useRef<(roundNum?: 1 | 2 | 3) => Promise<void>>(async () => {});
 
   // Sync state to LocalStorage
   useEffect(() => {
@@ -154,47 +156,110 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     });
   }, []);
 
-  // Live Timer Tick Effect
+  // Live Timer, Schedule Monitoring & Auto-Submit Tick Effect
   useEffect(() => {
     const interval = setInterval(() => {
+      const now = Date.now();
+
       setState(prev => {
-        let changed = false;
+        let scheduleChanged = false;
+        let newIsStarted = prev.schedule.isStarted;
+        let newIsEnded = prev.schedule.isEnded;
+
+        if (prev.schedule.startTime) {
+          const startMs = new Date(prev.schedule.startTime).getTime();
+          if (!isNaN(startMs)) {
+            const started = now >= startMs;
+            if (started !== newIsStarted) {
+              newIsStarted = started;
+              scheduleChanged = true;
+            }
+          }
+        }
+
+        if (prev.schedule.endTime) {
+          const endMs = new Date(prev.schedule.endTime).getTime();
+          if (!isNaN(endMs)) {
+            const ended = now >= endMs;
+            if (ended !== newIsEnded) {
+              newIsEnded = ended;
+              scheduleChanged = true;
+            }
+          }
+        }
+
+        // If event just transitioned to ended, auto-submit active workspace!
+        if (newIsEnded && prev.currentView.includes('workspace') && !prev.isAutoSubmitting) {
+          setTimeout(() => {
+            if (autoSubmitRef.current) {
+              autoSubmitRef.current(prev.currentRound);
+            }
+          }, 10);
+        }
+
+        // If event just started and contestant is on waiting room, enter Round 1!
+        if (newIsStarted && !newIsEnded && prev.currentView === 'waiting_room') {
+          setTimeout(() => {
+            startRound(1);
+          }, 10);
+        }
+
+        // Timer ticks only if event is actively running
+        let timersChanged = false;
         const newTimers = { ...prev.timers };
 
-        if (newTimers.round1Active && newTimers.round1Remaining > 0) {
-          newTimers.round1Remaining -= 1;
-          changed = true;
-          if (newTimers.round1Remaining <= 0) {
-            newTimers.round1Active = false;
-            setTimeout(() => finalizeRound(1), 10);
+        if (!newIsEnded && (newIsStarted || !prev.schedule.startTime)) {
+          if (newTimers.round1Active && newTimers.round1Remaining > 0) {
+            newTimers.round1Remaining -= 1;
+            timersChanged = true;
+            if (newTimers.round1Remaining <= 0) {
+              newTimers.round1Active = false;
+              setTimeout(() => {
+                if (autoSubmitRef.current) autoSubmitRef.current(1);
+              }, 10);
+            }
+          }
+
+          if (newTimers.round2Active && newTimers.round2Remaining > 0) {
+            newTimers.round2Remaining -= 1;
+            timersChanged = true;
+            if (newTimers.round2Remaining <= 0) {
+              newTimers.round2Active = false;
+              setTimeout(() => {
+                if (autoSubmitRef.current) autoSubmitRef.current(2);
+              }, 10);
+            }
+          }
+
+          if (newTimers.round3Active && newTimers.round3Remaining > 0) {
+            newTimers.round3Remaining -= 1;
+            timersChanged = true;
+            if (newTimers.round3Remaining <= 0) {
+              newTimers.round3Active = false;
+              setTimeout(() => {
+                if (autoSubmitRef.current) autoSubmitRef.current(3);
+              }, 10);
+            }
           }
         }
 
-        if (newTimers.round2Active && newTimers.round2Remaining > 0) {
-          newTimers.round2Remaining -= 1;
-          changed = true;
-          if (newTimers.round2Remaining <= 0) {
-            newTimers.round2Active = false;
-            setTimeout(() => finalizeRound(2), 10);
-          }
-        }
+        if (!scheduleChanged && !timersChanged) return prev;
 
-        if (newTimers.round3Active && newTimers.round3Remaining > 0) {
-          newTimers.round3Remaining -= 1;
-          changed = true;
-          if (newTimers.round3Remaining <= 0) {
-            newTimers.round3Active = false;
-            setTimeout(() => finalizeRound(3), 10);
-          }
-        }
-
-        if (!changed) return prev;
-        return { ...prev, timers: newTimers };
+        return {
+          ...prev,
+          timers: newTimers,
+          schedule: scheduleChanged ? {
+            ...prev.schedule,
+            isStarted: newIsStarted,
+            isEnded: newIsEnded,
+            status: !newIsStarted ? 'WAITING_TO_START' : (newIsEnded ? 'ENDED' : 'IN_PROGRESS')
+          } : prev.schedule
+        };
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [finalizeRound]);
+  }, [startRound]);
 
   // Session reinstatement & strike pardon handler (triggered by Admin broadcast or heartbeat response)
   const pardonStrikesAndRestoreSession = useCallback(() => {
@@ -314,6 +379,23 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         pardonStrikesAndRestoreSession();
       }
 
+      if (resp?.schedule) {
+        setState(prev => {
+          if (
+            prev.schedule?.startTime !== resp.schedule.startTime ||
+            prev.schedule?.endTime !== resp.schedule.endTime ||
+            prev.schedule?.isStarted !== resp.schedule.isStarted ||
+            prev.schedule?.isEnded !== resp.schedule.isEnded
+          ) {
+            return {
+              ...prev,
+              schedule: resp.schedule
+            };
+          }
+          return prev;
+        });
+      }
+
       if (resp?.timeRemaining !== undefined && Math.abs(resp.timeRemaining - remainingSeconds) > 3) {
         setState(prev => {
           const key = roundNum === 1 ? 'round1Remaining' : (roundNum === 2 ? 'round2Remaining' : 'round3Remaining');
@@ -371,6 +453,17 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         window.parent.postMessage({ type: 'CODE_RESCUE_ENTER_FULLSCREEN' }, '*');
       }
     } catch (e) {}
+
+    // Gating check: if event has not started yet, route to waiting_room
+    if (state.schedule?.startTime && !state.schedule?.isStarted) {
+      setState(prev => ({
+        ...prev,
+        currentRound: round,
+        currentView: 'waiting_room'
+      }));
+      return;
+    }
+
     setState(prev => {
       const activeKey = round === 1 ? 'round1Active' : (round === 2 ? 'round2Active' : 'round3Active');
       const remainingKey = round === 1 ? 'round1Remaining' : (round === 2 ? 'round2Remaining' : 'round3Remaining');
@@ -523,6 +616,33 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     return result;
   };
+
+  // Automatic submission of all buffered work when time expires or event ends
+  const autoSubmitCurrentRound = useCallback(async (roundNum?: 1 | 2 | 3) => {
+    const targetRound = roundNum || state.currentRound;
+    setState(prev => ({ ...prev, isAutoSubmitting: true }));
+
+    try {
+      const questions = targetRound === 1 ? round1Questions : (targetRound === 2 ? round2Questions : [round3Question]);
+      for (const q of questions) {
+        const userCode = state.codeBuffers[q.id];
+        if (userCode && userCode.trim() && userCode !== q.brokenCode) {
+          const prevSubs = state.submissions[q.id] || [];
+          const alreadySubmitted = prevSubs.some(s => s.code === userCode);
+          if (!alreadySubmitted) {
+            await submitSolution(q, userCode);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error during auto-submission:', e);
+    } finally {
+      setState(prev => ({ ...prev, isAutoSubmitting: false }));
+      finalizeRound(targetRound);
+    }
+  }, [state.currentRound, state.codeBuffers, state.submissions, finalizeRound]);
+
+  autoSubmitRef.current = autoSubmitCurrentRound;
 
   const proceedToNextRound = () => {
     if (state.currentRound === 1) {
@@ -796,6 +916,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         resetQuestionCode,
         runVisibleTests,
         submitSolution,
+        autoSubmitCurrentRound,
         finalizeRound,
         proceedToNextRound,
         resetCompetition,

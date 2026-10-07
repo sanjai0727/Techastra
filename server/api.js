@@ -250,6 +250,59 @@ function getAllAnnouncementsFormatted() {
     }));
 }
 
+function getCompetitionSchedule() {
+    let startTime = '';
+    let endTime = '';
+    let eventEnded = false;
+    try {
+        const sRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_start_time'").get();
+        if (sRow && sRow.value) startTime = sRow.value;
+        const eRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_end_time'").get();
+        if (eRow && eRow.value) endTime = eRow.value;
+        const endRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
+        eventEnded = endRow ? endRow.value === '1' : false;
+    } catch (e) {
+        console.error('Error fetching competition schedule:', e);
+    }
+
+    const now = Date.now();
+    let isStarted = true;
+    let isEnded = eventEnded;
+
+    if (startTime) {
+        const startMs = Date.parse(startTime);
+        if (!isNaN(startMs)) {
+            isStarted = now >= startMs;
+        }
+    }
+
+    if (endTime) {
+        const endMs = Date.parse(endTime);
+        if (!isNaN(endMs)) {
+            if (now >= endMs) {
+                isEnded = true;
+            }
+        }
+    }
+
+    let status = 'IN_PROGRESS';
+    if (!isStarted) {
+        status = 'WAITING_TO_START';
+    } else if (isEnded) {
+        status = 'ENDED';
+    }
+
+    return {
+        startTime,
+        endTime,
+        serverTime: new Date().toISOString(),
+        isStarted,
+        isEnded,
+        eventEnded: isEnded,
+        status,
+    };
+}
+
 // Middleware: Authenticate Admin Session
 function requireAdminAuth(req, res, next) {
     const authHeader = req.headers['authorization'] || '';
@@ -886,7 +939,8 @@ router.post('/telemetry/heartbeat', (req, res) => {
                 pardoned: true,
                 status: 'ACTIVE',
                 strikes: 0,
-                timeRemaining: p.time_remaining
+                timeRemaining: p.time_remaining,
+                schedule: getCompetitionSchedule()
             });
         }
 
@@ -953,11 +1007,12 @@ router.post('/telemetry/heartbeat', (req, res) => {
             strikes,
             timeRemaining,
             reinstated: status === 'ACTIVE' && strikes === 0,
-            pardoned: strikes === 0
+            pardoned: strikes === 0,
+            schedule: getCompetitionSchedule()
         });
     }
 
-    return res.json({ success: true });
+    return res.json({ success: true, schedule: getCompetitionSchedule() });
 });
 
 // Real-Time Keystroke & Participant Code Stream
@@ -1467,11 +1522,7 @@ router.get('/admin/system-stats', requireAdminAuth, (req, res) => {
     const totalSubmissions = db.prepare('SELECT COUNT(*) as c FROM submissions').get().c;
     const totalEvents = db.prepare('SELECT COUNT(*) as c FROM proctoring_events').get().c;
 
-    let eventEnded = false;
-    try {
-        const configRow = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
-        eventEnded = configRow ? configRow.value === '1' : false;
-    } catch {}
+    const schedule = getCompetitionSchedule();
 
     return res.json({
         success: true,
@@ -1483,7 +1534,8 @@ router.get('/admin/system-stats', requireAdminAuth, (req, res) => {
             totalSubmissions,
             totalEvents,
             sseClients: sseClients.size,
-            eventEnded,
+            eventEnded: schedule.isEnded,
+            schedule,
             uptimeSeconds: Math.floor(process.uptime()),
             serverTime: new Date().toISOString()
         }
@@ -1533,8 +1585,32 @@ router.post('/admin/toggle-event-ended', requireAdminAuth, (req, res) => {
     const { eventEnded } = req.body || {};
     const val = eventEnded ? '1' : '0';
     db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_ended', ?)").run(val);
+    const schedule = getCompetitionSchedule();
     broadcast('event_ended_updated', { eventEnded: Boolean(eventEnded) });
-    return res.json({ success: true, eventEnded: Boolean(eventEnded) });
+    broadcast('schedule_updated', schedule);
+    return res.json({ success: true, eventEnded: Boolean(eventEnded), schedule });
+});
+
+// Competition Schedule (Public view for contestants & arena terminals)
+router.get('/competition/schedule', (req, res) => {
+    return res.json({ success: true, schedule: getCompetitionSchedule() });
+});
+
+// Admin Update Competition Schedule (Strictly Admin Authenticated)
+router.post('/admin/schedule', requireAdminAuth, (req, res) => {
+    const { startTime, endTime, eventEnded } = req.body || {};
+    if (startTime !== undefined) {
+        db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_start_time', ?)").run(String(startTime || ''));
+    }
+    if (endTime !== undefined) {
+        db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_end_time', ?)").run(String(endTime || ''));
+    }
+    if (eventEnded !== undefined) {
+        db.prepare("INSERT OR REPLACE INTO competition_settings (key, value) VALUES ('event_ended', ?)").run(eventEnded ? '1' : '0');
+    }
+    const schedule = getCompetitionSchedule();
+    broadcast('schedule_updated', schedule);
+    return res.json({ success: true, message: 'Competition schedule updated successfully.', schedule });
 });
 
 // ============================================================================

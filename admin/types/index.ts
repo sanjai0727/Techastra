@@ -130,3 +130,13 @@ export interface DashboardOverviewStats {
     eliminated: number;
     flagged: number;
 }
+
+export interface CompetitionSchedule {
+    startTime: string;
+    endTime: string;
+    serverTime: string;
+    isStarted: boolean;
+    isEnded: boolean;
+    eventEnded: boolean;
+    status: 'WAITING_TO_START' | 'IN_PROGRESS' | 'ENDED';
+}

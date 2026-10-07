@@ -179,11 +179,16 @@ function initSchema() {
         );
     `);
 
-    // Ensure event_ended flag defaults to 0 (scores hidden until event ends)
-    const checkEventEnded = db.prepare("SELECT value FROM competition_settings WHERE key = 'event_ended'").get();
-    if (!checkEventEnded) {
-        db.prepare("INSERT INTO competition_settings (key, value) VALUES ('event_ended', '0')").run();
-    }
+    // Ensure competition global settings default rows exist
+    const ensureSetting = (key, defaultVal) => {
+        const row = db.prepare("SELECT value FROM competition_settings WHERE key = ?").get(key);
+        if (!row) {
+            db.prepare("INSERT INTO competition_settings (key, value) VALUES (?, ?)").run(key, defaultVal);
+        }
+    };
+    ensureSetting('event_ended', '0');
+    ensureSetting('event_start_time', '');
+    ensureSetting('event_end_time', '');
 
     // Seed default Admins if not exist
     const ensureAdmin = (user, pass, name) => {

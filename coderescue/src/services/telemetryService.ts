@@ -74,7 +74,7 @@ class TelemetryService {
   }
 
   // 1. Live Heartbeat Dispatch
-  public async sendTelemetryHeartbeat(payload: TelemetryHeartbeatPayload): Promise<{ success: boolean; reinstated?: boolean; pardoned?: boolean; timeRemaining?: number }> {
+  public async sendTelemetryHeartbeat(payload: TelemetryHeartbeatPayload): Promise<{ success: boolean; reinstated?: boolean; pardoned?: boolean; timeRemaining?: number; schedule?: any }> {
     if (!payload.participantId) return { success: false };
 
     // Cross-tab zero latency push
@@ -105,6 +105,20 @@ class TelemetryService {
     }
   }
 
+  // Fetch official competition schedule from server
+  public async fetchSchedule(): Promise<any> {
+    try {
+      const res = await fetch('/api/competition/schedule');
+      const data = await res.json();
+      if (data && data.success) {
+        return data.schedule;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   // Cross-tab session reset / pardon listener
   public onSessionReset(callback: (participantId?: string) => void): () => void {
     if (!this.broadcastChannel) return () => {};
@@ -112,6 +126,19 @@ class TelemetryService {
       const data = e.data;
       if (data?.type === 'SESSION_RESET' || data?.type === 'PARTICIPANT_REINSTATED') {
         callback(data.participantId);
+      }
+    };
+    this.broadcastChannel.addEventListener('message', handler);
+    return () => this.broadcastChannel?.removeEventListener('message', handler);
+  }
+
+  // Cross-tab schedule update listener
+  public onScheduleUpdate(callback: (schedule: any) => void): () => void {
+    if (!this.broadcastChannel) return () => {};
+    const handler = (e: MessageEvent) => {
+      const data = e.data;
+      if (data?.type === 'SCHEDULE_UPDATED' && data.schedule) {
+        callback(data.schedule);
       }
     };
     this.broadcastChannel.addEventListener('message', handler);

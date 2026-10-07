@@ -113,10 +113,20 @@ export interface QualificationConfig {
   round2MinScore: number;
 }
 
+export interface CompetitionSchedule {
+  startTime: string;
+  endTime: string;
+  serverTime: string;
+  isStarted: boolean;
+  isEnded: boolean;
+  status: 'WAITING_TO_START' | 'IN_PROGRESS' | 'ENDED';
+}
+
 export type ActiveView = 
   | 'welcome'
   | 'registration'
   | 'rules'
+  | 'waiting_room'
   | 'round1_workspace'
   | 'round1_result'
   | 'round2_workspace'
@@ -157,6 +167,8 @@ export interface CompetitionState {
     round2Active: boolean;
     round3Active: boolean;
   };
+  schedule: CompetitionSchedule;
+  isAutoSubmitting: boolean;
   codeBuffers: Record<string, string>; // questionId -> user code
   submissions: Record<string, Submission[]>; // questionId -> list of submissions
   bestScores: Record<string, number>; // questionId -> highest score achieved

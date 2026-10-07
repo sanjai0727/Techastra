@@ -5,7 +5,7 @@
 // Zero demo data — persistent state with live SSE sync.
 // ============================================================================
 
-import { RoundId, RoundStatus } from '../types';
+import { RoundId, RoundStatus, CompetitionSchedule } from '../types';
 import { AdminAuthService } from './adminAuthService';
 
 export class RoundService {
@@ -148,6 +148,39 @@ export class RoundService {
             return !!data.success;
         } catch {
             return false;
+        }
+    }
+
+    public static async getSchedule(): Promise<CompetitionSchedule | null> {
+        try {
+            const res = await fetch('/api/competition/schedule');
+            const data = await res.json();
+            if (data && data.success && data.schedule) {
+                return data.schedule as CompetitionSchedule;
+            }
+            return null;
+        } catch {
+            return null;
+        }
+    }
+
+    public static async updateSchedule(payload: { startTime?: string; endTime?: string; eventEnded?: boolean }): Promise<{ success: boolean; schedule?: CompetitionSchedule; error?: string }> {
+        try {
+            const res = await fetch('/api/admin/schedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AdminAuthService.getAuthHeader(),
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data && data.success) {
+                return { success: true, schedule: data.schedule };
+            }
+            return { success: false, error: data?.error || 'Failed to update schedule' };
+        } catch (e: any) {
+            return { success: false, error: e?.message || 'Network error updating schedule' };
         }
     }
 
