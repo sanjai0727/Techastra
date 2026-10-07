@@ -19,6 +19,14 @@ div {
     display: flex;
 }
 
+pre,
+code,
+.code-walkthrough-block pre,
+.terminal-walkthrough-box pre {
+    display: block;
+    text-align: left;
+}
+
 #root {
     height: 100%;
 }

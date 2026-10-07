@@ -63,33 +63,45 @@ const MusicProjects: React.FC<MusicProjectsProps> = (props) => {
                 <br />
                 <h2>Sample Challenge Walkthrough</h2>
                 <br />
-                <div style={styles.codeBlock}>
-                    <p style={styles.codeComment}># FAULTY CODE — Challenge 04: Session Event Tracker</p>
-                    <p style={styles.codeRed}>def register_event(event_id, session_log=[]):</p>
-                    <p style={styles.codeRed}>&nbsp;&nbsp;&nbsp;&nbsp;session_log.append(event_id)</p>
-                    <p style={styles.codeLine}>&nbsp;&nbsp;&nbsp;&nbsp;return session_log</p>
-                    <br />
-                    <p style={styles.codeComment}># Invocation test:</p>
-                    <p style={styles.codeLine}>print(register_event("USER_LOGIN"))&nbsp;&nbsp;&nbsp;&nbsp;# ['USER_LOGIN']</p>
-                    <p style={styles.codeRed}>print(register_event("ITEM_VIEW"))&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# ['USER_LOGIN', 'ITEM_VIEW'] !?</p>
+                <div className="code-walkthrough-block" style={styles.codeCard}>
+                    <div style={styles.codeHeaderFaulty}>
+                        <span>❌ FAULTY CODE — Challenge 04: Session Event Tracker (Mutable Default Trap)</span>
+                    </div>
+                    <pre style={styles.codePre}>
+<span style={styles.codeComment}># Defect: session_log defaults to a mutable empty list []</span>
+<span style={styles.codeRed}>def register_event(event_id, session_log=[]):</span>
+<span style={styles.codeRed}>    session_log.append(event_id)</span>
+<span style={styles.codeLine}>    return session_log</span>
+
+<span style={styles.codeComment}># Invocation test showing state leakage across independent calls:</span>
+<span style={styles.codeLine}>print(register_event("USER_LOGIN"))    # ['USER_LOGIN']</span>
+<span style={styles.codeRed}>print(register_event("ITEM_VIEW"))     # ['USER_LOGIN', 'ITEM_VIEW'] !? (State Leaked)</span>
+                    </pre>
                 </div>
                 <br />
                 <p><b>Diagnostic Analysis:</b></p>
-                <div style={styles.analysisBox}>
-                    <p>
+                <div className="analysis-walkthrough-box" style={styles.analysisCard}>
+                    <div style={styles.analysisHeader}>
+                        <span>💡 Python Execution Model Insight</span>
+                    </div>
+                    <div style={styles.analysisBody}>
                         In Python, default argument expressions are evaluated once when the function
                         is defined, NOT each time the function is called. Because <code>[]</code> is mutable,
-                        every subsequent caller without an explicit second parameter mutates the same list object!
-                    </p>
+                        every subsequent caller without an explicit second parameter mutates the exact same list object!
+                    </div>
                 </div>
                 <br />
-                <div style={styles.codeBlock}>
-                    <p style={styles.codeComment}># RESCUED CODE — Pass Verdict: 20/20 Points</p>
-                    <p style={styles.codeGreen}>def register_event(event_id, session_log=None):</p>
-                    <p style={styles.codeGreen}>&nbsp;&nbsp;&nbsp;&nbsp;if session_log is None:</p>
-                    <p style={styles.codeGreen}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;session_log = []</p>
-                    <p style={styles.codeLine}>&nbsp;&nbsp;&nbsp;&nbsp;session_log.append(event_id)</p>
-                    <p style={styles.codeLine}>&nbsp;&nbsp;&nbsp;&nbsp;return session_log</p>
+                <div className="code-walkthrough-block" style={styles.codeCard}>
+                    <div style={styles.codeHeaderRescued}>
+                        <span>✅ RESCUED CODE — Pass Verdict: 20/20 Points</span>
+                    </div>
+                    <pre style={styles.codePre}>
+<span style={styles.codeGreen}>def register_event(event_id, session_log=None):</span>
+<span style={styles.codeGreen}>    if session_log is None:</span>
+<span style={styles.codeGreen}>        session_log = []</span>
+<span style={styles.codeLine}>    session_log.append(event_id)</span>
+<span style={styles.codeLine}>    return session_log</span>
+                    </pre>
                 </div>
                 <br />
                 <h3>Pro-Tips for Qualifying in Round 2:</h3>
@@ -119,38 +131,108 @@ const MusicProjects: React.FC<MusicProjectsProps> = (props) => {
 };
 
 const styles: StyleSheetCSS = {
-    codeBlock: {
-        backgroundColor: '#1e1e1e',
-        color: '#f8f8f2',
-        padding: 16,
-        fontFamily: 'Terminal, monospace',
-        fontSize: 13,
-        border: '1px solid #333',
+    codeCard: {
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#ffffff',
+        border: '2px inset #c0c0c0',
+        borderRadius: 3,
         marginBottom: 16,
-        lineHeight: 1.5,
+        overflow: 'hidden',
+        boxShadow: 'inset 1px 1px 0 #808080, 0 1px 3px rgba(0,0,0,0.08)',
+    },
+    codeHeaderFaulty: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff0f0',
+        color: '#b31d28',
+        fontWeight: 'bold',
+        fontSize: 13,
+        padding: '8px 14px',
+        borderBottom: '1px solid #ffd0d0',
+        fontFamily: 'Consolas, "Courier New", monospace',
+    },
+    codeHeaderRescued: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#e6ffed',
+        color: '#137333',
+        fontWeight: 'bold',
+        fontSize: 13,
+        padding: '8px 14px',
+        borderBottom: '1px solid #bef5cb',
+        fontFamily: 'Consolas, "Courier New", monospace',
+    },
+    codePre: {
+        display: 'block',
+        margin: 0,
+        padding: '14px 18px',
+        fontFamily: 'Consolas, "Courier New", monospace',
+        fontSize: 13.5,
+        lineHeight: 1.6,
+        color: '#24292f',
+        backgroundColor: '#fafbfc',
+        overflowX: 'auto',
+        whiteSpace: 'pre',
+        textAlign: 'left',
     },
     codeComment: {
-        color: '#6272a4',
-        marginBottom: 8,
+        color: '#6e7781',
+        fontStyle: 'italic',
+        display: 'block',
     },
     codeLine: {
-        color: '#f8f8f2',
+        color: '#24292f',
+        display: 'block',
     },
     codeRed: {
-        color: '#ff5555',
-        backgroundColor: 'rgba(255,85,85,0.1)',
+        color: '#cf222e',
+        backgroundColor: '#ffebe9',
+        fontWeight: 'bold',
+        display: 'block',
+        padding: '2px 6px',
+        borderRadius: 2,
+        margin: '1px 0',
     },
     codeGreen: {
-        color: '#50fa7b',
-        backgroundColor: 'rgba(80,250,123,0.1)',
+        color: '#116329',
+        backgroundColor: '#dafbe1',
+        fontWeight: 'bold',
+        display: 'block',
+        padding: '2px 6px',
+        borderRadius: 2,
+        margin: '1px 0',
     },
-    analysisBox: {
-        backgroundColor: '#fff3cd',
-        border: '1px solid #ffeeba',
-        color: '#856404',
-        padding: 12,
+    analysisCard: {
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#fffdf5',
+        border: '1.5px solid #ffeeba',
+        borderRadius: 3,
         marginBottom: 16,
+        overflow: 'hidden',
+    },
+    analysisHeader: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff3cd',
+        color: '#856404',
+        fontWeight: 'bold',
         fontSize: 13,
+        padding: '6px 14px',
+        borderBottom: '1px solid #ffeeba',
+        fontFamily: 'Consolas, "Courier New", monospace',
+    },
+    analysisBody: {
+        display: 'block',
+        padding: '12px 16px',
+        color: '#856404',
+        fontSize: 14,
+        lineHeight: 1.6,
+        textAlign: 'left',
     },
 };
 

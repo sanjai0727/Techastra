@@ -64,17 +64,22 @@ const ArtProjects: React.FC<ArtProjectsProps> = (props) => {
                 <br />
                 <h2>Sample System Overview: E-Commerce Dispatch Engine</h2>
                 <br />
-                <div style={styles.codeBlock}>
-                    <p style={styles.codeComment}># ARCHITECTURE PREVIEW: Order Processing & Tax Dispatch</p>
-                    <p style={styles.codeLine}>class OrderProcessor:</p>
-                    <p style={styles.codeLine}>&nbsp;&nbsp;&nbsp;&nbsp;def __init__(self, tax_rate=0.08, currency="INR"):</p>
-                    <p style={styles.codeLine}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.tax_rate = tax_rate</p>
-                    <p style={styles.codeLine}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.currency = currency</p>
-                    <br />
-                    <p style={styles.codeRed}>&nbsp;&nbsp;&nbsp;&nbsp;# BUG 1: Ingestion crash on orders missing discount code</p>
-                    <p style={styles.codeRed}>&nbsp;&nbsp;&nbsp;&nbsp;# BUG 2: Tiered bulk discount applied AFTER tax instead of BEFORE</p>
-                    <p style={styles.codeRed}>&nbsp;&nbsp;&nbsp;&nbsp;# BUG 3: Zero-item basket results in unhandled ZeroDivisionError</p>
-                    <p style={styles.codeRed}>&nbsp;&nbsp;&nbsp;&nbsp;# BUG 4: Order status enum mismatch ('FULFILLED' vs 'PROCESSED')</p>
+                <div className="code-walkthrough-block" style={styles.codeCard}>
+                    <div style={styles.codeHeader}>
+                        <span>🏗️ ARCHITECTURE PREVIEW: Order Processing & Tax Dispatch</span>
+                    </div>
+                    <pre style={styles.codePre}>
+<span style={styles.codeLine}>class OrderProcessor:</span>
+<span style={styles.codeLine}>    def __init__(self, tax_rate=0.08, currency="INR"):</span>
+<span style={styles.codeLine}>        self.tax_rate = tax_rate</span>
+<span style={styles.codeLine}>        self.currency = currency</span>
+
+<span style={styles.codeComment}>    # Critical System Defects to Triage:</span>
+<span style={styles.codeRed}>    # BUG 1: Ingestion crash on orders missing discount code</span>
+<span style={styles.codeRed}>    # BUG 2: Tiered bulk discount applied AFTER tax instead of BEFORE</span>
+<span style={styles.codeRed}>    # BUG 3: Zero-item basket results in unhandled ZeroDivisionError</span>
+<span style={styles.codeRed}>    # BUG 4: Order status enum mismatch ('FULFILLED' vs 'PROCESSED')</span>
+                    </pre>
                 </div>
                 <br />
                 <h3>Winning Strategies from Past Champions:</h3>
@@ -110,27 +115,58 @@ const ArtProjects: React.FC<ArtProjectsProps> = (props) => {
 };
 
 const styles: StyleSheetCSS = {
-    codeBlock: {
-        backgroundColor: '#1e1e1e',
-        color: '#f8f8f2',
-        padding: 16,
-        fontFamily: 'Terminal, monospace',
-        fontSize: 13,
-        border: '1px solid #333',
+    codeCard: {
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#ffffff',
+        border: '2px inset #c0c0c0',
+        borderRadius: 3,
         marginBottom: 16,
-        lineHeight: 1.5,
+        overflow: 'hidden',
+        boxShadow: 'inset 1px 1px 0 #808080, 0 1px 3px rgba(0,0,0,0.08)',
+    },
+    codeHeader: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f6f8fa',
+        color: '#000080',
+        fontWeight: 'bold',
+        fontSize: 13,
+        padding: '8px 14px',
+        borderBottom: '1px solid #d0d7de',
+        fontFamily: 'Consolas, "Courier New", monospace',
+    },
+    codePre: {
+        display: 'block',
+        margin: 0,
+        padding: '14px 18px',
+        fontFamily: 'Consolas, "Courier New", monospace',
+        fontSize: 13.5,
+        lineHeight: 1.6,
+        color: '#24292f',
+        backgroundColor: '#fafbfc',
+        overflowX: 'auto',
+        whiteSpace: 'pre',
+        textAlign: 'left',
     },
     codeComment: {
-        color: '#6272a4',
-        marginBottom: 8,
+        color: '#6e7781',
+        fontStyle: 'italic',
+        display: 'block',
     },
     codeLine: {
-        color: '#f8f8f2',
+        color: '#24292f',
+        display: 'block',
     },
     codeRed: {
-        color: '#ff5555',
-        backgroundColor: 'rgba(255,85,85,0.1)',
-        padding: '2px 0',
+        color: '#cf222e',
+        backgroundColor: '#ffebe9',
+        fontWeight: 'bold',
+        display: 'block',
+        padding: '2px 6px',
+        borderRadius: 2,
+        margin: '1px 0',
     },
     warningBox: {
         backgroundColor: '#f8d7da',
