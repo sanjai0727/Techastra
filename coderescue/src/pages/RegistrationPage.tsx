@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCompetition } from '../context/CompetitionContext';
+import { findMasterContestant } from '../data/masterRoster';
 
 interface LiveContestant {
   registrationId?: string;
@@ -176,17 +177,16 @@ export const RegistrationPage: React.FC = () => {
     setIsVerifying(true);
     setError(null);
 
-    // 1. First attempt live server lookup against backend (SQLite / Dr. M.G.R. portal sync)
-    const lookup = await safeFetchJson(`/api/coordinator/lookup/${encodeURIComponent(cleanCode)}`, undefined, 2000);
-    if (lookup.ok && lookup.data && lookup.data.success && lookup.data.found && lookup.data.participant) {
-      const p = lookup.data.participant;
+    // 1. First check local authoritative master roster (instant, 100% reliable)
+    const master = findMasterContestant(cleanCode);
+    if (master) {
       const candidate: LiveContestant = {
-        registrationCode: p.id || cleanCode,
-        name: p.name || `Contestant ${cleanCode}`,
-        college: p.college || 'Engineering College',
-        department: p.department || 'Computer Science and Engineering',
-        year: p.year || '3rd Year',
-        venue: p.venue || 'IBM Lab • Day 1 (Oct 8, 2026)',
+        registrationCode: master.registrationCode,
+        name: master.name,
+        college: master.college,
+        department: master.department,
+        year: master.year,
+        venue: master.venue,
         isPreRegistered: true,
       };
       setVerifiedCandidate(candidate);
@@ -204,11 +204,31 @@ export const RegistrationPage: React.FC = () => {
       return local;
     }
 
-    // 3. If token matches the official symposium format (SYM2026-XXXX)
+    // 3. Attempt live server lookup against backend (SQLite / Dr. M.G.R. portal sync)
+    const lookup = await safeFetchJson(`/api/coordinator/lookup/${encodeURIComponent(cleanCode)}`, undefined, 2500);
+    if (lookup.ok && lookup.data && lookup.data.success && lookup.data.found && lookup.data.participant) {
+      const p = lookup.data.participant;
+      const apiName = p.name && !p.name.startsWith('Contestant SYM') ? p.name : '';
+      const candidate: LiveContestant = {
+        registrationCode: p.id || cleanCode,
+        name: apiName,
+        college: p.college || 'Engineering College',
+        department: p.department || 'Computer Science and Engineering',
+        year: p.year || '3rd Year',
+        venue: p.venue || 'IBM Lab • Day 1 (Oct 8, 2026)',
+        isPreRegistered: true,
+      };
+      setVerifiedCandidate(candidate);
+      setIsVerifying(false);
+      setError(null);
+      return candidate;
+    }
+
+    // 4. If token matches the official symposium format (SYM2026-XXXX) but unlisted
     if (isValidTokenFormat(cleanCode)) {
       const candidate: LiveContestant = {
         registrationCode: cleanCode,
-        name: `Contestant ${cleanCode}`,
+        name: '',
         college: 'Dr. M.G.R. Educational and Research Institute',
         department: 'Computer Science and Engineering',
         year: '3rd Year',
@@ -221,7 +241,7 @@ export const RegistrationPage: React.FC = () => {
       return candidate;
     }
 
-    // 4. Invalid format
+    // 5. Invalid format
     setVerifiedCandidate(null);
     setIsVerifying(false);
     setError(
@@ -236,35 +256,70 @@ export const RegistrationPage: React.FC = () => {
     setError(null);
 
     const cleanToken = normalizeToken(tokenToLogin);
-    let candidateData: LiveContestant | null = verifiedCandidate || findLocalContestant(cleanToken);
+    const master = findMasterContestant(cleanToken);
+    let candidateData: LiveContestant | null =
+      verifiedCandidate ||
+      findLocalContestant(cleanToken) ||
+      (master
+        ? {
+            registrationCode: master.registrationCode,
+            name: master.name,
+            college: master.college,
+            department: master.department,
+            year: master.year,
+            venue: master.venue,
+            isPreRegistered: true,
+          }
+        : null);
 
     // 1. Attempt server sync if backend is active
-    const loginRes = await safeFetchJson('/api/participants/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participantId: cleanToken }),
-    }, 2000);
+    const loginRes = await safeFetchJson(
+      '/api/participants/login',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantId: cleanToken }),
+      },
+      2000
+    );
 
     if (loginRes.ok && loginRes.data && loginRes.data.success && loginRes.data.participant) {
       const p = loginRes.data.participant;
+      const apiName = p.fullName || p.name;
+      const effectiveName =
+        (apiName && !apiName.startsWith('Contestant SYM'))
+          ? apiName
+          : (candidateData?.name && !candidateData.name.startsWith('Contestant SYM')
+              ? candidateData.name
+              : (master?.name || ''));
+
       candidateData = {
         registrationCode: cleanToken,
-        name: p.fullName || p.name || `Contestant ${cleanToken}`,
-        college: p.college || 'Engineering College',
-        department: p.department || 'Computer Science and Engineering',
-        year: p.year || '3rd Year',
+        name: effectiveName,
+        college: p.college || candidateData?.college || master?.college || 'Engineering College',
+        department: p.department || candidateData?.department || master?.department || 'Computer Science and Engineering',
+        year: p.year || candidateData?.year || master?.year || '3rd Year',
         venue: 'IBM Lab • Day 1 (Oct 8, 2026)',
       };
     }
 
-    // 2. Guarantee entry: register participant in state and proceed to Rules
-    const fullName = candidateData?.name || `Contestant ${cleanToken}`;
-    const collegeName = candidateData?.college || 'Dr. M.G.R. Educational and Research Institute';
-    const deptName = candidateData?.department || 'Computer Science and Engineering';
-    const yearName = candidateData?.year || '3rd Year';
+    let finalFullName = candidateData?.name?.trim() || master?.name || '';
+    if (finalFullName.startsWith('Contestant SYM') && master?.name) {
+      finalFullName = master.name;
+    }
+
+    if (!finalFullName) {
+      setIsSubmitting(false);
+      setError('Please provide your Full Name to proceed into the arena.');
+      return;
+    }
+
+    const collegeName = candidateData?.college?.trim() || master?.college || 'Dr. M.G.R. Educational and Research Institute';
+    const deptName = candidateData?.department || master?.department || 'Computer Science and Engineering';
+    const yearName = candidateData?.year || master?.year || '3rd Year';
 
     registerParticipant({
-      fullName,
+      fullName: finalFullName,
       college: collegeName,
       department: deptName,
       year: yearName,
@@ -300,6 +355,16 @@ export const RegistrationPage: React.FC = () => {
 
     // If candidate is already verified, proceed directly into arena
     if (verifiedCandidate && normalizeToken(verifiedCandidate.registrationCode || '') === cleanToken) {
+      if (!verifiedCandidate.name?.trim() || verifiedCandidate.name.startsWith('Contestant SYM')) {
+        const master = findMasterContestant(cleanToken);
+        if (master?.name) {
+          verifiedCandidate.name = master.name;
+          verifiedCandidate.college = master.college;
+        } else {
+          setError('Please enter your full name in the Candidate Full Name field.');
+          return;
+        }
+      }
       await autoLoginWithVerifiedToken(cleanToken);
       return;
     }
@@ -307,6 +372,17 @@ export const RegistrationPage: React.FC = () => {
     // Verify token first
     const resolved = await verifyToken(cleanToken);
     if (resolved) {
+      if (!resolved.name?.trim() || resolved.name.startsWith('Contestant SYM')) {
+        const master = findMasterContestant(cleanToken);
+        if (master?.name) {
+          resolved.name = master.name;
+          resolved.college = master.college;
+          setVerifiedCandidate(resolved);
+        } else {
+          setError('Please enter your full name in the Candidate Full Name field.');
+          return;
+        }
+      }
       await autoLoginWithVerifiedToken(cleanToken);
       return;
     }
@@ -666,20 +742,40 @@ export const RegistrationPage: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
                           <div>
-                            <span className="text-gray-600 text-xs sm:text-sm block">
-                              Candidate Full Name:
+                            <span className="text-gray-600 text-xs sm:text-sm block mb-1">
+                              Candidate Full Name: <span className="text-red-700">*</span>
                             </span>
-                            <span className="font-bold text-base sm:text-lg text-gray-900">
-                              {verifiedCandidate.name}
-                            </span>
+                            <input
+                              type="text"
+                              value={verifiedCandidate.name || ''}
+                              onChange={(e) =>
+                                setVerifiedCandidate({
+                                  ...verifiedCandidate,
+                                  name: e.target.value,
+                                })
+                              }
+                              placeholder="Enter candidate full name"
+                              className="site-input font-bold text-sm sm:text-base text-gray-900 w-full px-2.5 py-1.5 bg-white border border-[#808080]"
+                              style={{ backgroundColor: '#ffffff' }}
+                            />
                           </div>
                           <div>
-                            <span className="text-gray-600 text-xs sm:text-sm block">
+                            <span className="text-gray-600 text-xs sm:text-sm block mb-1">
                               Institution / College:
                             </span>
-                            <span className="font-bold text-sm sm:text-base text-gray-900">
-                              {verifiedCandidate.college}
-                            </span>
+                            <input
+                              type="text"
+                              value={verifiedCandidate.college || ''}
+                              onChange={(e) =>
+                                setVerifiedCandidate({
+                                  ...verifiedCandidate,
+                                  college: e.target.value,
+                                })
+                              }
+                              placeholder="Enter institution / college"
+                              className="site-input font-bold text-xs sm:text-sm text-gray-900 w-full px-2.5 py-1.5 bg-white border border-[#808080]"
+                              style={{ backgroundColor: '#ffffff' }}
+                            />
                           </div>
                         </div>
                         <div className="mt-2.5 pt-2 border-t border-[#b0d0b0] text-xs sm:text-sm text-gray-700 flex flex-wrap items-center justify-between gap-1">

@@ -865,7 +865,28 @@ router.get('/coordinator/lookup/:code', async (req, res) => {
         });
     }
 
-    // 2. Check live / master portal roster
+    // 2. Check official master roster (instant lookup)
+    const masterMatch = Array.isArray(OFFICIAL_MASTER_ROSTER) && OFFICIAL_MASTER_ROSTER.find(
+        (r) =>
+            (r.registrationCode && r.registrationCode.toUpperCase() === code) ||
+            (r.registrationId && r.registrationId.toUpperCase() === code)
+    );
+    if (masterMatch) {
+        return res.json({
+            success: true,
+            found: true,
+            participant: {
+                id: masterMatch.registrationCode || code,
+                name: masterMatch.name,
+                college: masterMatch.college,
+                department: masterMatch.department || 'Computer Science & Engineering',
+                year: masterMatch.year || '3rd Year',
+                venue: masterMatch.venue || 'IBM Lab • Day 1 (Oct 8, 2026)',
+            },
+        });
+    }
+
+    // 3. Check live portal roster
     try {
         const roster = await fetchLiveRoster();
         const match = roster.find(

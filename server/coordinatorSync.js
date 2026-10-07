@@ -61,6 +61,15 @@ async function authenticateCoordinator() {
 // Master official symposium roster registered for Code Rescue on Techastra Portal
 const OFFICIAL_MASTER_ROSTER = [
   {
+    registrationId: 'cmuvgho31002j2thtthaza1q0',
+    registrationCode: 'SYM2026-0036',
+    name: 'RAMATHATCHANA M',
+    college: 'R.M.D Engineering College',
+    department: 'Computer Science & Engineering',
+    year: '3rd Year',
+    venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
+  },
+  {
     registrationId: 'cmuvgho31002j2thtthaza1ql',
     registrationCode: 'SYM2026-0037',
     name: 'Muniyappan V',
@@ -182,6 +191,15 @@ const OFFICIAL_MASTER_ROSTER = [
     registrationCode: 'SYM2026-0157',
     name: 'Navaneeth',
     college: 'VEL TECH MULTI TECH DR RANGARAJAN DR SAKUNTHALA ENGINEERING COLLEGE',
+    department: 'Computer Science & Engineering',
+    year: '3rd Year',
+    venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
+  },
+  {
+    registrationId: 'cmuy0e1600005sxqrsilamb005',
+    registrationCode: 'SYM2026-0160',
+    name: 'Silambarasan.S',
+    college: 'Crescent institute of science and technology',
     department: 'Computer Science & Engineering',
     year: '3rd Year',
     venue: 'IBM Lab • Day 1 (Oct 8, 2026)'
