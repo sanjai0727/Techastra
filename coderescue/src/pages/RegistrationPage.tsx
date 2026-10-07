@@ -98,6 +98,12 @@ export const RegistrationPage: React.FC = () => {
     if (/^\d+$/.test(cleanCode)) {
       cleanCode = `SYM2026-${cleanCode.padStart(4, '0')}`;
       setLoginToken(cleanCode);
+    } else {
+      const numMatch = cleanCode.match(/^SYM2026-(\d+)$/i);
+      if (numMatch) {
+        cleanCode = `SYM2026-${String(numMatch[1]).padStart(4, '0')}`;
+        setLoginToken(cleanCode);
+      }
     }
 
     setIsVerifying(true);
@@ -180,6 +186,12 @@ export const RegistrationPage: React.FC = () => {
     if (/^\d+$/.test(cleanToken)) {
       cleanToken = `SYM2026-${cleanToken.padStart(4, '0')}`;
       setLoginToken(cleanToken);
+    } else {
+      const numMatch = cleanToken.match(/^SYM2026-(\d+)$/i);
+      if (numMatch) {
+        cleanToken = `SYM2026-${String(numMatch[1]).padStart(4, '0')}`;
+        setLoginToken(cleanToken);
+      }
     }
 
     // Save pending token to session & local storage

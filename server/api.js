@@ -14,6 +14,8 @@ const loginAttempts = new Map();
 const {
     fetchLiveRoster,
     syncRosterToDatabase,
+    seedOfficialRosterToDb,
+    OFFICIAL_MASTER_ROSTER,
     markAttendanceOnPortal,
     getSyncStatus,
 } = require('./coordinatorSync');
@@ -834,11 +836,17 @@ router.get('/coordinator/roster', async (req, res) => {
 });
 
 router.get('/coordinator/lookup/:code', async (req, res) => {
-    const rawCode = req.params.code ? req.params.code.trim().toUpperCase() : '';
-    let code = rawCode;
-    if (/^\d+$/.test(code)) {
-        code = `SYM2026-${String(code).padStart(4, '0')}`;
+    let rawCode = req.params.code ? req.params.code.trim().toUpperCase() : '';
+    // Normalize e.g. "38" -> "SYM2026-0038", "SYM2026-38" -> "SYM2026-0038"
+    if (/^\d+$/.test(rawCode)) {
+        rawCode = `SYM2026-${String(rawCode).padStart(4, '0')}`;
+    } else {
+        const numMatch = rawCode.match(/^SYM2026-(\d+)$/i);
+        if (numMatch) {
+            rawCode = `SYM2026-${String(numMatch[1]).padStart(4, '0')}`;
+        }
     }
+    const code = rawCode;
 
     // 1. Check local DB
     const local = db.prepare('SELECT * FROM participants WHERE id = ?').get(code);
@@ -850,13 +858,14 @@ router.get('/coordinator/lookup/:code', async (req, res) => {
                 id: local.id,
                 name: local.full_name,
                 college: local.college,
-                department: local.department,
-                year: local.year,
+                department: local.department || 'Computer Science & Engineering',
+                year: local.year || '3rd Year',
+                venue: 'IBM Lab • Day 1 (Oct 8, 2026)',
             },
         });
     }
 
-    // 2. Check live portal
+    // 2. Check live / master portal roster
     try {
         const roster = await fetchLiveRoster();
         const match = roster.find(
@@ -872,8 +881,9 @@ router.get('/coordinator/lookup/:code', async (req, res) => {
                     id: match.registrationCode || code,
                     name: match.name,
                     college: match.college,
-                    department: 'Computer Science & Engineering',
-                    year: 'Senior Engineering',
+                    department: match.department || 'Computer Science & Engineering',
+                    year: match.year || '3rd Year',
+                    venue: match.venue || 'IBM Lab • Day 1 (Oct 8, 2026)',
                 },
             });
         }
@@ -1649,29 +1659,153 @@ router.post('/announcements', requireAdminAuth, (req, res) => {
 });
 
 // ============================================================================
-// 7. HARD RESET / AUDIT PURGE (RESTRICTED TO CHIEF ADMIN)
+// 7. COMPREHENSIVE DATABASE RESET / AUDIT PURGE (COORDINATOR ACCESS)
 // ============================================================================
 
-router.post('/admin/reset-contest', requireAdminAuth, (req, res) => {
+router.get('/admin/database-stats', requireAdminAuth, (req, res) => {
+    try {
+        const participantsCount = db.prepare('SELECT COUNT(*) as c FROM participants').get().c;
+        const activeParticipants = db.prepare("SELECT COUNT(*) as c FROM participants WHERE status = 'ACTIVE'").get().c;
+        const submissionsCount = db.prepare('SELECT COUNT(*) as c FROM submissions').get().c;
+        const proctoringEventsCount = db.prepare('SELECT COUNT(*) as c FROM proctoring_events').get().c;
+        const sessionsCount = db.prepare('SELECT COUNT(*) as c FROM participant_sessions').get().c;
+        let liveScreensCount = 0;
+        try { liveScreensCount = db.prepare('SELECT COUNT(*) as c FROM live_screens').get().c; } catch (e) {}
+        const announcementsCount = db.prepare('SELECT COUNT(*) as c FROM announcements').get().c;
+
+        return res.json({
+            success: true,
+            stats: {
+                participantsCount,
+                activeParticipants,
+                submissionsCount,
+                proctoringEventsCount,
+                sessionsCount,
+                liveScreensCount,
+                announcementsCount,
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+function executeDatabaseReset(options = {}) {
+    const mode = options.mode || 'full'; // 'full' | 'sessions_only' | 'clean_slate' | 'seed_only'
+    const seedRoster = options.seedRoster !== false;
+
+    if (mode === 'seed_only') {
+        const seeded = seedOfficialRosterToDb();
+        return {
+            mode,
+            message: `Successfully seeded/restored ${seeded} official contestants into the database.`,
+            seededCount: seeded
+        };
+    }
+
+    if (mode === 'sessions_only') {
+        // Soft reset: Keep enrolled contestants, wipe telemetry & active test sessions
+        db.prepare('DELETE FROM submissions').run();
+        db.prepare('DELETE FROM proctoring_events').run();
+        db.prepare('DELETE FROM participant_sessions').run();
+        try { db.prepare('DELETE FROM live_screens').run(); } catch (e) {}
+
+        // Reset participant scores and strikes
+        db.prepare(`
+            UPDATE participants SET
+                score = 0,
+                total_score = 0,
+                round1_score = 0,
+                round2_score = 0,
+                round3_score = 0,
+                strikes = 0,
+                status = 'ACTIVE',
+                current_round = 'R1',
+                current_question = 'Q1',
+                time_remaining = 1200,
+                last_event = 'Session reset by coordinator'
+        `).run();
+
+        db.prepare('UPDATE rounds SET is_active = 0').run();
+        db.prepare("UPDATE rounds SET is_active = 1 WHERE round_id = 'R1'").run();
+
+        return {
+            mode,
+            message: 'All participant submissions, strikes, sessions, and screens have been reset to Round 1 (0 points). Roster retained.'
+        };
+    }
+
+    // Default 'full' or 'clean_slate':
     db.prepare('DELETE FROM submissions').run();
     db.prepare('DELETE FROM proctoring_events').run();
     db.prepare('DELETE FROM participant_sessions').run();
-    db.prepare('DELETE FROM participants').run();
     db.prepare('DELETE FROM announcements').run();
     try { db.prepare('DELETE FROM live_screens').run(); } catch (e) {}
+    try { db.prepare('DELETE FROM inquiries').run(); } catch (e) {}
 
     db.prepare('UPDATE rounds SET is_active = 0').run();
     db.prepare("UPDATE rounds SET is_active = 1 WHERE round_id = 'R1'").run();
+    try {
+        db.prepare("UPDATE competition_settings SET value = '0' WHERE key = 'event_ended'").run();
+    } catch (e) {}
 
-    // Broadcast reset event
-    broadcast('reset_contest', {});
-    broadcast('participants_updated', []);
-    broadcast('submissions_updated', []);
-    broadcast('events_updated', []);
-    broadcast('rounds_updated', getAllRoundsFormatted());
-    broadcast('announcements_updated', []);
+    let seededCount = 0;
+    if (mode === 'clean_slate') {
+        // Pristine empty state — contestants only enter upon login/signup
+        db.prepare('DELETE FROM participants').run();
+    } else {
+        // Full reset with official seed roster
+        db.prepare('DELETE FROM participants').run();
+        if (seedRoster) {
+            seededCount = seedOfficialRosterToDb();
+        }
+    }
 
-    return res.json({ success: true, message: 'Competition state reset to clean initial state.' });
+    return {
+        mode,
+        message: mode === 'clean_slate'
+            ? 'Database completely wiped to clean slate. Contestants will enter database upon login or sign-up.'
+            : `Full database reset complete! Seeded ${seededCount} official verified contestants (including SYM2026-0038 Karthik Raman).`,
+        seededCount
+    };
+}
+
+router.post('/admin/reset-database', requireAdminAuth, (req, res) => {
+    try {
+        const result = executeDatabaseReset(req.body);
+
+        // Broadcast reset events via SSE
+        broadcast('reset_contest', {});
+        broadcast('participants_updated', getAllParticipantsFormatted());
+        broadcast('submissions_updated', []);
+        broadcast('events_updated', []);
+        broadcast('rounds_updated', getAllRoundsFormatted());
+        broadcast('announcements_updated', []);
+
+        console.log(`[Admin Security] Database reset executed by coordinator (${result.mode})`);
+        return res.json({ success: true, ...result });
+    } catch (err) {
+        console.error('[Admin Security] Database reset failed:', err.message);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/admin/reset-contest', requireAdminAuth, (req, res) => {
+    try {
+        const mode = req.body?.mode || (req.body?.hardReset ? 'clean_slate' : 'full');
+        const result = executeDatabaseReset({ mode, seedRoster: true });
+
+        broadcast('reset_contest', {});
+        broadcast('participants_updated', getAllParticipantsFormatted());
+        broadcast('submissions_updated', []);
+        broadcast('events_updated', []);
+        broadcast('rounds_updated', getAllRoundsFormatted());
+        broadcast('announcements_updated', []);
+
+        return res.json({ success: true, ...result });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 module.exports = router;

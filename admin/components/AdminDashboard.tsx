@@ -18,9 +18,10 @@ import { RoundManagement } from './RoundManagement';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 import { ReportsPanel } from './ReportsPanel';
 import { LiveScreensMatrix } from './LiveScreensMatrix';
+import { DatabaseResetPanel } from './DatabaseResetPanel';
 import { ErrorBoundary } from './ErrorBoundary';
 
-type DashboardTab = 'participants' | 'screens' | 'proctoring' | 'submissions' | 'rounds' | 'announcements' | 'reports';
+type DashboardTab = 'participants' | 'screens' | 'proctoring' | 'submissions' | 'rounds' | 'announcements' | 'reports' | 'database';
 
 interface AdminDashboardProps {
     user: AdminUser;
@@ -208,40 +209,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
 
                     <button
                         className="admin-btn admin-btn-danger"
-                        onClick={async () => {
-                            const confirmed = window.confirm(
-                                '⚠️ CRITICAL SECURITY WARNING: CONTEST RESET\n\n' +
-                                'Are you sure you want to reset all championship contest progress, submissions, strikes, and scores?\n\n' +
-                                'This action is restricted strictly to Event Coordinators.\n\n' +
-                                'Click OK to execute Reset.'
-                            );
-                            if (!confirmed) return;
-
-                            try {
-                                const res = await fetch('/api/admin/reset-contest', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${user.token}`,
-                                    },
-                                    body: JSON.stringify({ hardReset: false }),
-                                });
-                                const d = await res.json();
-                                if (d.success) {
-                                    alert('✓ ' + d.message);
-                                    ParticipantService.pollServerTelemetry();
-                                    fetchSystemStats();
-                                } else {
-                                    alert(`Reset error: ${d.error || 'Unauthorized'}`);
-                                }
-                            } catch (e: any) {
-                                alert(`Failed to contact server: ${e.message}`);
-                            }
-                        }}
-                        style={{ padding: '3px 10px', fontSize: 11, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 4 }}
-                        title="Emergency Coordinator Reset: Clear all submissions, strikes, and reset scores to 0"
+                        onClick={() => setActiveTab('database')}
+                        style={{ padding: '3px 12px', fontSize: 11, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 5 }}
+                        title="Database Management & Contest Reset: Clear submissions, pardon strikes, or execute clean slate reset"
                     >
-                        ⚠️ Reset Contest Data
+                        🗄️ Database Reset
                     </button>
 
                     <span style={{ fontSize: 12, color: '#333' }}>
@@ -336,6 +308,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                 >
                     📈 Reports &amp; Score Reveal
                 </button>
+                <button
+                    className={`admin-tab-btn ${activeTab === 'database' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('database')}
+                    style={activeTab === 'database' ? { backgroundColor: '#fff0f0', color: '#c5221f' } : undefined}
+                >
+                    🗄️ Database Reset
+                </button>
             </div>
 
             {/* Active Tab View */}
@@ -405,6 +384,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }
                             TOURNAMENT SCORECARD, DATA EXPORTS &amp; AUDIT REPORTS
                         </h4>
                         <ReportsPanel participants={participants} />
+                    </div>
+                )}
+
+                {activeTab === 'database' && (
+                    <div>
+                        <DatabaseResetPanel
+                            user={user}
+                            onResetCompleted={() => {
+                                ParticipantService.pollServerTelemetry();
+                                fetchSystemStats();
+                            }}
+                        />
                     </div>
                 )}
             </ErrorBoundary>
